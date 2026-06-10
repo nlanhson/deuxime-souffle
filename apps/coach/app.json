@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Deuxième Souffle",
+    "slug": "deuxieme-souffle-coach",
+    "scheme": "dscoach",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "fr.deuxiemesouffle.coach"
+    },
+    "android": {
+      "package": "fr.deuxiemesouffle.coach",
+      "adaptiveIcon": {
+        "backgroundColor": "#E1322B",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "react-native-bottom-tabs",
+      "expo-font"
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

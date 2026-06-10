@@ -1,0 +1,10 @@
+{
+  "name": "deuxime-souffle",
+  "private": true,
+  "scripts": {
+    "start": "npm start --prefix apps/coach",
+    "ios": "npm run ios --prefix apps/coach",
+    "android": "npm run android --prefix apps/coach",
+    "web": "npm run web --prefix apps/coach"
+  }
+}
