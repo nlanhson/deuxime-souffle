@@ -1,0 +1,119 @@
+.wrap {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-subtle);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-surface);
+  text-align: left;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--ls-normal);
+  color: var(--color-text-secondary);
+  padding: var(--space-md) var(--space-md);
+  border-bottom: 1px solid var(--color-border-strong);
+}
+
+.table td {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: var(--text-body-lg);
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table [data-align='right'] {
+  text-align: right;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover td {
+  background: var(--lc-neutral-50);
+}
+
+.sortBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--touch-target-min);
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.sortIcon {
+  width: 15px;
+  height: 15px;
+}
+
+/* ---- Reflux mobile : la table devient des cartes empilées ---- */
+@media (max-width: 719px) {
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+  }
+
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .table tr {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .table tr + tr {
+    border-top: 1px solid var(--color-border-subtle);
+  }
+
+  .table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+    border: 0;
+    padding: var(--space-xs) 0;
+    text-align: right;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: var(--ls-normal);
+    color: var(--color-text-secondary);
+    text-align: left;
+  }
+
+  .table [data-align='right'] {
+    text-align: right;
+  }
+}

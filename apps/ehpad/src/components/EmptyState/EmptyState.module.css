@@ -1,0 +1,38 @@
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  text-align: center;
+  padding: var(--space-2xl) var(--space-lg);
+}
+
+.icon {
+  width: 44px;
+  height: 44px;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-xs);
+}
+
+.empty[data-variant='error'] .icon {
+  color: var(--color-danger);
+}
+
+.title {
+  font-size: var(--text-h3);
+  color: var(--color-text-primary);
+}
+
+.body {
+  max-width: 44ch;
+  color: var(--color-text-secondary);
+}
+
+.action {
+  margin-top: var(--space-md);
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  justify-content: center;
+}

@@ -1,0 +1,157 @@
+/* « Nous contacter » — panneau clair à deux colonnes (coordonnées DS à gauche,
+ * formulaire à droite). Reprend la composition de la maquette mais sur la surface
+ * claire EHPAD : carte blanche, jetons sémantiques par défaut, badges bleu marque,
+ * CTA dégradé rouge→braise signature. */
+
+.panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-2xl);
+  padding: var(--space-2xl);
+}
+
+@media (min-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    padding: var(--space-3xl);
+  }
+}
+
+/* ---- Colonne info (gauche) ---- */
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+@media (min-width: 860px) {
+  .info {
+    padding-right: var(--space-3xl);
+  }
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-h1);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-tight);
+  color: var(--color-text-primary);
+}
+
+.lede {
+  margin: 0;
+  max-width: 42ch;
+  font-size: var(--text-body-lg);
+  line-height: var(--lh-relaxed);
+  color: var(--color-text-secondary);
+}
+
+.methods {
+  list-style: none;
+  margin: var(--space-sm) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.method {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--color-info-soft);
+  color: var(--color-accent);
+}
+
+.badge svg {
+  width: 22px;
+  height: 22px;
+}
+
+.methodText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.methodLabel {
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body);
+  color: var(--color-text-primary);
+}
+
+.methodValue {
+  font-size: var(--text-body);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  width: fit-content;
+}
+
+.methodValue:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.methodValue:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Colonne formulaire (droite) ---- */
+.formCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+@media (min-width: 860px) {
+  .formCol {
+    padding-left: var(--space-3xl);
+    border-left: 1px solid var(--color-border-subtle);
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* Étiquettes en casse normale (règle de marque : pas de capitales) — surcharge
+ * locale du .label partagé qui passe en majuscules ailleurs dans l'app. */
+.form :global(label) {
+  text-transform: none;
+  letter-spacing: var(--ls-normal);
+}
+
+/* CTA pleine largeur, à l'image de la maquette. */
+.submit {
+  margin-top: var(--space-sm);
+}
+
+.submit :global(button) {
+  width: 100%;
+}

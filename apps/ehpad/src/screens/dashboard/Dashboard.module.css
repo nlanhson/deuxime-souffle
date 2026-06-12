@@ -1,0 +1,7 @@
+/* Cartes statistiques — non cliquables, calmes : l'info est le sujet principal,
+   les actions vivent (en plus discret) dans l'en-tête. */
+.statRow {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}

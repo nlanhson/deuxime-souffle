@@ -1,0 +1,48 @@
+.skeleton {
+  display: block;
+  background: linear-gradient(
+    100deg,
+    var(--lc-neutral-100) 40%,
+    var(--lc-neutral-200) 50%,
+    var(--lc-neutral-100) 60%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-sm);
+  /* Invisible pendant ~300 ms pour éviter un flash sur les chargements rapides. */
+  opacity: 0;
+  animation:
+    skeleton-appear 1ms linear 300ms forwards,
+    skeleton-shimmer 1400ms linear infinite;
+}
+
+@keyframes skeleton-appear {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -80% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: skeleton-appear 1ms linear 300ms forwards; /* scintillement coupé, statique */
+  }
+}
+
+.rows {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.cards {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}

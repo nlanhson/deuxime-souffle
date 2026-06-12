@@ -1,0 +1,91 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.content:focus {
+  outline: none;
+}
+
+@media (max-width: 719px) {
+  .content {
+    padding: var(--space-md);
+  }
+}
+
+.drawerScrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(24, 23, 21, 0.5);
+}
+
+.drawer {
+  width: min(320px, 86vw);
+  height: 100%;
+  background: var(--color-surface);
+  padding: var(--space-md);
+  overflow-y: auto;
+  animation: drawer-in var(--duration-base) var(--ease-decelerate);
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(-12px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.drawerBrand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.drawerTitle {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-subheading);
+}
+
+.drawerClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  border: 0;
+  background: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}

@@ -1,0 +1,307 @@
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { CalendarPlus, Pencil, RefreshCw, Send } from 'lucide-react';
+import { useStrings } from '@/i18n';
+import * as api from '@/data/api';
+import { useAuth } from '@/context/AuthContext';
+import { useDataVersion } from '@/context/DataContext';
+import { useAsync } from '@/hooks/useAsync';
+import { capitalize, formatDate, formatEuro, formatTime, formatTimestamp } from '@/lib/format';
+import { contractStatusChip, sessionStatusChip, unitLabel } from '@/lib/status';
+import {
+  Avatar,
+  Button,
+  ButtonLink,
+  CardSection,
+  EmptyState,
+  InlineAlert,
+  List,
+  ListItem,
+  LoadError,
+  PageHeader,
+  ProgressBar,
+  RatingDisplay,
+  Skeleton,
+  SkeletonGroup,
+  StatusChip,
+} from '@/components';
+import { PlanSessionModal } from '@/screens/dashboard/PlanSessionModal';
+import styles from './contracts.module.css';
+
+/** CON-03 — détail du contrat : résumé, séances générées, coachs, historique. */
+export default function ContractDetailScreen() {
+  const fr = useStrings();
+  const { id = '' } = useParams();
+  const version = useDataVersion();
+  const navigate = useNavigate();
+  const { isAdmin } = useAuth();
+  const [planOpen, setPlanOpen] = useState(false);
+
+  const state = useAsync(
+    () =>
+      Promise.all([api.getContract(id), api.listSessions(), api.listCoaches(), api.listContracts()]).then(
+        ([contract, sessions, coaches, contracts]) => ({ contract, sessions, coaches, contracts }),
+      ),
+    [id, version],
+  );
+
+  const contract = state.data?.contract ?? null;
+
+  const contractSessions = useMemo(
+    () =>
+      (state.data?.sessions ?? [])
+        .filter((s) => s.contractId === id)
+        .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time)),
+    [state.data?.sessions, id],
+  );
+
+  const participatingCoaches = useMemo(() => {
+    const ids = [...new Set(contractSessions.map((s) => s.coachId).filter((c): c is string => c !== null))];
+    return ids
+      .map((coachId) => state.data?.coaches.find((c) => c.id === coachId))
+      .filter((c): c is NonNullable<typeof c> => Boolean(c));
+  }, [contractSessions, state.data?.coaches]);
+
+  if (state.loading) {
+    return (
+      <>
+        <PageHeader title={fr.contracts.title} crumbs={[{ label: fr.contracts.detail.breadcrumb, to: '/contrats' }]} />
+        <SkeletonGroup>
+          <Skeleton height={180} radius="var(--radius-xl)" />
+          <div style={{ height: 'var(--space-md)' }} />
+          <Skeleton height={320} radius="var(--radius-xl)" />
+        </SkeletonGroup>
+      </>
+    );
+  }
+
+  if (state.error) {
+    return (
+      <>
+        <PageHeader title={fr.contracts.title} crumbs={[{ label: fr.contracts.detail.breadcrumb, to: '/contrats' }]} />
+        <LoadError onRetry={state.retry} />
+      </>
+    );
+  }
+
+  if (!contract) {
+    return (
+      <>
+        <PageHeader title={fr.contracts.title} crumbs={[{ label: fr.contracts.detail.breadcrumb, to: '/contrats' }]} />
+        <EmptyState
+          title={fr.common.notFound}
+          body={fr.common.notFoundBody}
+          action={<ButtonLink to="/contrats">{fr.common.back}</ButtonLink>}
+        />
+      </>
+    );
+  }
+
+  const title = fr.contracts.detail.title(contract.reference);
+  const gateReason = isAdmin ? undefined : fr.common.adminOnly;
+  const lastModification = [...contract.history].sort((a, b) => b.at.localeCompare(a.at))[0];
+
+  return (
+    <>
+      <PageHeader
+        title={title}
+        crumbs={[{ label: fr.contracts.detail.breadcrumb, to: '/contrats' }, { label: title }]}
+        actions={<StatusChip spec={contractStatusChip(contract.status)} />}
+      />
+
+      {contract.status === 'rejete' && contract.rejectionReason && (
+        <InlineAlert
+          variant="warning"
+          title={fr.contracts.detail.rejectionTitle}
+          action={
+            <Button
+              size="md"
+              icon={Send}
+              disabled={!isAdmin}
+              disabledReason={gateReason}
+              onClick={() => navigate(`/contrats/${contract.id}/resoumettre`)}
+            >
+              {fr.contracts.actions.resubmit}
+            </Button>
+          }
+        >
+          {contract.rejectionReason}
+        </InlineAlert>
+      )}
+      {contract.status === 'en_attente_validation' && (
+        <InlineAlert variant="info">{fr.contracts.detail.pendingInfo}</InlineAlert>
+      )}
+      {contract.status === 'modification_en_attente' && (
+        <InlineAlert variant="info">{fr.contracts.detail.modifPendingInfo}</InlineAlert>
+      )}
+      {contract.status === 'non_renouvele' && (
+        <InlineAlert variant="info">
+          {fr.contracts.detail.nonRenewedInfo(formatDate(contract.endDate))}
+        </InlineAlert>
+      )}
+
+      <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
+        {contract.status === 'active' && (
+          <Button icon={CalendarPlus} onClick={() => setPlanOpen(true)}>
+            {fr.contracts.actions.oneOff}
+          </Button>
+        )}
+        {contract.status === 'a_renouveler' && (
+          <Button
+            icon={RefreshCw}
+            disabled={!isAdmin}
+            disabledReason={gateReason}
+            onClick={() => navigate(`/contrats/${contract.id}/renouveler`)}
+          >
+            {fr.contracts.actions.renew}
+          </Button>
+        )}
+        {(contract.status === 'active' || contract.status === 'a_renouveler') && (
+          <Button
+            icon={Pencil}
+            disabled={!isAdmin}
+            disabledReason={gateReason}
+            onClick={() => navigate(`/contrats/${contract.id}/modifier`)}
+          >
+            {fr.contracts.actions.edit}
+          </Button>
+        )}
+      </div>
+
+      <div className={styles.detailGrid}>
+        <CardSection title={fr.contracts.detail.summary}>
+          <dl className={styles.fieldGrid}>
+            <div>
+              <dt>{fr.contracts.card.status}</dt>
+              <dd>
+                <StatusChip spec={contractStatusChip(contract.status)} />
+              </dd>
+            </div>
+            <div>
+              <dt>{fr.contracts.card.units}</dt>
+              <dd>{contract.units.map(unitLabel).join(', ')}</dd>
+            </div>
+            <div>
+              <dt>{fr.contracts.card.frequency}</dt>
+              <dd>{fr.frequency[contract.frequency]}</dd>
+            </div>
+            <div>
+              <dt>{fr.contracts.card.sessionType}</dt>
+              <dd>{fr.sessionTypes[contract.sessionType]}</dd>
+            </div>
+            <div>
+              <dt>{fr.contracts.card.start}</dt>
+              <dd>{capitalize(formatDate(contract.startDate))}</dd>
+            </div>
+            <div>
+              <dt>{fr.contracts.card.end}</dt>
+              <dd>{capitalize(formatDate(contract.endDate))}</dd>
+            </div>
+            <div>
+              <dt>{fr.contracts.card.rate}</dt>
+              <dd>{formatEuro(contract.rate)}</dd>
+            </div>
+            {contract.availabilityNotes && (
+              <div style={{ gridColumn: '1 / -1' }}>
+                <dt>{fr.contracts.card.notes}</dt>
+                <dd>{contract.availabilityNotes}</dd>
+              </div>
+            )}
+          </dl>
+          <div style={{ marginTop: 'var(--space-md)' }}>
+            <ProgressBar
+              value={contract.completedSessionCount}
+              max={Math.max(contract.generatedSessionCount, 1)}
+              label={`${contract.completedSessionCount} ${fr.contracts.card.completed.toLowerCase()} sur ${contract.generatedSessionCount} ${fr.contracts.card.generated.toLowerCase()}`}
+            />
+          </div>
+          {lastModification && (
+            <p className={styles.historyMeta} style={{ marginTop: 'var(--space-sm)' }}>
+              {fr.contracts.detail.modifiedBy(lastModification.by, formatTimestamp(lastModification.at))}
+            </p>
+          )}
+        </CardSection>
+
+        <CardSection title={fr.contracts.detail.coachesTitle}>
+          {participatingCoaches.length === 0 ? (
+            <p style={{ color: 'var(--color-text-secondary)' }}>{fr.contracts.detail.coachesEmpty}</p>
+          ) : (
+            <>
+              {participatingCoaches.map((coach) => (
+                <div key={coach.id} className={styles.coachRow}>
+                  <Avatar firstName={coach.firstName} lastName={coach.lastName} decorative />
+                  <span className={styles.coachName}>
+                    {coach.firstName} {coach.lastName}
+                    <span className={styles.coachHint}>{fr.contracts.detail.avgFromFacility}</span>
+                  </span>
+                  {coach.avgRatingFromFacility !== undefined && (
+                    <RatingDisplay value={coach.avgRatingFromFacility} size="sm" />
+                  )}
+                </div>
+              ))}
+              {contract.avgRatingFromFacility !== undefined && (
+                <div style={{ marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)', borderTop: '1px solid var(--color-border-subtle)' }}>
+                  <p className={styles.summaryLabel}>{fr.contracts.detail.contractAvg}</p>
+                  <RatingDisplay value={contract.avgRatingFromFacility} />
+                </div>
+              )}
+            </>
+          )}
+        </CardSection>
+
+        <CardSection title={fr.contracts.detail.sessionsTitle}>
+          {contractSessions.length === 0 ? (
+            <p style={{ color: 'var(--color-text-secondary)' }}>{fr.contracts.detail.sessionsEmpty}</p>
+          ) : (
+            <>
+              <List label={fr.contracts.detail.sessionsTitle}>
+                {contractSessions.slice(0, 8).map((session) => (
+                  <ListItem
+                    key={session.id}
+                    to={`/sessions/${session.id}`}
+                    primary={`${capitalize(formatDate(session.date))} · ${formatTime(session.time)}`}
+                    secondary={unitLabel(session.unitType)}
+                    trailing={<StatusChip spec={sessionStatusChip(session.status)} />}
+                  />
+                ))}
+              </List>
+              {contractSessions.length > 8 && (
+                <ButtonLink size="md" variant="ghost" to="/sessions">
+                  {fr.dashboard.widgets.seeAll}
+                </ButtonLink>
+              )}
+            </>
+          )}
+        </CardSection>
+
+        <CardSection title={fr.contracts.detail.historyTitle}>
+          {contract.history.length === 0 ? (
+            <p style={{ color: 'var(--color-text-secondary)' }}>{fr.contracts.detail.historyEmpty}</p>
+          ) : (
+            <ul className={styles.historyList}>
+              {[...contract.history]
+                .sort((a, b) => b.at.localeCompare(a.at))
+                .map((entry) => (
+                  <li key={entry.id} className={styles.historyItem}>
+                    {entry.label}
+                    <span className={styles.historyMeta}>
+                      {fr.contracts.detail.modifiedBy(entry.by, formatTimestamp(entry.at))}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </CardSection>
+      </div>
+
+      <PlanSessionModal
+        open={planOpen}
+        onClose={() => setPlanOpen(false)}
+        contracts={state.data?.contracts ?? []}
+        userName=""
+        initialContractId={contract.id}
+      />
+    </>
+  );
+}

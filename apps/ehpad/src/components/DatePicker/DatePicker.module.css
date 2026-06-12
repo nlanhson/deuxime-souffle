@@ -1,0 +1,113 @@
+.valueText {
+  flex: 1;
+  text-align: left;
+}
+
+.valueText[data-placeholder] {
+  color: var(--color-text-muted);
+}
+
+.root {
+  position: relative;
+}
+
+.popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 30;
+  margin-top: var(--space-xs);
+  width: min(340px, calc(100vw - 2 * var(--space-md)));
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-2);
+  padding: var(--space-md);
+}
+
+.navRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.navBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  border: 0;
+  background: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.navBtn:hover {
+  background: var(--lc-neutral-100);
+}
+
+.monthLabel {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-body-lg);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.weekday {
+  text-align: center;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: var(--ls-normal);
+  color: var(--color-text-muted);
+  padding: var(--space-xs) 0;
+}
+
+.day {
+  min-height: 42px;
+  border: 0;
+  background: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-body);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.day:hover:not(:disabled) {
+  background: var(--color-info-soft);
+}
+
+.day[data-outside] {
+  color: var(--color-text-muted);
+}
+
+.day[data-today] {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.day[data-selected] {
+  background: var(--color-accent);
+  color: var(--color-on-action);
+}
+
+.day:disabled {
+  color: var(--color-border-strong);
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.gridNote {
+  margin-top: var(--space-sm);
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}

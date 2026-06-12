@@ -1,0 +1,119 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg) var(--space-md);
+}
+
+.card {
+  width: min(480px, 100%);
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-subtle);
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.brand {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-subheading);
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--space-sm);
+}
+
+.brandSub {
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--ls-normal); /* casse normale — pas de capitales, pas d'interlettrage de label */
+  color: var(--color-accent);
+}
+
+.title {
+  font-size: var(--text-h2);
+}
+
+.subtitle {
+  color: var(--color-text-secondary);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.actions > * {
+  width: 100%;
+}
+
+.link {
+  color: var(--color-accent);
+  font-size: var(--text-body);
+  align-self: flex-start;
+  min-height: var(--touch-target-min);
+  display: inline-flex;
+  align-items: center;
+}
+
+.demo {
+  background: var(--color-canvas);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.demoTitle {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: var(--ls-normal);
+  font-size: 12px;
+}
+
+.rules {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-canvas);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-size: var(--text-body);
+}
+
+.rulesTitle {
+  font-size: var(--text-body);
+  color: var(--color-text-secondary);
+}
+
+.rule {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text-secondary);
+}
+
+.rule[data-met='true'] {
+  color: var(--color-progress-strong);
+}
+
+.ruleIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}

@@ -1,0 +1,71 @@
+.grid {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
+  align-items: start;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.identity {
+  min-width: 0;
+}
+
+.name {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-subheading);
+}
+
+.meta {
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
+}
+
+.line {
+  font-size: var(--text-body);
+  overflow-wrap: anywhere;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.cardActions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: var(--space-sm);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.formGrid {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.formActions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}

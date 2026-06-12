@@ -1,0 +1,49 @@
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.avatar[data-size='sm'] {
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
+}
+
+.avatar[data-size='md'] {
+  width: 48px;
+  height: 48px;
+  font-size: var(--text-body);
+}
+
+.avatar[data-size='lg'] {
+  width: 64px;
+  height: 64px;
+  font-size: var(--text-subheading);
+}
+
+.avatar[data-tone='bleu'] {
+  background: var(--lc-bleu-100);
+  color: var(--lc-bleu-700);
+}
+
+.avatar[data-tone='vert'] {
+  background: var(--lc-vert-100);
+  color: var(--lc-vert-700);
+}
+
+.avatar[data-tone='or'] {
+  background: var(--lc-or-100);
+  color: var(--lc-or-800);
+}
+
+.avatar[data-tone='neutre'] {
+  background: var(--lc-neutral-100);
+  color: var(--lc-neutral-700);
+}

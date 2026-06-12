@@ -1,0 +1,125 @@
+.wizard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.progress {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-subtle);
+  padding: var(--space-md) var(--space-lg);
+}
+
+.stepLabel {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-body-lg);
+  color: var(--color-accent);
+  margin-bottom: var(--space-sm);
+}
+
+.stepList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.stepItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.stepBullet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border-strong);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.stepItem[data-state='current'] .stepBullet {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-on-action);
+}
+
+.stepItem[data-state='done'] .stepBullet {
+  border-color: var(--color-progress-strong);
+  background: var(--color-progress-soft);
+  color: var(--color-progress-strong);
+}
+
+.stepName {
+  font-size: var(--text-body);
+  color: var(--color-text-secondary);
+}
+
+.stepItem[data-state='current'] .stepName {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .layout:has(.summary) {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+}
+
+.content {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-subtle);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.summary {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-subtle);
+  padding: var(--space-lg);
+  position: sticky;
+  top: var(--space-md);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.footerLeft,
+.footerRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.disabledReason {
+  font-size: var(--text-body);
+  color: var(--color-text-secondary);
+}

@@ -1,0 +1,147 @@
+/* Global resets + base — EHPAD surface (apaisée). Tokens come from theme/tokens.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-body-lg); /* 18px primary reading size for this audience */
+  line-height: var(--lh-body);
+  color: var(--color-text-primary);
+  background: var(--color-canvas);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+p,
+h1,
+h2,
+h3,
+h4 {
+  overflow-wrap: break-word;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  line-height: var(--lh-heading);
+}
+
+/* Hiérarchie façon app coach : grands titres (h1/h2 — titres de page, de section,
+   de modale) en Oswald 700 ; sous-titres h3/h4 en 600. Les libellés UPPERCASE
+   gardent leur 600 explicite dans leurs propres règles. */
+h1,
+h2 {
+  font-weight: var(--weight-bold);
+}
+
+/* Gras du corps de texte → Inter 700 réel (le poids 700 est désormais chargé,
+   plus de faux-gras synthétisé). */
+b,
+strong {
+  font-weight: var(--weight-bold);
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+/* Focus is always visible — 2px blue ring at 2px offset, everywhere. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: var(--color-info-soft);
+}
+
+/* Screen-reader-only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip link — first in tab order, visible on focus */
+.skip-link {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  z-index: 100;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface);
+  color: var(--color-accent);
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: var(--ls-normal);
+  font-size: var(--text-body-sm);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* Unit-type calendar coding — derived from the brand ramps (no raw hex).
+   Always paired with a text label + legend; never colour alone. */
+:root {
+  --unit-uc-bg: var(--lc-bleu-50);
+  --unit-uc-edge: var(--lc-bleu-600);
+  --unit-uc-text: var(--lc-bleu-800);
+  --unit-up-bg: var(--lc-vert-50);
+  --unit-up-edge: var(--lc-vert-600);
+  --unit-up-text: var(--lc-vert-800);
+  --unit-aidants-bg: var(--lc-or-50);
+  --unit-aidants-edge: var(--lc-or-600);
+  --unit-aidants-text: var(--lc-or-800);
+  --unit-soignants-bg: var(--lc-bleu-100);
+  --unit-soignants-edge: var(--lc-bleu-400);
+  --unit-soignants-text: var(--lc-bleu-900);
+  --unit-autre-bg: var(--lc-neutral-100);
+  --unit-autre-edge: var(--lc-neutral-500);
+  --unit-autre-text: var(--lc-neutral-800);
+}

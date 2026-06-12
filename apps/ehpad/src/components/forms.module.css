@@ -1,0 +1,229 @@
+/* Styles partagés des champs — dosage EHPAD : 18px, conteneurs ≥ 52px. */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  max-width: 100%;
+}
+
+.label {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--ls-normal);
+  color: var(--color-text-primary);
+}
+
+.required {
+  font-family: var(--font-body);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+
+.helper {
+  font-size: var(--text-body);
+  color: var(--color-text-secondary);
+}
+
+.control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 52px;
+  width: 100%;
+  padding: 0 var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-body-lg);
+  color: var(--color-text-primary);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.control:has(:focus-visible),
+select.control:focus-visible,
+button.control:focus-visible {
+  border-color: var(--color-border-strong);
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.control[data-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.control[data-readonly='true'] {
+  background: var(--color-canvas);
+  border-color: transparent;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}
+
+.input:focus {
+  outline: none; /* l'anneau de focus vit sur .control (focus-within) */
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+textarea.input {
+  padding: var(--space-md) 0;
+  resize: vertical;
+  min-height: 96px;
+  line-height: var(--lh-body);
+}
+
+.affixButton {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  border: 0;
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.leadingIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.errorMsg {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--color-danger);
+  font-size: var(--text-body);
+}
+
+.errorIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+/* select natif */
+select.control {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--color-text-secondary) 50%),
+    linear-gradient(135deg, var(--color-text-secondary) 50%, transparent 50%);
+  background-position:
+    calc(100% - 22px) 50%,
+    calc(100% - 16px) 50%;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: var(--space-2xl);
+  cursor: pointer;
+}
+
+/* groupes radio / cases */
+.fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.legend {
+  composes: label;
+  padding: 0;
+  margin-bottom: var(--space-xs);
+}
+
+.choiceRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  min-height: var(--touch-target-min);
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.choiceRow:hover {
+  background: var(--lc-neutral-100);
+}
+
+.choiceRow:has(:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.choiceCard {
+  composes: choiceRow;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  padding: var(--space-md);
+  align-items: center;
+}
+
+.choiceCard[data-checked='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-info-soft);
+}
+
+.choiceLabel {
+  font-size: var(--text-body-lg);
+  line-height: var(--lh-body);
+}
+
+.choiceHelper {
+  display: block;
+  font-size: var(--text-body);
+  color: var(--color-text-secondary);
+}
+
+/* contrôle visuel ≥ 24px ; la rangée entière est la cible */
+.box {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-border-strong);
+  border-radius: 7px;
+  background: var(--color-surface);
+  color: transparent;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.round {
+  border-radius: 50%;
+}
+
+input:checked + .box {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-action);
+}
+
+.srInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}

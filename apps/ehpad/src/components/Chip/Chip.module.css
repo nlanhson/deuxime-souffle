@@ -1,0 +1,56 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: var(--ls-normal);
+  /* On laisse les libellés longs (ex. « Coordinateur·rice d'animation ») passer à la
+     ligne plutôt que déborder l'écran en 320px ; les puces courtes tiennent sur une ligne. */
+  overflow-wrap: anywhere;
+}
+
+.icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentcolor;
+  flex-shrink: 0;
+}
+
+.chip[data-variant='info'] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-surface);
+}
+
+.chip[data-variant='progress'] {
+  background: var(--color-progress-soft);
+  color: var(--lc-vert-700);
+}
+
+.chip[data-variant='warning'] {
+  background: var(--color-warning-soft);
+  color: var(--lc-or-800);
+}
+
+.chip[data-variant='pending'] {
+  background: var(--color-canvas);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-secondary);
+}
+
+.chip[data-variant='neutral'] {
+  background: var(--lc-neutral-100);
+  color: var(--color-text-secondary);
+}

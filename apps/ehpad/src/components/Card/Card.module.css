@@ -1,0 +1,57 @@
+/* Carte minimale : surface blanche définie par un bord fin, pas d'ombre.
+   Calme par défaut — une carte d'information ne doit pas attirer l'œil. */
+.card {
+  display: block;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  color: inherit;
+  text-decoration: none;
+}
+
+.card[data-variant='inline'] {
+  border-radius: var(--radius-md);
+}
+
+/* Seules les cartes-liens prennent une couleur (affordance de clic). */
+.card[data-variant='interactive'] {
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.card[data-variant='interactive']:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--elevation-1);
+  transform: translateY(-1px);
+}
+
+.card[data-variant='interactive']:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.accent {
+  border-left: 4px solid var(--color-accent);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-md);
+}
+
+.sectionTitle {
+  font-size: var(--text-h3);
+  color: var(--color-text-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card[data-variant='interactive']:hover {
+    transform: none;
+  }
+}

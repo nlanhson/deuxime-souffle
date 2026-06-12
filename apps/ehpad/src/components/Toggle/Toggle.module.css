@@ -1,0 +1,27 @@
+.track {
+  width: 52px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-strong);
+  padding: 3px;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.track[data-on] {
+  background: var(--color-accent);
+}
+
+.knob {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  box-shadow: var(--elevation-1);
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.track[data-on] .knob {
+  transform: translateX(22px);
+}

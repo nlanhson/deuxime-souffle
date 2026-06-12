@@ -1,0 +1,100 @@
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+}
+
+.banner {
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-lg);
+}
+
+.icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.content {
+  flex: 1;
+  min-width: 200px;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-body);
+  margin-bottom: 2px;
+}
+
+.body {
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+}
+
+.action {
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* Mobile étroit : l'action passe sous le contenu et s'étire. Sinon le libellé Inter
+   (plus large que l'ancien Oswald condensé) + la rangée flex non sécable poussaient
+   la bannière hors de l'écran (défilement horizontal sur /factures et /contacts). */
+@media (max-width: 480px) {
+  .alert {
+    flex-wrap: wrap;
+  }
+
+  .content {
+    min-width: 0;
+  }
+
+  .action {
+    align-self: stretch;
+    flex-basis: 100%;
+  }
+}
+
+.alert[data-variant='info'] {
+  background: var(--color-info-soft);
+  border-color: var(--lc-bleu-200);
+  color: var(--lc-bleu-800);
+}
+
+.alert[data-variant='info'] .icon {
+  color: var(--color-accent);
+}
+
+.alert[data-variant='success'] {
+  background: var(--color-progress-soft);
+  border-color: var(--lc-vert-200);
+  color: var(--lc-vert-800);
+}
+
+.alert[data-variant='success'] .icon {
+  color: var(--color-progress-strong);
+}
+
+.alert[data-variant='warning'] {
+  background: var(--color-warning-soft);
+  border-color: var(--lc-or-200);
+  color: var(--lc-or-800);
+}
+
+.alert[data-variant='warning'] .icon {
+  color: var(--lc-or-700);
+}
+
+.alert[data-variant='danger'] {
+  background: var(--color-danger-soft);
+  border-color: var(--lc-rouge-200);
+  color: var(--color-danger);
+}
+
+.alert[data-variant='danger'] .icon {
+  color: var(--color-danger);
+}

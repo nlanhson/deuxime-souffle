@@ -1,0 +1,108 @@
+/* Carte d'accès rapide — surface blanche, bord fin, pastille d'icône colorée.
+   La couleur = signal de « cliquable ». Le reste de la page (cartes d'info)
+   reste neutre pour ne pas voler l'attention. */
+.card {
+  --ac-accent: var(--color-info);
+  --ac-soft: var(--lc-bleu-50);
+
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  width: 100%;
+  min-height: var(--touch-target-min);
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.card[data-tone='progress'] { --ac-accent: var(--color-progress-strong); --ac-soft: var(--lc-vert-50); }
+.card[data-tone='action']   { --ac-accent: var(--color-action);          --ac-soft: var(--lc-rouge-50); }
+.card[data-tone='reward']   { --ac-accent: var(--color-reward-strong);   --ac-soft: var(--lc-or-50); }
+
+.card:hover {
+  border-color: var(--ac-accent);
+  box-shadow: var(--elevation-1);
+  transform: translateY(-1px);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--ac-accent);
+  outline-offset: 2px;
+}
+
+.card:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+  border-color: var(--color-border-subtle);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--ac-soft);
+  color: var(--ac-accent);
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+  padding-top: 2px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.title {
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body);
+  color: var(--color-text-primary);
+}
+
+.description {
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Pastille de comptage — discrète, teintée de l'accent de la carte. */
+.badge {
+  flex-shrink: 0;
+  padding: 1px var(--space-sm);
+  border-radius: var(--radius-pill);
+  background: var(--ac-soft);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  color: var(--ac-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card:hover {
+    transform: none;
+  }
+}

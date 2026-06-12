@@ -1,0 +1,306 @@
+.cardGrid {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
+}
+
+.contractCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.reference {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-h3);
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-sm) var(--space-md);
+  margin: 0;
+}
+
+.fieldGrid dt {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: var(--ls-normal);
+  color: var(--color-text-secondary);
+  margin-bottom: 2px;
+}
+
+.fieldGrid dd {
+  margin: 0;
+  font-size: var(--text-body);
+}
+
+.cardActions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.filterRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+/* ---- détail ---- */
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.coachRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+}
+
+.coachRow + .coachRow {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.coachName {
+  flex: 1;
+  min-width: 0;
+}
+
+.coachHint {
+  display: block;
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+
+.historyList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.historyItem {
+  padding: var(--space-sm) 0;
+}
+
+.historyItem + .historyItem {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.historyMeta {
+  display: block;
+  font-size: var(--text-body-sm);
+  color: var(--color-text-muted);
+}
+
+/* ---- wizard étape 2 : grille des demi-journées ---- */
+
+.exGrid {
+  display: grid;
+  grid-template-columns: 110px repeat(7, minmax(64px, 1fr));
+  gap: var(--space-xs);
+  align-items: stretch;
+  overflow-x: auto;
+  padding-bottom: var(--space-xs);
+}
+
+.exHead {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: var(--ls-normal);
+  color: var(--color-text-secondary);
+  text-align: center;
+  align-self: end;
+  padding-bottom: var(--space-xs);
+}
+
+.exRowLabel {
+  composes: exHead;
+  text-align: left;
+  align-self: center;
+  padding-bottom: 0;
+}
+
+.exCell {
+  min-height: var(--touch-target-min);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: var(--text-body-sm);
+  color: var(--color-progress-strong);
+  cursor: pointer;
+}
+
+.exCell[aria-pressed='true'] {
+  background: var(--lc-neutral-100);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+}
+
+.presetRow {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.periodRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  padding: var(--space-sm) 0;
+}
+
+.periodRow + .periodRow {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.periodForm {
+  display: grid;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-canvas);
+}
+
+.summaryList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  font-size: var(--text-body);
+}
+
+.summaryList dt,
+.summaryLabel {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: var(--ls-normal);
+  color: var(--color-text-secondary);
+}
+
+.summaryTitle {
+  font-size: var(--text-subheading);
+  margin-bottom: var(--space-sm);
+}
+
+/* ---- créneaux suggérés ---- */
+
+.slotCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  flex-wrap: wrap;
+}
+
+.slotCard[data-selected='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-info-soft);
+}
+
+.slotWhen {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-subheading);
+  min-width: 180px;
+}
+
+.slotReason {
+  flex: 1;
+  color: var(--color-text-secondary);
+  min-width: 200px;
+}
+
+.slotActions {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ---- renouvellement ---- */
+
+.compareGrid {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
+  align-items: start;
+}
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.timelineItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.sessionPreview {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  color: var(--color-text-secondary);
+}
+
+/* ---- non-reconduction ---- */
+
+.nrCard {
+  max-width: 720px;
+}
+
+.nrActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+  align-items: stretch;
+  max-width: 480px;
+}
+
+.consequences {
+  margin: 0;
+  padding-left: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}

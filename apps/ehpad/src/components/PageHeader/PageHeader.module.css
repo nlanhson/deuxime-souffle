@@ -1,0 +1,63 @@
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.crumbs ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.crumbs li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-body);
+}
+
+.crumbs a {
+  color: var(--color-accent);
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target-min);
+}
+
+.crumbs span {
+  color: var(--color-text-secondary);
+}
+
+.sep {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: clamp(var(--text-h2), 4vw, var(--text-h1));
+  color: var(--color-text-primary);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.intro {
+  color: var(--color-text-secondary);
+  max-width: 64ch;
+}

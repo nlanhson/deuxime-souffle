@@ -1,0 +1,645 @@
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.navBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.navBtn:hover {
+  color: var(--color-text-primary);
+}
+
+.periodLabel {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-subheading);
+  min-width: 12ch;
+  text-align: center;
+}
+
+.todayBtn {
+  min-height: var(--touch-target-min);
+  padding: 0 var(--space-md);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--ls-normal); /* casse normale (règle de marque : pas de capitales) */
+  cursor: pointer;
+}
+
+.todayBtn:hover {
+  background: var(--lc-neutral-100);
+}
+
+/* ---- vue Mois ---- */
+
+/* Grille « planning » : lignes nettes (les interstices de 1px laissent voir le
+   fond gris), cases blanches et aérées, façon tableau d'horaires. */
+.monthGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--color-border-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.weekdayHeader {
+  background: var(--color-surface);
+  text-align: center;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: var(--ls-normal);
+  color: var(--color-text-muted);
+  padding: var(--space-sm) 0;
+}
+
+.dayCell {
+  background: var(--color-surface);
+  min-height: 124px;
+  padding: var(--space-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dayCell[data-outside] {
+  background: var(--lc-neutral-50);
+}
+
+.dayNumber {
+  align-self: flex-start;
+  font-size: var(--text-body-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding: 2px 4px;
+}
+
+.dayCell[data-outside] .dayNumber {
+  color: var(--color-text-muted);
+}
+
+/* Aujourd'hui : pastille ronde autour du numéro, dégradé rouge→braise du
+   CTA primaire (au lieu d'un bloc de couleur sur toute la case). */
+.dayCell[data-today] .dayNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--gradient-cta);
+  color: var(--color-on-action);
+}
+
+/* ---- séance (vue Mois) — pastille sur une seule ligne, façon Google Agenda :
+   point d'unité (saturé) + heure + coach. Remplissage doux de l'unité, texte
+   foncé accessible (paires bg/text AAA du design system). La couleur n'est
+   jamais seule : doublée par le point ET la légende (toujours affichée).
+   « Prochaine » = liseré + point rouge (le mot reste dans l'aria-label). ---- */
+.mEvent {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: 22px;
+  padding: 2px 7px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: filter var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.mEvent:hover {
+  filter: brightness(0.97);
+}
+
+.mEvent:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* Prochaine : liseré rouge (≠ accent bleu, ≠ teintes d'unité). */
+.mEvent[data-next] {
+  border-color: var(--color-action);
+}
+
+/* Remplissage doux de l'unité + texte foncé accessible (paires bg/text). */
+.mEvent[data-tone='uc'] { background: var(--unit-uc-bg); color: var(--unit-uc-text); }
+.mEvent[data-tone='up'] { background: var(--unit-up-bg); color: var(--unit-up-text); }
+.mEvent[data-tone='aidants'] { background: var(--unit-aidants-bg); color: var(--unit-aidants-text); }
+.mEvent[data-tone='soignants'] { background: var(--unit-soignants-bg); color: var(--unit-soignants-text); }
+.mEvent[data-tone='autre'] { background: var(--unit-autre-bg); color: var(--unit-autre-text); }
+
+/* Point d'unité saturé — différencie les teintes douces d'un coup d'œil (décoratif). */
+.mDot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-border-strong);
+}
+.mEvent[data-tone='uc'] .mDot { background: var(--unit-uc-edge); }
+.mEvent[data-tone='up'] .mDot { background: var(--unit-up-edge); }
+.mEvent[data-tone='aidants'] .mDot { background: var(--unit-aidants-edge); }
+.mEvent[data-tone='soignants'] .mDot { background: var(--unit-soignants-edge); }
+.mEvent[data-tone='autre'] .mDot { background: var(--unit-autre-edge); }
+
+.mTime {
+  flex: 0 0 auto;
+  font-weight: 600;
+  font-size: 12px;
+  color: inherit;
+}
+
+.mCoach {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  color: inherit;
+  opacity: 0.9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Point « prochaine séance » en fin de ligne (rouge). */
+.nextDot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-action);
+}
+
+/* « + » d'ajout par case (jour planifiable) — discret, révélé au survol/focus,
+   poussé en bas de la case comme dans un planning. */
+.addBtn {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-border-strong);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+/* Plus marqué au survol de la case ou au focus clavier. */
+.dayCell:hover .addBtn,
+.addBtn:focus-visible {
+  color: var(--color-text-secondary);
+}
+
+.addBtn:hover {
+  background: var(--lc-neutral-100);
+  color: var(--color-text-primary);
+}
+
+.addBtn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---- événements (couleurs par unité, identiques dans les trois vues) ---- */
+
+.event {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border-left: 4px solid;
+  font-size: 13px;
+  text-decoration: none;
+  min-height: 28px;
+}
+
+.event[data-tone='uc'],
+.listRow[data-tone='uc'] {
+  background: var(--unit-uc-bg);
+  border-color: var(--unit-uc-edge);
+  color: var(--unit-uc-text);
+}
+
+.event[data-tone='up'],
+.listRow[data-tone='up'] {
+  background: var(--unit-up-bg);
+  border-color: var(--unit-up-edge);
+  color: var(--unit-up-text);
+}
+
+.event[data-tone='aidants'],
+.listRow[data-tone='aidants'] {
+  background: var(--unit-aidants-bg);
+  border-color: var(--unit-aidants-edge);
+  color: var(--unit-aidants-text);
+}
+
+.event[data-tone='soignants'],
+.listRow[data-tone='soignants'] {
+  background: var(--unit-soignants-bg);
+  border-color: var(--unit-soignants-edge);
+  color: var(--unit-soignants-text);
+}
+
+.event[data-tone='autre'],
+.listRow[data-tone='autre'] {
+  background: var(--unit-autre-bg);
+  border-color: var(--unit-autre-edge);
+  color: var(--unit-autre-text);
+}
+
+.event:hover,
+.listRow:hover {
+  filter: brightness(0.97);
+}
+
+.event[data-next] {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.nextBadge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-on-action);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: var(--ls-normal);
+}
+
+.eventTime {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.eventCoach {
+  font-size: var(--text-body-sm);
+}
+
+.eventUnit {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: var(--ls-normal);
+}
+
+.moreBtn {
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font-size: 13px;
+  text-align: left;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  min-height: 28px;
+}
+
+/* ---- vue Semaine — grille horaire type planning ---- */
+
+.weekTime {
+  overflow-x: auto;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.wtInner {
+  --wt-gutter: 60px;
+  min-width: 760px;
+}
+
+/* En-tête des jours (aligné colonne par colonne avec le corps). */
+.wtHeadRow {
+  display: grid;
+  grid-template-columns: var(--wt-gutter) repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.wtCorner {
+  border-right: 1px solid var(--color-border-subtle);
+}
+
+.wtDayHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--space-sm) 0;
+  border-left: 1px solid var(--color-border-subtle);
+}
+
+.wtDayName {
+  font-size: var(--text-body-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.wtDayNum {
+  font-size: var(--text-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.wtDayHead[data-today] .wtDayName,
+.wtDayHead[data-today] .wtDayNum {
+  color: var(--color-accent);
+}
+
+/* Corps : gouttière des heures + 7 colonnes-jour (hauteur fixée en ligne). */
+.wtBody {
+  display: grid;
+  grid-template-columns: var(--wt-gutter) repeat(7, minmax(0, 1fr));
+  position: relative;
+}
+
+.wtGutter {
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border-subtle);
+}
+
+.wtHour {
+  position: relative;
+}
+
+.wtHourLabel {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  padding: 0 2px;
+}
+
+.wtCol {
+  position: relative;
+  border-left: 1px solid var(--color-border-subtle);
+  /* lignes horaires : 1 trait par heure (taille fournie en ligne) */
+  background-image: linear-gradient(
+    to bottom,
+    var(--color-border-subtle) 0,
+    var(--color-border-subtle) 1px,
+    transparent 1px
+  );
+  background-repeat: repeat-y;
+}
+
+.wtCol[data-today] {
+  background-color: var(--color-info-soft);
+}
+
+/* Bloc de séance positionné par l'heure (haut) et la durée (hauteur). */
+.wtEvent {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-border-strong);
+  text-decoration: none;
+  transition: filter var(--duration-fast) var(--ease-standard);
+}
+
+.wtEvent:hover {
+  filter: brightness(0.97);
+}
+
+.wtEvent:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.wtEvent[data-tone='uc'] {
+  background: var(--unit-uc-bg);
+  border-left-color: var(--unit-uc-edge);
+  color: var(--unit-uc-text);
+}
+.wtEvent[data-tone='up'] {
+  background: var(--unit-up-bg);
+  border-left-color: var(--unit-up-edge);
+  color: var(--unit-up-text);
+}
+.wtEvent[data-tone='aidants'] {
+  background: var(--unit-aidants-bg);
+  border-left-color: var(--unit-aidants-edge);
+  color: var(--unit-aidants-text);
+}
+.wtEvent[data-tone='soignants'] {
+  background: var(--unit-soignants-bg);
+  border-left-color: var(--unit-soignants-edge);
+  color: var(--unit-soignants-text);
+}
+.wtEvent[data-tone='autre'] {
+  background: var(--unit-autre-bg);
+  border-left-color: var(--unit-autre-edge);
+  color: var(--unit-autre-text);
+}
+
+.wtEvent[data-next] {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+}
+
+.wtEventTitle {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wtEventMeta {
+  font-size: 11px;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Trait « maintenant » (rouge de marque) sur la colonne du jour. */
+.wtNow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px solid var(--color-action);
+  z-index: 1;
+}
+
+.wtNowDot {
+  position: absolute;
+  left: -3px;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-action);
+}
+
+/* ---- vue Liste ---- */
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.listRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  min-height: 56px;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border-left: 4px solid;
+  text-decoration: none;
+}
+
+.listDate {
+  font-weight: 600;
+  min-width: 220px;
+}
+
+.listTrailing {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.listEmpty {
+  color: var(--color-text-secondary);
+  padding: var(--space-lg);
+  text-align: center;
+}
+
+/* ---- légende (obligatoire — la couleur n'est jamais seule) ---- */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+
+.legendTitle {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: var(--ls-normal);
+  font-size: 12px;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid;
+}
+
+.legendItem[data-tone='uc'] .legendDot {
+  background: var(--unit-uc-bg);
+  border-color: var(--unit-uc-edge);
+}
+
+.legendItem[data-tone='up'] .legendDot {
+  background: var(--unit-up-bg);
+  border-color: var(--unit-up-edge);
+}
+
+.legendItem[data-tone='aidants'] .legendDot {
+  background: var(--unit-aidants-bg);
+  border-color: var(--unit-aidants-edge);
+}
+
+.legendItem[data-tone='soignants'] .legendDot {
+  background: var(--unit-soignants-bg);
+  border-color: var(--unit-soignants-edge);
+}
+
+.legendItem[data-tone='autre'] .legendDot {
+  background: var(--unit-autre-bg);
+  border-color: var(--unit-autre-edge);
+}
+
+@media (max-width: 719px) {
+  .dayCell {
+    min-height: 72px;
+    padding: 2px;
+  }
+
+  /* le libellé d'unité reste visible (la couleur n'est jamais le seul signal) */
+  .event {
+    padding: 3px 4px;
+    font-size: 11px;
+    border-left-width: 3px;
+  }
+
+  .listDate {
+    min-width: 0;
+    width: 100%;
+  }
+}
