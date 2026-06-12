@@ -8,14 +8,20 @@
   padding: var(--space-2xl) var(--space-lg);
 }
 
+/* Puits teinté derrière l'icône : un moment de marque calme au lieu du
+   pictogramme gris générique flottant. */
 .icon {
-  width: 44px;
-  height: 44px;
-  color: var(--color-text-muted);
+  width: 64px;
+  height: 64px;
+  padding: var(--space-md);
+  border-radius: 50%;
+  background: var(--lc-bleu-50);
+  color: var(--color-accent);
   margin-bottom: var(--space-xs);
 }
 
 .empty[data-variant='error'] .icon {
+  background: var(--color-danger-soft);
   color: var(--color-danger);
 }
 

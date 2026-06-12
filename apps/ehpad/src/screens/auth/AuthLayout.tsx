@@ -16,16 +16,22 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
   return (
     <div className={styles.page}>
       <main className={styles.card}>
-        <Logo size={48} />
-        <p className={styles.brand}>
-          {fr.app.name}
-          <span className={styles.brandSub}>{fr.app.space}</span>
-        </p>
-        <h1 className={styles.title}>{title}</h1>
-        {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+        <div className={styles.lockup}>
+          <Logo size={48} />
+          <p className={styles.brand}>
+            {fr.app.name}
+            <span className={styles.brandSub}>{fr.app.space}</span>
+          </p>
+        </div>
+        <div className={styles.heading}>
+          <h1 className={styles.title}>{title}</h1>
+          {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+        </div>
         {children}
-        <LanguageSwitcher tone="auth" />
       </main>
+      {/* Hors de la carte : la bascule de langue reste après le contenu principal
+          dans l'ordre de tabulation, posée sur le papier sous la carte. */}
+      <LanguageSwitcher tone="auth" />
     </div>
   );
 }

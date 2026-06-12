@@ -11,6 +11,7 @@ import {
   Avatar,
   Button,
   ButtonLink,
+  Card,
   CardSection,
   EmptyState,
   InlineAlert,
@@ -24,6 +25,7 @@ import {
   Textarea,
 } from '@/components';
 import type { Evaluation } from '@/types/models';
+import styles from './evaluations.module.css';
 
 type Impression = Evaluation['impression'];
 
@@ -58,9 +60,10 @@ export default function EvaluateScreen() {
       <>
         <PageHeader title={fr.evaluations.form.title} crumbs={crumbs} />
         <SkeletonGroup>
-          <Skeleton height={96} radius="var(--radius-xl)" />
-          <div style={{ height: 'var(--space-md)' }} />
-          <Skeleton height={320} radius="var(--radius-xl)" />
+          <div className={styles.skeletonStack}>
+            <Skeleton height={64} radius="var(--radius-lg)" />
+            <Skeleton height={320} radius="var(--radius-lg)" />
+          </div>
         </SkeletonGroup>
       </>
     );
@@ -91,25 +94,24 @@ export default function EvaluateScreen() {
 
   const coach = state.data?.coaches.find((c) => c.id === session.coachId);
 
+  // Rappel compact (une ligne) : la carte d'évaluation reste le héros de l'écran.
   const sessionInfo = (
-    <CardSection title={fr.evaluations.form.sessionInfo}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
-        <p style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 'var(--text-subheading)' }}>
+    <section className={styles.recap} aria-label={fr.evaluations.form.sessionInfo}>
+      <div className={styles.recapRow}>
+        {coach && <Avatar firstName={coach.firstName} lastName={coach.lastName} size="sm" decorative />}
+        <p className={styles.recapDate}>
           {capitalize(formatWeekdayDate(session.date))} · {formatTime(session.time)}
         </p>
         {coach && (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-            <Avatar firstName={coach.firstName} lastName={coach.lastName} size="sm" decorative />
+          <span className={styles.recapCoach}>
             {coach.firstName} {coach.lastName}
           </span>
         )}
       </div>
       {session.isFirstTogether && (
-        <div style={{ marginTop: 'var(--space-sm)' }}>
-          <InlineAlert variant="success" title={fr.sessions.detail.firstTogether} />
-        </div>
+        <InlineAlert variant="success" title={fr.sessions.detail.firstTogether} />
       )}
-    </CardSection>
+    </section>
   );
 
   // Déjà évaluée → lecture seule de l'évaluation envoyée
@@ -120,11 +122,11 @@ export default function EvaluateScreen() {
         {sessionInfo}
         <InlineAlert variant="info" title={fr.evaluations.form.alreadyDone} />
         <CardSection title={fr.sessions.detail.evaluationTitle}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+          <div className={styles.stackSm}>
             <RatingDisplay value={session.evaluation.stars} />
             <p>{fr.evaluations.form.impressions[session.evaluation.impression]}</p>
             {session.evaluation.comment && <p>« {session.evaluation.comment} »</p>}
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-body-sm)' }}>
+            <p className={styles.metaText}>
               {fr.evaluations.form.submittedOn(
                 formatTimestamp(session.evaluation.submittedAt),
                 session.evaluation.submittedBy,
@@ -184,11 +186,9 @@ export default function EvaluateScreen() {
       {sessionInfo}
       {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
 
-      <CardSection title={fr.evaluations.form.starsLabel}>
+      {/* Une seule carte : le flux « 3 gestes » se termine dans son contenant. */}
+      <Card className={styles.formCard}>
         <RatingInput legend={fr.evaluations.form.starsLabel} value={stars} onChange={setStars} />
-      </CardSection>
-
-      <CardSection title={fr.evaluations.form.impressionLabel}>
         <RadioGroup<Impression>
           legend={fr.evaluations.form.impressionLabel}
           value={impression}
@@ -201,32 +201,29 @@ export default function EvaluateScreen() {
             { value: 'a_ameliorer', label: fr.evaluations.form.impressions.a_ameliorer },
           ]}
         />
-        <div style={{ marginTop: 'var(--space-md)' }}>
-          <Textarea
-            label={fr.evaluations.form.commentLabel}
-            value={comment}
-            onChange={setComment}
-            helper={fr.evaluations.form.commentHelper}
-          />
+        <Textarea
+          label={fr.evaluations.form.commentLabel}
+          value={comment}
+          onChange={setComment}
+          helper={fr.evaluations.form.commentHelper}
+        />
+        <div className={styles.submitRow}>
+          <Button
+            variant="primary"
+            onClick={submit}
+            loading={busy}
+            disabled={missingReason !== null}
+            disabledReason={missingReason ?? undefined}
+          >
+            {fr.evaluations.form.submit}
+          </Button>
+          {missingReason && (
+            <p className={styles.submitHint} aria-live="polite">
+              {missingReason}
+            </p>
+          )}
         </div>
-      </CardSection>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
-        <Button
-          variant="primary"
-          onClick={submit}
-          loading={busy}
-          disabled={missingReason !== null}
-          disabledReason={missingReason ?? undefined}
-        >
-          {fr.evaluations.form.submit}
-        </Button>
-        {missingReason && (
-          <p style={{ color: 'var(--color-text-secondary)' }} aria-live="polite">
-            {missingReason}
-          </p>
-        )}
-      </div>
+      </Card>
     </>
   );
 }

@@ -1,12 +1,9 @@
-/* « Nous contacter » — panneau clair à deux colonnes (coordonnées DS à gauche,
- * formulaire à droite). Reprend la composition de la maquette mais sur la surface
- * claire EHPAD : carte blanche, jetons sémantiques par défaut, badges bleu marque,
- * CTA dégradé rouge→braise signature. */
+/* « Nous contacter » — en-tête de page standard (PageHeader), puis panneau
+ * blanc à deux colonnes : coordonnées DS à gauche, formulaire à droite.
+ * Carte plate posée sur le papier teinté, jetons sémantiques par défaut. */
 
 .panel {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border-subtle);
   background: var(--color-surface);
   color: var(--color-text-primary);
@@ -14,15 +11,15 @@
 
 .grid {
   display: grid;
-  gap: var(--space-2xl);
-  padding: var(--space-2xl);
+  gap: var(--space-xl);
+  padding: var(--space-xl);
 }
 
 @media (min-width: 860px) {
   .grid {
     grid-template-columns: 1fr 1fr;
     gap: 0;
-    padding: var(--space-3xl);
+    padding: var(--space-2xl);
   }
 }
 
@@ -35,31 +32,13 @@
 
 @media (min-width: 860px) {
   .info {
-    padding-right: var(--space-3xl);
+    padding-right: var(--space-2xl);
   }
-}
-
-.heading {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-weight: var(--weight-bold);
-  font-size: var(--text-h1);
-  line-height: var(--lh-heading);
-  letter-spacing: var(--ls-tight);
-  color: var(--color-text-primary);
-}
-
-.lede {
-  margin: 0;
-  max-width: 42ch;
-  font-size: var(--text-body-lg);
-  line-height: var(--lh-relaxed);
-  color: var(--color-text-secondary);
 }
 
 .methods {
   list-style: none;
-  margin: var(--space-sm) 0 0;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -92,7 +71,7 @@
 .methodText {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-xs);
   min-width: 0;
 }
 
@@ -102,21 +81,22 @@
   color: var(--color-text-primary);
 }
 
+/* Lien d'action : bleu = cliquable (règle maison) — l'info reste encre neutre. */
 .methodValue {
   font-size: var(--text-body);
-  color: var(--color-text-secondary);
+  color: var(--color-accent);
   text-decoration: none;
   width: fit-content;
 }
 
 .methodValue:hover {
-  color: var(--color-accent);
   text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .methodValue:focus-visible {
   outline: 2px solid var(--color-accent);
-  outline-offset: 3px;
+  outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
 
@@ -129,7 +109,7 @@
 
 @media (min-width: 860px) {
   .formCol {
-    padding-left: var(--space-3xl);
+    padding-left: var(--space-2xl);
     border-left: 1px solid var(--color-border-subtle);
   }
 }
@@ -140,18 +120,7 @@
   gap: var(--space-lg);
 }
 
-/* Étiquettes en casse normale (règle de marque : pas de capitales) — surcharge
- * locale du .label partagé qui passe en majuscules ailleurs dans l'app. */
-.form :global(label) {
-  text-transform: none;
-  letter-spacing: var(--ls-normal);
-}
-
-/* CTA pleine largeur, à l'image de la maquette. */
+/* Bouton d'envoi : largeur naturelle, aligné à gauche comme les autres formulaires. */
 .submit {
   margin-top: var(--space-sm);
-}
-
-.submit :global(button) {
-  width: 100%;
 }

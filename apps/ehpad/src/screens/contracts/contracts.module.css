@@ -20,8 +20,27 @@
 
 .reference {
   font-family: var(--font-heading);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   font-size: var(--text-h3);
+}
+
+/* Recette unique de libellé de champ — 14px/600, encre secondaire, casse normale.
+   (Remplace trois variantes 12px dupliquées.) */
+.summaryLabel,
+.fieldGrid dt,
+.summaryList dt,
+.exHead,
+.groupLabel {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--ls-normal);
+  color: var(--color-text-secondary);
+}
+
+/* Libellé qui coiffe un groupe de boutons (raccourcis, périodes types). */
+.groupLabel {
+  margin-bottom: var(--space-xs);
 }
 
 .fieldGrid {
@@ -32,17 +51,17 @@
 }
 
 .fieldGrid dt {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: var(--ls-normal);
-  color: var(--color-text-secondary);
-  margin-bottom: 2px;
+  margin-bottom: var(--space-xs);
 }
 
 .fieldGrid dd {
   margin: 0;
   font-size: var(--text-body);
+}
+
+/* Champ long (notes) : toute la largeur de la grille. */
+.fieldSpan {
+  grid-column: 1 / -1;
 }
 
 .cardActions {
@@ -60,6 +79,24 @@
   flex-wrap: wrap;
 }
 
+/* Rangée d'actions standard — boutons côte à côte, retour à la ligne permis. */
+.actionRow {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+/* Texte d'appoint en encre secondaire. */
+.muted {
+  color: var(--color-text-secondary);
+}
+
+/* Chapeau secondaire qui introduit un bloc. */
+.mutedLead {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-md);
+}
+
 /* ---- détail ---- */
 
 .detailGrid {
@@ -67,6 +104,11 @@
   grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
   gap: var(--space-lg);
   align-items: start;
+}
+
+/* Le résumé mène : pleine largeur au-dessus des autres sections. */
+.detailGrid > :first-child {
+  grid-column: 1 / -1;
 }
 
 .coachRow {
@@ -91,6 +133,13 @@
   color: var(--color-text-secondary);
 }
 
+/* Moyenne du contrat, séparée de la liste des coachs par un filet. */
+.ratingDivider {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
 .historyList {
   list-style: none;
   margin: 0;
@@ -111,6 +160,67 @@
   color: var(--color-text-muted);
 }
 
+/* ---- formulaires du wizard ---- */
+
+.unitsFieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+/* Légende alignée sur les libellés de formulaire partagés : 16px/600, casse normale. */
+.formLegend {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body);
+  letter-spacing: var(--ls-normal);
+  color: var(--color-text-primary);
+  padding: 0;
+  margin-bottom: var(--space-xs);
+}
+
+.legendHint {
+  font-family: var(--font-body);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+
+.otherUnitField {
+  margin-top: var(--space-sm);
+  max-width: 420px;
+}
+
+/* Deux champs date côte à côte, empilés sur écran étroit. */
+.dateGrid {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.formStack {
+  display: grid;
+  gap: var(--space-md);
+}
+
+/* Titre de bloc + badge sur la même ligne (édition de contrat). */
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.titleRow .summaryTitle {
+  margin-bottom: 0;
+}
+
+.majorSection {
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: var(--space-lg);
+}
+
 /* ---- wizard étape 2 : grille des demi-journées ---- */
 
 .exGrid {
@@ -123,14 +233,14 @@
 }
 
 .exHead {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: var(--ls-normal);
-  color: var(--color-text-secondary);
   text-align: center;
   align-self: end;
   padding-bottom: var(--space-xs);
+}
+
+/* Rangée logique de la grille : le conteneur s'efface, ses cellules se placent. */
+.exRowGroup {
+  display: contents;
 }
 
 .exRowLabel {
@@ -151,7 +261,7 @@
 }
 
 .exCell[aria-pressed='true'] {
-  background: var(--lc-neutral-100);
+  background: var(--color-surface-hover);
   border-color: var(--color-border-strong);
   color: var(--color-text-secondary);
   text-decoration: line-through;
@@ -176,6 +286,12 @@
   border-top: 1px solid var(--color-border-subtle);
 }
 
+/* Actions inline d'une période (modifier / supprimer). */
+.rowActions {
+  display: inline-flex;
+  gap: var(--space-xs);
+}
+
 .periodForm {
   display: grid;
   gap: var(--space-md);
@@ -195,17 +311,20 @@
   font-size: var(--text-body);
 }
 
-.summaryList dt,
-.summaryLabel {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: var(--ls-normal);
-  color: var(--color-text-secondary);
+.summaryList dd {
+  margin: 0;
 }
 
 .summaryTitle {
   font-size: var(--text-subheading);
+  margin-bottom: var(--space-sm);
+}
+
+/* Titre du récapitulatif latéral — il soutient l'étape, il ne rivalise pas. */
+.asideTitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
   margin-bottom: var(--space-sm);
 }
 
@@ -217,19 +336,19 @@
   gap: var(--space-md);
   padding: var(--space-md);
   border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--color-surface);
   flex-wrap: wrap;
 }
 
 .slotCard[data-selected='true'] {
   border-color: var(--color-accent);
-  background: var(--color-info-soft);
+  background: var(--color-selected-soft);
 }
 
 .slotWhen {
   font-family: var(--font-heading);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   font-size: var(--text-subheading);
   min-width: 180px;
 }
@@ -254,6 +373,12 @@
   gap: var(--space-lg);
   grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
   align-items: start;
+}
+
+/* La proposition porte l'accent (équivalent de la prop accent de Card) ;
+   le contrat actuel reste neutre et recule sur le canevas teinté. */
+.compareGrid > :last-child {
+  border-left: 4px solid var(--color-accent);
 }
 
 .timeline {
@@ -284,7 +409,8 @@
 
 /* ---- non-reconduction ---- */
 
-.nrCard {
+/* La carte entière tient dans la largeur de lecture (720px). */
+.nrWrap {
   max-width: 720px;
 }
 
@@ -303,4 +429,51 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+}
+
+/* ---- remplacement des styles inline (espacement et squelettes) ---- */
+
+/* Sous-bloc détaché du contenu qui précède (barre de progression, aperçus…). */
+.subBlock {
+  margin-top: var(--space-md);
+}
+
+/* Note ou lien d'appoint, légèrement détaché du bloc précédent. */
+.subNote {
+  margin-top: var(--space-sm);
+}
+
+/* Chapeau en encre normale, détaché du bloc qu'il introduit. */
+.lead {
+  margin-bottom: var(--space-md);
+}
+
+/* Intro secondaire serrée contre la liste qu'elle annonce. */
+.mutedIntro {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-sm);
+}
+
+/* Liste des conséquences détachée du texte et de la case à cocher.
+   (Défini après .consequences pour primer sur son margin: 0.) */
+.consequencesSpaced {
+  margin: var(--space-md) 0;
+}
+
+/* Actions d'une bannière (reprendre / ignorer le brouillon). */
+.bannerActions {
+  display: inline-flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+/* Pile de squelettes pendant le chargement. */
+.skeletonStack {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+/* Respiration entre deux squelettes. */
+.skeletonGap {
+  height: var(--space-md);
 }

@@ -105,91 +105,100 @@ export default function ActivateScreen() {
   return (
     <AuthLayout title={fr.auth.activate.title} subtitle={fr.auth.activate.subtitle}>
       {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
-      <form className={styles.form} onSubmit={submit} noValidate>
-        <TextField
-          label={fr.auth.activate.firstName}
-          value={firstName}
-          onChange={(v) => {
-            setFirstName(v);
-            if (errors.firstName) setError('firstName', null);
-          }}
-          onBlur={() => setError('firstName', firstName.trim() ? null : fr.common.requiredField)}
-          error={errors.firstName ?? null}
-          required
-          autoComplete="given-name"
-        />
-        <TextField
-          label={fr.auth.activate.lastName}
-          value={lastName}
-          onChange={(v) => {
-            setLastName(v);
-            if (errors.lastName) setError('lastName', null);
-          }}
-          onBlur={() => setError('lastName', lastName.trim() ? null : fr.common.requiredField)}
-          error={errors.lastName ?? null}
-          required
-          autoComplete="family-name"
-        />
-        <TextField
-          label={fr.auth.activate.phone}
-          type="tel"
-          value={phone}
-          onChange={(v) => {
-            setPhone(v);
-            if (errors.phone) setError('phone', null);
-          }}
-          onBlur={() => setError('phone', phone.trim() ? null : fr.common.requiredField)}
-          error={errors.phone ?? null}
-          required
-          autoComplete="tel"
-          inputMode="tel"
-        />
-        <TextField
-          label={fr.auth.login.email}
-          type="email"
-          value={check.data.email ?? ''}
-          onChange={() => undefined}
-          readOnly
-          helper={fr.auth.activate.emailHelper}
-        />
-        <TextField
-          label={fr.auth.activate.rolesLabel}
-          value={(check.data.roleLabels ?? []).join(', ')}
-          onChange={() => undefined}
-          readOnly
-          helper={fr.auth.activate.emailHelper}
-        />
-        <TextField
-          label={fr.auth.activate.password}
-          type="password"
-          value={password}
-          onChange={(v) => {
-            setPassword(v);
-            if (errors.password) setError('password', null);
-          }}
-          onBlur={() =>
-            setError('password', passwordValid(password) ? null : fr.auth.passwordRules.notMet)
-          }
-          error={errors.password ?? null}
-          required
-          autoComplete="new-password"
-        />
-        <PasswordRules password={password} />
-        <TextField
-          label={fr.auth.activate.passwordConfirm}
-          type="password"
-          value={confirm}
-          onChange={(v) => {
-            setConfirm(v);
-            if (errors.confirm) setError('confirm', null);
-          }}
-          onBlur={() =>
-            setError('confirm', confirm === password ? null : fr.auth.passwordRules.mismatch)
-          }
-          error={errors.confirm ?? null}
-          required
-          autoComplete="new-password"
-        />
+      <form className={`${styles.form} ${styles.formGrouped}`} onSubmit={submit} noValidate>
+        {/* Groupe 1 — identité */}
+        <div className={styles.fieldGroup}>
+          <TextField
+            label={fr.auth.activate.firstName}
+            value={firstName}
+            onChange={(v) => {
+              setFirstName(v);
+              if (errors.firstName) setError('firstName', null);
+            }}
+            onBlur={() => setError('firstName', firstName.trim() ? null : fr.common.requiredField)}
+            error={errors.firstName ?? null}
+            required
+            autoComplete="given-name"
+          />
+          <TextField
+            label={fr.auth.activate.lastName}
+            value={lastName}
+            onChange={(v) => {
+              setLastName(v);
+              if (errors.lastName) setError('lastName', null);
+            }}
+            onBlur={() => setError('lastName', lastName.trim() ? null : fr.common.requiredField)}
+            error={errors.lastName ?? null}
+            required
+            autoComplete="family-name"
+          />
+          <TextField
+            label={fr.auth.activate.phone}
+            type="tel"
+            value={phone}
+            onChange={(v) => {
+              setPhone(v);
+              if (errors.phone) setError('phone', null);
+            }}
+            onBlur={() => setError('phone', phone.trim() ? null : fr.common.requiredField)}
+            error={errors.phone ?? null}
+            required
+            autoComplete="tel"
+            inputMode="tel"
+          />
+        </div>
+        {/* Groupe 2 — informations d'invitation (lecture seule) */}
+        <div className={styles.fieldGroup}>
+          <TextField
+            label={fr.auth.login.email}
+            type="email"
+            value={check.data.email ?? ''}
+            onChange={() => undefined}
+            readOnly
+            helper={fr.auth.activate.emailHelper}
+          />
+          <TextField
+            label={fr.auth.activate.rolesLabel}
+            value={(check.data.roleLabels ?? []).join(', ')}
+            onChange={() => undefined}
+            readOnly
+            helper={fr.auth.activate.emailHelper}
+          />
+        </div>
+        {/* Groupe 3 — mot de passe */}
+        <div className={styles.fieldGroup}>
+          <TextField
+            label={fr.auth.activate.password}
+            type="password"
+            value={password}
+            onChange={(v) => {
+              setPassword(v);
+              if (errors.password) setError('password', null);
+            }}
+            onBlur={() =>
+              setError('password', passwordValid(password) ? null : fr.auth.passwordRules.notMet)
+            }
+            error={errors.password ?? null}
+            required
+            autoComplete="new-password"
+          />
+          <PasswordRules password={password} />
+          <TextField
+            label={fr.auth.activate.passwordConfirm}
+            type="password"
+            value={confirm}
+            onChange={(v) => {
+              setConfirm(v);
+              if (errors.confirm) setError('confirm', null);
+            }}
+            onBlur={() =>
+              setError('confirm', confirm === password ? null : fr.auth.passwordRules.mismatch)
+            }
+            error={errors.confirm ?? null}
+            required
+            autoComplete="new-password"
+          />
+        </div>
         <div className={styles.actions}>
           <Button type="submit" variant="primary" loading={busy}>
             {fr.auth.activate.submit}

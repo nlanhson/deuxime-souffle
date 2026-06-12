@@ -43,7 +43,8 @@ export function SkeletonCards({ count = 4, height = 120 }: { count?: number; hei
   return (
     <div className={styles.cards}>
       {Array.from({ length: count }, (_, i) => (
-        <Skeleton key={i} height={height} radius="var(--radius-xl)" />
+        // même rayon que la vraie carte : pas de changement de forme au chargement
+        <Skeleton key={i} height={height} radius="var(--radius-lg)" />
       ))}
     </div>
   );

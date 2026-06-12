@@ -2,15 +2,17 @@
  * Coach · Sign up / Apply to coach (E01 — "Coach self-registration (email / Google) with admin
  * validation").
  *
- * Opened from Welcome's "Apply to join" (and Login's "Create an account"). Collects the registration
- * fields the AUTH stories name — identity, email, phone, SIRET, password, an optional invitation code
- * (the WBS enforces code↔email pairing for invited coaches) and a consent gate — then creates a
- * PENDING_APPROVAL account via the auth seam, which drops the coach onto the pending-approval screen.
+ * Opened from Welcome's "Apply to join" (and Login's "Create an account"). The FIELD SET mirrors
+ * the client's back-office "Invite a coach · Step 1 — Coach's identity" form: civility + date of
+ * birth, first name + name, email, phone, personal address (feeds the default travel-time
+ * calculation), SIRET + legal status, and the INSEE auto-verification note. Self-registration
+ * adds what the back-office flow doesn't need: a password, the optional invitation code (the WBS
+ * enforces code↔email pairing for invited coaches) and a consent gate. Submitting creates a
+ * PENDING_APPROVAL account via the auth seam — the KYC-documents step lives on the pending screen.
  *
  * PROTOTYPE: no backend, so a valid-looking form submits straight to pending; Google OAuth2, the
- * SIRET/email uniqueness checks, and the Google "profile completion" step are stubbed. LAYOUT is a
- * synthesis pending the coach video + Figma. Surface = coach (ink). Motion: one opacity entrance,
- * instant under reduced motion.
+ * INSEE/uniqueness checks, and the Google "profile completion" step are stubbed. Surface = coach
+ * (ink). Motion: one opacity entrance, instant under reduced motion.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -23,8 +25,12 @@ import { copy } from '../copy';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { GoogleButton } from '../components/GoogleButton';
 import { AuthTextField } from '../components/AuthTextField';
+import { SelectField } from '../components/SelectField';
 import { Logo } from '../components/Logo';
-import { X, Mail, Phone, IdCard, Lock, Eye, EyeOff, Check, TriangleAlert } from '../icons';
+import { OptionSheet } from '../components/OptionSheet';
+import {
+  X, Mail, Phone, IdCard, Lock, Eye, EyeOff, Check, TriangleAlert, MapPin, Briefcase, Lightbulb,
+} from '../icons';
 import { ease, dur } from '../lib/motion';
 
 const S = surfaces.coach;
@@ -41,6 +47,26 @@ const F = {
 const EMAIL_RE = /\S+@\S+\.\S+/;
 const isSiret = (v: string) => /^\d{14}$/.test(v.replace(/\s/g, ''));
 
+/** Masks a date-of-birth as DD/MM/YYYY while typing (digits in, slashes inserted). */
+const formatDob = (v: string) => {
+  const d = v.replace(/\D/g, '').slice(0, 8);
+  if (d.length <= 2) return d;
+  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
+  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
+};
+/** A complete, plausible DD/MM/YYYY birth date (real calendar day, coach at least 16). */
+const isDob = (v: string) => {
+  const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return false;
+  const dd = Number(m[1]), mm = Number(m[2]), yyyy = Number(m[3]);
+  if (mm < 1 || mm > 12 || dd < 1 || yyyy < 1900) return false;
+  if (dd > new Date(yyyy, mm, 0).getDate()) return false;
+  return yyyy <= new Date().getFullYear() - 16;
+};
+
+type CivilityKey = 'madam' | 'sir';
+type LegalKey = 'selfEmployed' | 'soleProprietor' | 'company' | 'other';
+
 export function SignUpScreen({
   reduced,
   onBack,
@@ -53,21 +79,30 @@ export function SignUpScreen({
   onRegister: (firstName?: string) => void;
 }) {
   const c = copy.auth.signup;
+  const [civility, setCivility] = useState<CivilityKey | null>(null);
+  const [dob, setDob] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
   const [siret, setSiret] = useState('');
+  // Back-office parity: the legal-status select arrives preset to Self-employed.
+  const [legal, setLegal] = useState<LegalKey>('selfEmployed');
   const [password, setPassword] = useState('');
   const [invite, setInvite] = useState('');
   const [show, setShow] = useState(false);
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState(false);
+  const [civilityOpen, setCivilityOpen] = useState(false);
+  const [legalOpen, setLegalOpen] = useState(false);
 
+  const dobRef = useRef<TextInput>(null);
   const firstNameRef = useRef<TextInput>(null);
   const lastRef = useRef<TextInput>(null);
   const emailRef = useRef<TextInput>(null);
   const phoneRef = useRef<TextInput>(null);
+  const addressRef = useRef<TextInput>(null);
   const siretRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const inviteRef = useRef<TextInput>(null);
@@ -82,8 +117,12 @@ export function SignUpScreen({
   const emailValid = EMAIL_RE.test(email.trim());
   const siretValid = isSiret(siret);
   const passwordValid = password.length >= 8;
+  // Civility, date of birth and legal status are optional (back-office parity: no asterisk) —
+  // but a partially-typed birth date is invalid, not missing.
+  const dobValid = dob === '' || isDob(dob);
   const valid =
-    firstName.trim() !== '' && lastName.trim() !== '' && emailValid && phone.trim() !== '' && siretValid && passwordValid && consent;
+    firstName.trim() !== '' && lastName.trim() !== '' && emailValid && phone.trim() !== '' &&
+    address.trim() !== '' && siretValid && passwordValid && dobValid && consent;
 
   const clear = () => { if (error) setError(false); };
   const onEdit = (setter: (v: string) => void) => (v: string) => { setter(v); clear(); };
@@ -93,10 +132,12 @@ export function SignUpScreen({
       setError(true);
       // Move focus (and scroll) to the first invalid text field so the error isn't off-screen.
       const firstInvalid =
-        firstName.trim() === '' ? firstNameRef
+        !dobValid ? dobRef
+        : firstName.trim() === '' ? firstNameRef
         : lastName.trim() === '' ? lastRef
         : !emailValid ? emailRef
         : phone.trim() === '' ? phoneRef
+        : address.trim() === '' ? addressRef
         : !siretValid ? siretRef
         : !passwordValid ? passwordRef
         : null;
@@ -147,7 +188,36 @@ export function SignUpScreen({
               <View style={st.divLine} />
             </View>
 
-            <View style={st.nameRow}>
+            {/* Step header — verbatim from the back-office "Invite a coach" flow. */}
+            <Text style={st.step} accessibilityRole="header">{c.step}</Text>
+
+            <View style={st.fieldRow}>
+              <SelectField
+                containerStyle={st.flex}
+                label={c.civility.label}
+                optional={c.optionalTag}
+                placeholder={c.civility.placeholder}
+                value={civility ? c.civility.options[civility] : undefined}
+                onPress={() => setCivilityOpen(true)}
+              />
+              <AuthTextField
+                containerStyle={st.flex}
+                inputRef={dobRef}
+                label={c.dob.label}
+                optional={c.optionalTag}
+                value={dob}
+                onChangeText={(v) => { setDob(formatDob(v)); clear(); }}
+                error={error && !dobValid}
+                placeholder={c.dob.placeholder}
+                keyboardType="number-pad"
+                maxLength={10}
+                returnKeyType="next"
+                onSubmitEditing={() => firstNameRef.current?.focus()}
+                submitBehavior="submit"
+              />
+            </View>
+
+            <View style={st.fieldRow}>
               <AuthTextField
                 containerStyle={st.flex}
                 inputRef={firstNameRef}
@@ -208,6 +278,23 @@ export function SignUpScreen({
               autoComplete="tel"
               textContentType="telephoneNumber"
               returnKeyType="next"
+              onSubmitEditing={() => addressRef.current?.focus()}
+              submitBehavior="submit"
+            />
+
+            <AuthTextField
+              inputRef={addressRef}
+              label={c.address.label}
+              icon={MapPin}
+              help={c.address.help}
+              value={address}
+              onChangeText={onEdit(setAddress)}
+              error={error && address.trim() === ''}
+              placeholder={c.address.placeholder}
+              autoCapitalize="words"
+              autoComplete="street-address"
+              textContentType="fullStreetAddress"
+              returnKeyType="next"
               onSubmitEditing={() => siretRef.current?.focus()}
               submitBehavior="submit"
             />
@@ -226,6 +313,24 @@ export function SignUpScreen({
               onSubmitEditing={() => passwordRef.current?.focus()}
               submitBehavior="submit"
             />
+
+            <SelectField
+              label={c.legalStatus.label}
+              optional={c.optionalTag}
+              icon={Briefcase}
+              placeholder={c.legalStatus.placeholder}
+              value={c.legalStatus.options[legal]}
+              onPress={() => setLegalOpen(true)}
+            />
+
+            {/* Automatic-verification note (back-office parity: SIRET → INSEE, training gate). */}
+            <View style={st.verifyCard}>
+              <Lightbulb size={18} color={palette.bleu[300]} />
+              <View style={st.flex}>
+                <Text style={st.verifyTitle}>{c.verification.title}</Text>
+                <Text style={st.verifyBody}>{c.verification.body}</Text>
+              </View>
+            </View>
 
             <AuthTextField
               inputRef={passwordRef}
@@ -308,6 +413,23 @@ export function SignUpScreen({
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <OptionSheet
+        visible={civilityOpen}
+        onClose={() => setCivilityOpen(false)}
+        title={c.civility.sheetTitle}
+        options={(Object.keys(c.civility.options) as CivilityKey[]).map((k) => ({ key: k, label: c.civility.options[k] }))}
+        selectedKey={civility ?? undefined}
+        onSelect={(k) => { setCivility(k as CivilityKey); clear(); }}
+      />
+      <OptionSheet
+        visible={legalOpen}
+        onClose={() => setLegalOpen(false)}
+        title={c.legalStatus.sheetTitle}
+        options={(Object.keys(c.legalStatus.options) as LegalKey[]).map((k) => ({ key: k, label: c.legalStatus.options[k] }))}
+        selectedKey={legal}
+        onSelect={(k) => { setLegal(k as LegalKey); clear(); }}
+      />
     </SafeAreaView>
   );
 }
@@ -323,8 +445,9 @@ const st = StyleSheet.create({
     backgroundColor: palette.neutral[800],
   },
 
+  // Sentence case (brand rule: no all-caps) — the red eyebrow reads as a kicker, not a shout.
   eyebrow: {
-    fontFamily: F.oswS, fontSize: 13, letterSpacing: 2, textTransform: 'uppercase',
+    fontFamily: F.oswS, fontSize: 13, letterSpacing: 0.5,
     color: color.action, marginBottom: sp.sm,
   },
   // Anton: lineHeight ≥1.2× the size avoids the descender/cap clip.
@@ -336,8 +459,19 @@ const st = StyleSheet.create({
   divLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.10)' },
   divTxt: { fontFamily: F.body, fontSize: 13, color: palette.neutral[500] },
 
-  nameRow: { flexDirection: 'row', gap: sp.sm },
+  step: { fontFamily: F.oswS, fontSize: 15, letterSpacing: 0.5, color: S.textPrimary, marginTop: sp.xs },
+
+  fieldRow: { flexDirection: 'row', gap: sp.sm },
   eyeBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', marginRight: -sp.xs },
+
+  // Info-blue tint derived from palette.bleu (500 wash + 300 hairline) — readable on ink.
+  verifyCard: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm, marginTop: sp.md,
+    padding: sp.md, borderRadius: r.lg, backgroundColor: 'rgba(47,79,146,0.22)',
+    borderWidth: 1, borderColor: 'rgba(123,147,199,0.35)',
+  },
+  verifyTitle: { fontFamily: F.bodyS, fontSize: 14, lineHeight: 20, color: palette.bleu[200] },
+  verifyBody: { fontFamily: F.body, fontSize: 13, lineHeight: 19, color: palette.bleu[200], marginTop: 2 },
 
   consentRow: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm, marginTop: sp.lg, minHeight: 44 },
   box: {

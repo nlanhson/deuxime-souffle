@@ -87,7 +87,7 @@ export default function RenewScreen() {
       <>
         <PageHeader title={copy.title} crumbs={[{ label: fr.contracts.title, to: '/contrats' }]} />
         <SkeletonGroup>
-          <Skeleton height={420} radius="var(--radius-xl)" />
+          <Skeleton height={420} radius="var(--radius-lg)" />
         </SkeletonGroup>
       </>
     );
@@ -192,13 +192,14 @@ export default function RenewScreen() {
           )}
         </CardSection>
 
+        {/* Dernière carte de .compareGrid : liseré accent (voir contracts.module.css). */}
         <CardSection title={copy.proposal}>
-          <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>{copy.proposalIntro}</p>
+          <p className={styles.mutedLead}>{copy.proposalIntro}</p>
           {fields(
             `${capitalize(formatDate(proposal.start))} → ${formatDate(proposal.end)}`,
             `≈ ${proposal.estimated}`,
           )}
-          <div style={{ marginTop: 'var(--space-md)' }}>
+          <div className={styles.subBlock}>
             <p className={styles.summaryLabel}>{copy.generatedSessions}</p>
             <ul className={styles.sessionPreview}>
               {proposal.firstSessions.map((date) => (
@@ -230,10 +231,10 @@ export default function RenewScreen() {
             <strong>{copy.endsOn(formatDate(contract.endDate))}</strong>
           </li>
         </ul>
-        <p style={{ color: 'var(--color-text-secondary)', marginTop: 'var(--space-sm)' }}>{copy.slotsReserved}</p>
+        <p className={`${styles.muted} ${styles.subNote}`}>{copy.slotsReserved}</p>
       </CardSection>
 
-      <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
+      <div className={styles.actionRow}>
         <Button variant="primary" icon={RefreshCw} onClick={confirmRenewal} loading={busy}>
           {copy.confirm}
         </Button>

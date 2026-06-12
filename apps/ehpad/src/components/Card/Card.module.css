@@ -45,8 +45,11 @@
   margin-bottom: var(--space-md);
 }
 
+/* 20px/600 : un titre de section organise — il ne rivalise ni avec le h1
+   ni avec les chiffres « display » des cartes KPI (32px/700). */
 .sectionTitle {
-  font-size: var(--text-h3);
+  font-size: var(--text-subheading);
+  font-weight: var(--weight-semibold);
   color: var(--color-text-primary);
 }
 

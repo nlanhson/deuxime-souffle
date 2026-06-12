@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CalendarRange, Clock3, FileText, Star, User, Users } from 'lucide-react';
+import { CalendarRange, ChevronRight, Clock3, FileText, Star, User, Users } from 'lucide-react';
 import { useStrings } from '@/i18n';
 import * as api from '@/data/api';
 import { useDataVersion } from '@/context/DataContext';
@@ -193,12 +193,14 @@ export default function SessionsScreen() {
                   {fr.sessions.seeEvaluation}
                 </ButtonLink>
               ) : (
-                <ButtonLink size="md" icon={Star} to={`/evaluations/${s.id}`}>
+                <ButtonLink size="md" variant="accent" icon={Star} to={`/evaluations/${s.id}`}>
                   {fr.sessions.evaluateAction}
                 </ButtonLink>
               ))}
           </div>
         </div>
+
+        <ChevronRight className={styles.cardChevron} aria-hidden />
       </article>
     );
   };
@@ -227,7 +229,7 @@ export default function SessionsScreen() {
         role="tabpanel"
         id={panelId('sessions', tab)}
         aria-labelledby={tabId('sessions', tab)}
-        style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
+        className={styles.tabPanel}
       >
         <div className={styles.filters}>
           <Select

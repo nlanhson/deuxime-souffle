@@ -71,6 +71,14 @@ import {
   LockClosedIcon,
   PhoneIcon,
   IdentificationIcon,
+  BriefcaseIcon,
+  LightBulbIcon,
+  InformationCircleIcon,
+  TrophyIcon,
+  FireIcon,
+  TrashIcon,
+  ChatBubbleLeftRightIcon,
+  ClipboardDocumentListIcon,
 } from 'react-native-heroicons/outline';
 
 export type LucideIcon = ComponentType<
@@ -124,6 +132,7 @@ export const DoorOpen = ArrowRightEndOnRectangleIcon; // ~ door
 export const UserRound = UserCircleIcon; // ~ round user
 export const Car = TruckIcon; // ~ no car glyph
 export const Footprints = MapIcon; // ~ walking → map
+export const Bike = BoltIcon; // ~ no bicycle → bolt (two-wheel / speed)
 export const MapPinOff = MapPinIcon; // ~ no map-pin-off
 
 // --- profile / revenue / notification screens ---
@@ -150,3 +159,11 @@ export const ScrollText = DocumentTextIcon; // ~ scroll → document
 export const CalendarClock = CalendarDaysIcon; // ~ no calendar-clock
 export const CalendarPlus = CalendarDaysIcon; // ~ no calendar-plus
 export const Hourglass = ClockIcon; // ~ no hourglass → clock
+export const Briefcase = BriefcaseIcon;
+export const Lightbulb = LightBulbIcon;
+export const Info = InformationCircleIcon;
+export const Trophy = TrophyIcon;
+export const Flame = FireIcon;
+export const Trash2 = TrashIcon;
+export const MessageSquare = ChatBubbleLeftRightIcon;
+export const ClipboardList = ClipboardDocumentListIcon;

@@ -389,6 +389,10 @@ export const copy = {
     emptyUpcoming: 'No upcoming sessions.',
     expandA11y: 'Show session details',
     collapseA11y: 'Hide session details',
+    // List ↔ Month view toggle on the Confirmed segment (WBS PLA-02: "list/week/month view";
+    // week lives on Home — here the coach flips between the list and a month grid).
+    view: { list: 'List', month: 'Month', a11y: 'Sessions view' },
+    monthEmptyDay: 'No session this day.',
     // Session detail page (C22 "View session details") — opens when a session card is tapped.
     detail: {
       title: 'Session details',
@@ -397,6 +401,12 @@ export const copy = {
       where: 'Where',
       format: 'Format',
       contact: 'On-site contact',
+      // Coach hourly rate (WBS PLA-14) — the "€ / hour" value is composed in-component.
+      rate: 'Your hourly rate',
+      rateUnit: '€ / hour',
+      // Copy address (WBS PLA-02 — no Google Maps API needed to grab the address).
+      copyA11y: 'Copy address',
+      copied: 'Copied',
     },
     // Check-in flow (C16) — geolocated presence confirm, opened by the "Check in" CTA. The modal
     // runs a small state machine: intro → locating → outcome. Outcomes encode the C17 time+location
@@ -427,12 +437,28 @@ export const copy = {
     },
     // Per-session management actions — shown as a "Manage" group inside the session detail
     // sheet, because each acts on the session you're looking at: cancel participation (C24),
-    // declare absence (C20), transmission notes (C28). Destinations aren't built yet.
+    // declare absence (C20), declare a delay (PLA-14 "Late"), transmission notes (C28).
     manage: {
       title: 'Manage this session',
       cancelParticipation: 'Cancel participation',
       declareAbsence: 'Declare absence',
+      late: 'Running late',
       transmissionNotes: 'Transmission notes',
+    },
+    // Declare a delay (WBS PLA-14: "Coach can declare a delay by selecting 'Late'") — pick a
+    // rough delay, the care home is notified right away. Then a short acknowledgement.
+    lateModal: {
+      title: 'Running late?',
+      help: 'Pick roughly how late you’ll be — the care home is notified right away.',
+      options: {
+        five: 'About 5 minutes',
+        ten: 'About 10 minutes',
+        fifteen: 'About 15 minutes',
+        thirty: '30 minutes or more',
+      },
+      doneTitle: 'Delay declared',
+      doneBody: 'The care home has been notified you’re running late. Check in as usual when you arrive.',
+      closeA11y: 'Close late declaration',
     },
     // Cancel participation (C24) — confirm before dropping an assigned session. The warning nods to
     // the reputation rules: a late cancellation (< 48h) and a no-show both carry score penalties.
@@ -443,15 +469,29 @@ export const copy = {
       cancel: 'Keep session',
       closeA11y: 'Close',
     },
-    // Declare absence (C20) — "I can't attend this one." Unlike a plain cancel, it captures a reason
-    // (the assignment algorithm treats a declared absence as an availability exclusion, and the
-    // reputation system weighs absences/no-shows). Picking a reason is required before confirming.
+    // Declare absence (C20 / WBS PLA-11 — a 3-STEP required form, not a one-tap confirm):
+    // 1 reason (required) → 2 message to the care home → 3 review + confirm. The assignment
+    // algorithm treats a declared absence as an availability exclusion, and the reputation
+    // system weighs absences/no-shows — hence the deliberate, reviewable flow.
     absenceModal: {
       title: 'Declare absence',
       body: "Let the care home know you can't attend. They'll be notified right away and the session reassigned.",
-      note: 'Frequent or last-minute absences can affect your reputation score.',
+      // "Step 1 of 3 — Reason" is composed in-component from these parts.
+      stepPrefix: 'Step',
+      stepOf: 'of',
+      steps: { reason: 'Reason', details: 'Message', confirm: 'Confirm' },
       reasonLabel: 'Reason',
       reasons: { illness: 'Illness', emergency: 'Personal emergency', transport: 'Transport problem', other: 'Other' },
+      detailsLabel: 'Message to the care home',
+      detailsOptional: 'optional',
+      detailsHelp: 'Anything useful for the coordinator — sent with the notification.',
+      detailsPlaceholder: 'e.g. I could run the session on Thursday instead.',
+      summaryReason: 'Reason',
+      summaryMessage: 'Message',
+      summaryNone: 'No message',
+      note: 'Frequent or last-minute absences can affect your reputation score.',
+      next: 'Continue',
+      back: 'Back',
       confirm: 'Declare absence',
       cancel: 'Keep session',
       closeA11y: 'Close absence',
@@ -563,10 +603,23 @@ export const copy = {
       schedule: 'Weekly schedule',
       travel: 'Max travel time',
       transport: 'Transport',
-      departure: 'Departure address',
+      // Plural (WBS PLA-08): a primary + an optional secondary departure point.
+      departure: 'Departure addresses',
       areas: 'Preferred areas',
       unavailability: 'Unavailable periods',
       cta: 'Update availability',
+    },
+    // Progression & past activity — badges/levels (GAME-01/02), submitted reports (SESS-05) and
+    // the EHPAD feedback the coach received (SESS-06). Row values are mock placeholders (like
+    // availabilityModal.note) — real code composes them from data.
+    activity: {
+      eyebrow: 'Progression & activity',
+      badges: 'Badges & level',
+      badgesValue: 'Level 3 · 5 badges',
+      reports: 'Report history',
+      reportsValue: '14 sent',
+      feedback: 'Facility feedback',
+      feedbackValue: '4.8 average',
     },
     // Fairness target (target monthly volume + flexibility) and default rate.
     goals: {
@@ -590,6 +643,10 @@ export const copy = {
       calendar: 'Google Calendar',
       connected: 'Connected',
       password: 'Change password',
+      // Account deletion (WBS AUTH-14) — a REQUEST: the DS team processes it (GDPR), nothing is
+      // wiped on-device. Once requested, the row shows the pending state.
+      deleteAccount: 'Delete account',
+      deleteRequested: 'Requested',
     },
     support: {
       eyebrow: 'Support',
@@ -611,18 +668,40 @@ export const copy = {
       closeA11y: 'Close photo options',
     },
     edit: {
-      transport: { title: 'Mode of transport', car: 'Car', walking: 'Walking', other: 'Other' },
-      vehicle: { title: 'Your vehicle', label: 'Vehicle', placeholder: 'e.g. Scooter, Bike, Public transport' },
-      travel: { title: 'Max travel time', help: 'How far you’ll travel — measured from your departure address.' },
-      schedule: { title: 'Weekly schedule', help: 'Pick the days you can work.', weekdays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], notSet: 'No days set' },
-      departure: { title: 'Departure address', label: 'Address', help: 'Your travel time to each session is measured from here.' },
+      // WBS PLA-08 names Car + Two-wheel vehicle; Walking and the free-text Other stay as
+      // client-accepted extras.
+      transport: { title: 'Mode of transport', car: 'Car', twoWheel: 'Two-wheel vehicle', walking: 'Walking', other: 'Other' },
+      vehicle: { title: 'Your vehicle', label: 'Vehicle', placeholder: 'e.g. Public transport' },
+      // Slider, 10–90 min (WBS PLA-08). The "≤ N min" readout is composed in-component.
+      travel: {
+        title: 'Max travel time',
+        help: 'How far you’ll travel — measured from your departure address.',
+        decA11y: 'Decrease max travel time',
+        incA11y: 'Increase max travel time',
+      },
+      // Half-day grid, Mon→Sun (WBS PLA-09) — not whole weekdays.
+      schedule: {
+        title: 'Weekly schedule',
+        help: 'Activate the half-days you can work — weekends included.',
+        weekdays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        am: 'Morning',
+        pm: 'Afternoon',
+        notSet: 'No half-days set',
+      },
+      // Primary + optional secondary departure point (WBS PLA-08 "Departure addresses").
+      departure: {
+        title: 'Departure addresses',
+        primaryLabel: 'Primary address',
+        secondaryLabel: 'Secondary address',
+        secondaryOptional: 'optional',
+        help: 'Travel time to each session is measured from the closest of these.',
+      },
       areas: { title: 'Preferred areas', label: 'Areas', help: 'Sessions outside these still appear — they’re never hidden.' },
       unavailability: { title: 'Unavailable periods', label: 'Period', help: 'Holidays or time off. Use “None upcoming” when you’re fully available.' },
       target: { title: 'Monthly target', label: 'Sessions per month', help: 'Used to share sessions fairly between coaches.', flexibilityLabel: 'Flexibility', strict: 'Strict', flexible: 'Flexible' },
       rate: { title: 'Default hourly rate', label: 'Rate (€ / hour)' },
       personal: { title: 'Personal information', name: 'Full name', email: 'Email', phone: 'Phone' },
     },
-    travelOptions: ['≤ 15 min', '≤ 30 min', '≤ 45 min', '≤ 60 min'],
     password: {
       title: 'Change password',
       current: 'Current password',
@@ -654,6 +733,14 @@ export const copy = {
       pendingNote: 'New file uploaded — pending review by the DS team.',
     },
     logoutConfirm: { title: 'Log out?', body: 'You’ll need to sign in again to see your sessions.' },
+    // Delete account (AUTH-14) — a deletion REQUEST handled by the DS team, framed as such.
+    deleteConfirm: {
+      title: 'Delete your account?',
+      body: 'This sends a deletion request to the Deuxième Souffle team. Your account, sessions and documents are removed once it’s processed — this can’t be undone.',
+      confirm: 'Request deletion',
+      requestedTitle: 'Deletion requested',
+      requestedBody: 'The team has received your request and will confirm by email. You can keep using the app until it’s processed.',
+    },
     about: { title: 'Deuxième Souffle · Coach', body: 'APA coaching coordination for care homes.\nVersion 0.1.0 — prototype.' },
     links: {
       helpUrl: 'https://deuxiemesouffle.fr/aide',
@@ -687,11 +774,14 @@ export const copy = {
       apply: 'New coach? Apply to join',
       applyA11y: 'Apply to join as a coach',
     },
-    // Login — email + password sign-in (+ a cross-link to registration).
+    // Login — email + password sign-in (+ Google OAuth, per WBS "Coach can log in via Google
+    // OAuth", + a cross-link to registration).
     login: {
       eyebrow: 'Welcome back',
       title: 'Log in',
       subtitle: 'Sign in to your coach account.',
+      google: 'Continue with Google',
+      orDivider: 'or',
       email: { label: 'Email', placeholder: 'you@email.com' },
       password: {
         label: 'Password',
@@ -713,23 +803,56 @@ export const copy = {
       createAccount: 'Create an account',
     },
     // Sign-up / registration (E01 — "Coach self-registration (email / Google) with admin validation").
-    // Fields trace to the AUTH stories: identity + email + phone + SIRET + password, an optional
-    // invitation code (the WBS enforces code↔email pairing for invited coaches), and a consent gate.
-    // Submitting creates a PENDING_APPROVAL account (see `pending`). Google OAuth, SIRET/email
-    // uniqueness, and the profile-completion step are stubbed here. LAYOUT is a synthesis pending the
-    // coach video + Figma.
+    // The FIELD SET mirrors the client's back-office "Invite a coach · Step 1 — Coach's identity"
+    // form (civility · date of birth · first name · name · email · phone · personal address ·
+    // SIRET · legal status + the INSEE auto-verification note), plus what self-registration needs
+    // on top: password, the optional invitation code (WBS code↔email pairing) and a consent gate.
+    // Submitting creates a PENDING_APPROVAL account (see `pending` — the KYC-documents step).
+    // Google OAuth, the INSEE/uniqueness checks and profile completion are stubbed here.
     signup: {
       eyebrow: 'Join the club',
       title: 'Apply to coach',
       subtitle: 'Create your coach account — the team reviews it before you go live.',
       google: 'Continue with Google',
       orDivider: 'or',
-      firstName: { label: 'First name', placeholder: 'Karim' },
-      lastName: { label: 'Last name', placeholder: 'Benali' },
-      email: { label: 'Email', placeholder: 'you@email.com' },
+      // Step header, verbatim from the back-office flow; documents follow on the pending screen.
+      step: 'Step 1 — Coach’s identity',
+      optionalTag: 'optional',
+      civility: {
+        label: 'Civility',
+        placeholder: 'Select',
+        sheetTitle: 'Civility',
+        options: { madam: 'Madam', sir: 'Sir' },
+      },
+      // Typed as DD/MM/YYYY (French format) — the slashes are inserted as you type.
+      dob: { label: 'Date of birth', placeholder: 'DD/MM/YYYY' },
+      firstName: { label: 'First name', placeholder: 'Marie' },
+      lastName: { label: 'Name', placeholder: 'Dubois' },
+      email: { label: 'Email', placeholder: 'marie.dubois@coach.fr' },
       phone: { label: 'Phone', placeholder: '06 12 34 56 78' },
+      address: {
+        label: 'Personal address',
+        placeholder: '12 rue Vaugirard, 75015 Paris',
+        help: 'Used for the default travel-time calculation.',
+      },
       // SIRET = the independent coach's 14-digit business identifier (uniqueness enforced server-side).
-      siret: { label: 'SIRET', placeholder: '14-digit business number', help: 'Your auto-entrepreneur or company number.' },
+      siret: { label: 'SIRET', placeholder: '123 456 789 00012', help: 'Your auto-entrepreneur or company number.' },
+      legalStatus: {
+        label: 'Legal status',
+        placeholder: 'Select',
+        sheetTitle: 'Legal status',
+        options: {
+          selfEmployed: 'Self-employed',
+          soleProprietor: 'Sole proprietorship',
+          company: 'Company (EURL / SASU)',
+          other: 'Other',
+        },
+      },
+      // Mirrors the back-office note: SIRET → INSEE check; the DS training course gates validation.
+      verification: {
+        title: 'Automatic verification',
+        body: 'Your SIRET number is verified with INSEE. The Deuxième Souffle training course is mandatory before validation.',
+      },
       password: {
         label: 'Password',
         placeholder: 'At least 8 characters',
@@ -744,7 +867,8 @@ export const copy = {
       haveAccount: 'Already have an account?',
       login: 'Log in',
       backA11y: 'Back',
-      error: 'Fill in the highlighted fields to submit your application.',
+      // "Check" (not "fill in") — a field can be highlighted because it's invalid, not just empty.
+      error: 'Check the highlighted fields to submit your application.',
     },
     // Pending-approval screen (E01 — "Account pending validation" screen). After registration the
     // account is PENDING_APPROVAL and the rest of the app is locked until an admin validates the KYC
@@ -754,18 +878,72 @@ export const copy = {
       eyebrow: 'Account status',
       statusChip: 'Pending approval',
       title: 'Application under review',
-      // {name} is composed in-component from the registered first name.
+      // {name} is composed in-component from the registered first name. The indicative review
+      // time moved out of the body into its own visible line (WBS AUTH-19).
       bodyPrefix: 'Thanks for applying, ',
-      bodySuffix: '. Our team is verifying your details — we’ll email you as soon as your account is approved, usually within a couple of working days.',
-      bodyNoName: 'Thanks for applying. Our team is verifying your details — we’ll email you as soon as your account is approved, usually within a couple of working days.',
+      bodySuffix: '. Our team is verifying your details — we’ll email you as soon as your account is approved.',
+      bodyNoName: 'Thanks for applying. Our team is verifying your details — we’ll email you as soon as your account is approved.',
+      // Indicative processing time (WBS AUTH-19: "Indicative processing time displayed").
+      processingTime: 'Typical review time: 2–3 working days',
       docsEyebrow: 'Required documents',
-      docsNote: 'Add these to speed up your approval.',
+      docsNote: 'Add the missing ones to speed up your approval.',
       docs: { cv: 'CV', urssaf: 'URSSAF certificate', insurance: 'Professional insurance', diploma: 'APA diploma' },
+      // Per-document visual status (WBS AUTH-19: received vs pending, never colour alone).
       docStatusMissing: 'To add',
+      docStatusReceived: 'Received',
       complete: 'Complete my application',
       completeBody: 'Document upload is the next slice — your application is saved and the team can already see it.',
       backA11y: 'Back',
     },
+  },
+  // Badges & level (GAME-01 badge system · GAME-02 levels & progression). Counts, dates and the
+  // level number are mock placeholders composed in-component. The note keeps expectations honest:
+  // progression is recognition, not pay.
+  game: {
+    eyebrow: 'Progression',
+    title: 'Badges & level',
+    closeA11y: 'Close badges and level',
+    levelPrefix: 'Level',
+    // Composed in-component: "11 sessions to level 4".
+    toNextMid: 'sessions to level',
+    totalSuffix: 'sessions completed',
+    earnedTitle: 'Earned',
+    lockedTitle: 'In progress',
+    earnedPrefix: 'Earned',
+    note: 'Badges and levels grow with completed sessions, punctual check-ins and facility feedback. The DS team sees them too — they never affect your pay.',
+    badges: {
+      first: { name: 'First session', desc: 'Complete your first session' },
+      ten: { name: '10 sessions', desc: 'Complete 10 sessions' },
+      fifty: { name: '50 sessions', desc: 'Complete 50 sessions' },
+      punctual: { name: 'Right on time', desc: '20 punctual check-ins in a row' },
+      favourite: { name: 'Resident favourite', desc: 'A month above a 4.5 rating' },
+      hundred: { name: '100 sessions', desc: 'Complete 100 sessions' },
+      explorer: { name: 'Explorer', desc: 'Coach in 10 different facilities' },
+      streak: { name: 'Full month', desc: 'A calendar month with zero absences' },
+    },
+  },
+  // Report history (SESS-05) — chronological list of submitted reports, filterable by facility,
+  // paginated. Dates/counts are mock placeholders; statuses reuse sessions.reportView wording.
+  reportHistory: {
+    eyebrow: 'Your activity',
+    title: 'Report history',
+    closeA11y: 'Close report history',
+    filterAll: 'All facilities',
+    filterA11y: 'Filter reports by facility',
+    countSuffix: 'reports',
+    participantsSuffix: 'participants',
+    empty: 'No reports for this facility yet.',
+    showMore: 'Show more',
+  },
+  // EHPAD feedback (SESS-06) — the ratings + comments facilities left on the coach's sessions.
+  ehpadFeedback: {
+    eyebrow: 'Your activity',
+    title: 'Facility feedback',
+    closeA11y: 'Close facility feedback',
+    averageLabel: 'Average rating',
+    countSuffix: 'ratings',
+    note: 'Facilities rate each session after it ends. New feedback lands here.',
+    empty: 'No feedback yet — it appears after your first rated session.',
   },
   tabs: {
     home: 'Home',

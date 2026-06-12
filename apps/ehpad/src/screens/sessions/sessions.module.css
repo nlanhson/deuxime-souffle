@@ -8,11 +8,11 @@
 .reportGrid dt,
 .reportLabel {
   font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body-sm);
   letter-spacing: var(--ls-normal);
   color: var(--color-text-secondary);
-  margin-bottom: 2px;
+  margin-bottom: var(--space-xs);
 }
 
 .reportGrid dd {
@@ -29,11 +29,17 @@
 
 /* ---- détail de séance ---- */
 
+/* Carte d'identité de la page : surface blanche plate, liseré discret,
+   jamais d'ombre au repos (style maison « Papier calme »). */
 .headerCard {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-md) var(--space-xl);
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
 }
 
 .headerMain {
@@ -43,10 +49,29 @@
   min-width: 220px;
 }
 
+/* Date + heure = identité de la page : doit dominer les titres de section (20px). */
 .headerDate {
   font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: var(--text-h3);
+  font-weight: var(--weight-display);
+  font-size: var(--text-h2);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Texte secondaire (durée, états vides) — encre neutre, jamais d'accent. */
+.mutedText {
+  color: var(--color-text-secondary);
+}
+
+/* Pile verticale standard pour le contenu des sections. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.stackStart {
+  align-items: flex-start;
 }
 
 .headerChips {
@@ -67,11 +92,19 @@
   display: block;
 }
 
+/* Deux colonnes explicites : l'ordre des sections reste stable quelle que soit
+   la largeur (auto-fit remaniait l'ordre perçu) ; une colonne sous 720px. */
 .detailGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-lg);
   align-items: start;
+}
+
+@media (max-width: 719px) {
+  .detailGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .actionsRow {
@@ -103,7 +136,7 @@
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  margin-top: 4px;
+  margin-top: var(--space-xs);
   color: var(--color-accent);
 }
 
@@ -128,15 +161,27 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+  border: 0;
+  padding: 0;
+  margin: 0;
 }
 
+/* Intertitres d'horizon : encre pleine à 16px pour dominer les options qu'ils organisent. */
 .optionHorizon {
   font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body);
   letter-spacing: var(--ls-normal);
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
   margin-top: var(--space-sm);
+}
+
+/* Point central du bouton radio (l'anneau vient de forms.box/round). */
+.radioDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentcolor;
 }
 
 .option {
@@ -198,12 +243,12 @@
 
 .dayLead {
   font-family: var(--font-heading);
-  font-weight: 700;
+  font-weight: var(--weight-semibold);
   font-size: var(--text-subheading);
 }
 
 .daySub {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-size: var(--text-body-sm);
 }
 
@@ -213,14 +258,18 @@
   gap: var(--space-sm);
 }
 
-/* Flat, border-defined surface — no shadow at rest (EHPAD house style). The card is a
-   link, so it lifts on hover like the shared interactive Card / ActionCard. */
+/* Surface plate délimitée par sa bordure — pas d'ombre au repos (style maison).
+   La carte est un lien : au survol / focus, la bordure passe à l'accent et le
+   chevron s'allume pour déclarer la cliquabilité. */
 .sessionCard {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-md);
   flex-wrap: wrap;
   padding: var(--space-md);
+  /* Réserve l'espace du chevron persistant en bord droit. */
+  padding-right: calc(var(--space-md) + 20px + var(--space-sm));
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
   border-left: 4px solid var(--color-border-strong);
@@ -235,10 +284,35 @@
   transform: translateY(-1px);
 }
 
+/* Bordure accent au survol/focus — sauf le liseré gauche qui garde la couleur d'unité. */
+.sessionCard:hover,
+.sessionCard:has(.cardMain:focus-visible) {
+  border-top-color: var(--color-accent);
+  border-right-color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sessionCard:hover {
     transform: none;
   }
+}
+
+/* Chevron persistant : affordance « cette carte s'ouvre », visible sans survol. */
+.cardChevron {
+  position: absolute;
+  right: var(--space-md);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-muted);
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.sessionCard:hover .cardChevron,
+.sessionCard:has(.cardMain:focus-visible) .cardChevron {
+  color: var(--color-accent);
 }
 
 /* Liseré gauche = couleur d'unité (aligné sur la légende du calendrier). */
@@ -272,7 +346,7 @@
 
 .cardCoachName {
   font-family: var(--font-heading);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   font-size: var(--text-body-lg);
 }
 
@@ -305,7 +379,7 @@
 .cardMeta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-sm);
   color: var(--color-text-secondary);
   font-size: var(--text-body-sm);
 }
@@ -317,7 +391,7 @@
 }
 
 .cardTime {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   color: var(--color-text-primary);
 }
 
@@ -355,4 +429,20 @@
   .cardActions {
     justify-content: flex-start;
   }
+}
+
+/* Panneau d'onglet : filtres puis liste, rythme vertical standard. */
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* ---- modification de séance (SESS-10) ---- */
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  max-width: 480px;
 }

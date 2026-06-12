@@ -23,6 +23,7 @@ import {
 } from '@/components';
 import type { Column } from '@/components';
 import type { Invoice } from '@/types/models';
+import styles from './invoices.module.css';
 
 /** BILL-01 — factures : bannière de retard (ambre, jamais rouge), KPI factuels,
  *  table triée par période décroissante, recherche par numéro. Tout est HT. */
@@ -70,7 +71,7 @@ export default function InvoicesScreen() {
       header: fr.invoices.table.number,
       sortValue: (i) => i.number,
       render: (i) => (
-        <Link to={`/factures/${i.id}`} style={{ fontWeight: 600 }}>
+        <Link to={`/factures/${i.id}`} className={styles.numberLink}>
           {i.number}
         </Link>
       ),
@@ -108,13 +109,14 @@ export default function InvoicesScreen() {
 
   return (
     <>
-      <PageHeader title={fr.invoices.title} intro={fr.invoices.htNote} />
+      <PageHeader title={fr.invoices.title} />
 
       {state.loading && (
         <SkeletonGroup>
-          <SkeletonCards count={4} height={120} />
-          <div style={{ height: 'var(--space-md)' }} />
-          <SkeletonRows rows={6} height={60} />
+          <div className={styles.skeletonStack}>
+            <SkeletonCards count={4} height={120} />
+            <SkeletonRows rows={6} height={60} />
+          </div>
         </SkeletonGroup>
       )}
       {state.error && <LoadError onRetry={state.retry} />}
@@ -143,14 +145,14 @@ export default function InvoicesScreen() {
             </InlineAlert>
           )}
 
-          <div style={{ display: 'grid', gap: 'var(--space-md)', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+          {/* Le total impayé en tête de grille = la réponse à « dois-je quelque chose ? » */}
+          <div className={styles.kpiGrid}>
             <KpiCard eyebrow={fr.invoices.kpi.unpaid} value={formatEuro(computed.unpaidTotal)} />
             <KpiCard eyebrow={fr.invoices.kpi.awaiting} value={computed.awaiting} />
             <KpiCard
               eyebrow={fr.invoices.kpi.avgDelay}
               value={computed.avgDelay ?? '—'}
               unit={computed.avgDelay !== null ? fr.invoices.kpi.days : undefined}
-              tone="progress"
             />
             <KpiCard
               eyebrow={fr.invoices.kpi.nextDue}
@@ -158,7 +160,7 @@ export default function InvoicesScreen() {
             />
           </div>
 
-          <div style={{ maxWidth: 420 }}>
+          <div className={styles.searchField}>
             <TextField
               label={fr.invoices.searchLabel}
               type="search"
@@ -175,14 +177,17 @@ export default function InvoicesScreen() {
               action={<Button onClick={() => setSearch('')}>{fr.invoices.clearSearch}</Button>}
             />
           ) : (
-            <DataTable
-              columns={columns}
-              rows={rows}
-              rowKey={(i) => i.id}
-              caption={fr.invoices.title}
-              defaultSort="-period"
-              onRowClick={(i) => navigate(`/factures/${i.id}`)}
-            />
+            <div className={styles.tableBlock}>
+              <p className={styles.htNote}>{fr.invoices.htNote}</p>
+              <DataTable
+                columns={columns}
+                rows={rows}
+                rowKey={(i) => i.id}
+                caption={fr.invoices.title}
+                defaultSort="-period"
+                onRowClick={(i) => navigate(`/factures/${i.id}`)}
+              />
+            </div>
           )}
         </>
       )}

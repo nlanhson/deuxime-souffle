@@ -6,6 +6,8 @@
   max-width: min(420px, calc(100vw - 2 * var(--space-lg)));
 }
 
+/* L'état est double-codé : icône colorée + liseré gauche de la même teinte
+   (le succès, l'info et l'erreur se distinguent d'un coup d'œil, pas qu'à l'icône). */
 .toast {
   display: flex;
   align-items: flex-start;
@@ -13,9 +15,18 @@
   padding: var(--space-md) var(--space-lg);
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
+  border-left: 4px solid var(--color-progress-strong);
   border-radius: var(--radius-lg);
   box-shadow: var(--elevation-2);
   animation: toast-in var(--duration-base) var(--ease-decelerate);
+}
+
+.toast[data-kind='neutral'] {
+  border-left-color: var(--color-accent);
+}
+
+.toast[data-kind='danger'] {
+  border-left-color: var(--color-danger);
 }
 
 /* Entrée depuis le bord droit (toast ancré en bas à droite).
@@ -82,19 +93,26 @@
   text-decoration: underline;
 }
 
+/* Cible 44px (plancher tactile — tremblements fréquents chez ce public) ;
+   les marges négatives évitent de gonfler visuellement le toast. */
 .close {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  margin-top: -4px; /* aligne le × sur l'icône / la 1re ligne (centre du carré 32 → centre 12px) */
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  margin: calc(-1 * var(--space-sm)) calc(-1 * var(--space-sm)) calc(-1 * var(--space-sm)) 0;
   border: 0;
   background: none;
   color: var(--color-text-secondary);
   font-size: var(--text-h3);
   line-height: 1;
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
+}
+
+.close:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }

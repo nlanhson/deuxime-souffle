@@ -15,6 +15,7 @@ import {
   SkeletonGroup,
   SkeletonRows,
 } from '@/components';
+import styles from './evaluations.module.css';
 
 /** SESS-13 — liste des évaluations en attente (une destination, plusieurs accès). */
 export default function EvaluationsScreen() {
@@ -44,14 +45,7 @@ export default function EvaluationsScreen() {
       )}
 
       {state.data && state.data.pending.length > 0 && (
-        <section
-          style={{
-            background: 'var(--color-surface)',
-            borderRadius: 'var(--radius-xl)',
-            boxShadow: 'var(--elevation-1)',
-            padding: 'var(--space-sm) var(--space-lg)',
-          }}
-        >
+        <section className={styles.listCard}>
           <h2 className="sr-only">{fr.evaluations.pendingTitle}</h2>
           <List label={fr.evaluations.pendingTitle}>
             {state.data.pending.map((session) => {

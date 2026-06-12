@@ -48,6 +48,7 @@
 
 .title {
   font-size: clamp(var(--text-h2), 4vw, var(--text-h1));
+  letter-spacing: var(--ls-tight); /* Inter resserré aux grandes tailles */
   color: var(--color-text-primary);
 }
 

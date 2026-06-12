@@ -18,7 +18,7 @@ export function KpiCard({ eyebrow, value, unit, detail, tone = 'neutral', action
   return (
     <div className={styles.kpi} data-tone={tone}>
       <p className={styles.eyebrow}>{eyebrow}</p>
-    <p className={styles.value}>
+      <p className={styles.value}>
         <span className={styles.number}>{value}</span>
         {unit && <span className={styles.unit}> {unit}</span>}
       </p>

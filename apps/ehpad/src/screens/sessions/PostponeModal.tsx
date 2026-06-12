@@ -75,7 +75,7 @@ export function PostponeModal({ open, onClose, session }: PostponeModalProps) {
         onChange={() => setSelectedId(option.id)}
       />
       <span className={`${forms.box} ${forms.round}`} aria-hidden>
-        <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'currentcolor' }} />
+        <span className={styles.radioDot} />
       </span>
       <span className={styles.optionLabel}>
         {capitalize(formatWeekdayDate(option.date))} · {formatTime(option.time)}
@@ -138,7 +138,7 @@ export function PostponeModal({ open, onClose, session }: PostponeModalProps) {
       )}
 
       {options.data && options.data.length > 0 && (
-        <fieldset className={styles.optionGroup} style={{ border: 0, padding: 0, margin: 0 }}>
+        <fieldset className={styles.optionGroup}>
           <legend className="sr-only">{fr.sessions.postpone.chooseSlot}</legend>
           {byHorizon('deux_semaines').length > 0 && (
             <>

@@ -22,22 +22,24 @@
   padding: 0 var(--space-sm);
 }
 
+/* Le moment de marque du shell : un cran au-dessus des liens de navigation. */
 .brand {
   font-family: var(--font-heading);
   font-weight: var(--weight-semibold);
-  font-size: var(--text-body); /* 16px : tient « Deuxième Souffle » sur une seule ligne */
+  font-size: var(--text-body-lg);
   line-height: var(--lh-snug);
   color: var(--color-text-primary);
   display: flex;
   flex-direction: column;
 }
 
-/* Sous-libellé en casse normale (pas de capitales, pas d'interlettrage de label). */
+/* Sous-libellé en casse normale, encre neutre — le bleu reste aux éléments
+   cliquables (« Espace EHPAD » n'est pas un lien). */
 .brandSub {
   font-size: var(--text-caption);
   font-weight: var(--weight-medium);
   letter-spacing: var(--ls-normal);
-  color: var(--color-accent);
+  color: var(--color-text-secondary);
 }
 
 .navList {
@@ -61,22 +63,34 @@
   text-decoration: none;
   font-family: var(--font-body); /* pile de liens de navigation en Inter (pas Oswald) */
   font-weight: var(--weight-medium); /* 500 — convention dashboard ; l'actif passe à 600 */
-  font-size: var(--text-body-sm); /* 14px — taille nav standard (cible tactile garde 48px) */
+  font-size: var(--text-body); /* 16px — la navigation primaire n'est plus le plus petit texte de l'écran */
 }
 
 .navItem:hover {
-  background: var(--lc-neutral-100);
+  background: var(--color-surface-hover);
   color: var(--color-text-primary);
 }
 
-/* actif : léger surlignage neutre + texte plus sombre (pas de barre, pas de bleu).
-   Un cran plus marqué que le survol (neutral-200 vs 100) pour que « sélectionné » se
-   distingue de « survolé ». La couleur n'est jamais le seul signal : NavLink pose
-   aria-current="page" et le gris reste lisible en niveaux de gris. */
+/* actif : voile bleu doux + encre bleue + barre gauche — « vous êtes ici » porté
+   par trois indices (fond, graisse, barre), pas par la couleur seule (NavLink pose
+   aria-current="page" ; le contraste reste lisible en niveaux de gris). Le bleu est
+   cohérent avec la règle maison « couleur = cliquable » : l'onglet est un lien. */
 .active {
-  background: var(--lc-neutral-200);
-  color: var(--color-text-primary);
+  background: var(--color-selected-soft);
+  color: var(--color-selected-ink);
   font-weight: var(--weight-semibold); /* 600 — l'actif gagne en graisse, pas que le fond */
+}
+
+.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
 }
 
 .icon {

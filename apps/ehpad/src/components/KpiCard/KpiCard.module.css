@@ -1,5 +1,6 @@
-/* Carte statistique (non cliquable) — bord fin, pas d'ombre, chiffre neutre :
-   elle informe sans attirer l'attention. La couleur est réservée aux actions. */
+/* Carte statistique (non cliquable) — bord fin, pas d'ombre : elle informe.
+   Le CHIFFRE est le seul élément « display » de la carte (32px/700, chiffres
+   tabulaires) : libellé et détail restent en retrait — une seule chose mène. */
 .kpi {
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
@@ -7,12 +8,12 @@
   padding: var(--space-md);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-xs);
 }
 
 .eyebrow {
   font-family: var(--font-heading);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   font-size: var(--text-body-sm);
   letter-spacing: var(--ls-normal); /* casse normale (règle de marque : pas de capitales) */
   color: var(--color-text-secondary);
@@ -26,10 +27,12 @@
 
 .number {
   font-family: var(--font-display);
-  font-weight: var(--weight-semibold); /* 600 — chiffre plus léger, lecture calme (réf. carte stat) */
-  font-size: var(--text-h3);
-  line-height: 1.2;
-  color: var(--color-text-primary); /* neutre par défaut : une stat n'attire pas l'œil */
+  font-weight: var(--weight-display);
+  font-size: var(--text-h2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ls-tight);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary); /* neutre par défaut : une stat n'alerte pas */
 }
 
 /* Teintes sémantiques explicites uniquement (santé/alerte), jamais par défaut. */
@@ -41,6 +44,12 @@
   color: var(--color-accent);
 }
 
+/* La seule carte KPI qui appelle une action porte un liseré accent :
+   elle invite visiblement, les trois autres restent neutres. */
+.kpi[data-tone='accent'] {
+  border-left: 4px solid var(--color-accent);
+}
+
 .unit {
   font-size: var(--text-body-sm);
   color: var(--color-text-secondary);
@@ -48,7 +57,7 @@
 
 .detail {
   font-size: var(--text-body-sm);
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
 }
 
 .action {

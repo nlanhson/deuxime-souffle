@@ -1,6 +1,6 @@
 .wrap {
   background: var(--color-surface);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg); /* même rayon que toutes les cartes (une seule grammaire) */
   border: 1px solid var(--color-border-subtle);
   overflow: hidden;
 }
@@ -45,7 +45,7 @@
 }
 
 .clickable:hover td {
-  background: var(--lc-neutral-50);
+  background: var(--color-surface-hover);
 }
 
 .sortBtn {
@@ -106,8 +106,8 @@
   .table td::before {
     content: attr(data-label);
     font-family: var(--font-heading);
-    font-weight: 600;
-    font-size: 13px;
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-body-sm);
     letter-spacing: var(--ls-normal);
     color: var(--color-text-secondary);
     text-align: left;

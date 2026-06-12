@@ -18,6 +18,7 @@ import {
   SkeletonRows,
 } from '@/components';
 import type { AppNotification } from '@/types/models';
+import styles from './notifications.module.css';
 
 const TYPE_ICONS: Record<AppNotification['type'], LucideIcon> = {
   coach_retard: Timer,
@@ -70,14 +71,7 @@ export default function NotificationsScreen() {
       )}
 
       {state.data && state.data.length > 0 && (
-        <section
-          style={{
-            background: 'var(--color-surface)',
-            borderRadius: 'var(--radius-xl)',
-            boxShadow: 'var(--elevation-1)',
-            padding: 'var(--space-sm) var(--space-lg)',
-          }}
-        >
+        <section className={styles.listCard}>
           <List label={fr.notifications.title}>
             {state.data.map((notification) => {
               const Icon = TYPE_ICONS[notification.type];
@@ -88,16 +82,9 @@ export default function NotificationsScreen() {
                   onClick={() => open(notification)}
                   leading={
                     <span
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: 44,
-                        height: 44,
-                        borderRadius: '50%',
-                        background: notification.read ? 'var(--lc-neutral-100)' : 'var(--color-info-soft)',
-                        color: notification.read ? 'var(--color-text-secondary)' : 'var(--color-accent)',
-                      }}
+                      className={
+                        notification.read ? styles.typeIcon : `${styles.typeIcon} ${styles.typeIconUnread}`
+                      }
                     >
                       <Icon size={20} aria-hidden />
                     </span>

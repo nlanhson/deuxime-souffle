@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: rgba(24, 23, 21, 0.5);
+  background: var(--color-scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -64,7 +64,7 @@
 }
 
 .close:hover {
-  background: var(--lc-neutral-100);
+  background: var(--color-surface-hover);
 }
 
 .body {
@@ -75,10 +75,13 @@
   gap: var(--space-md);
 }
 
+/* Pied ancré par un filet : sur les dialogues qui défilent, la rangée
+   d'actions ne flotte plus dans le vide. */
 .footer {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-sm);
   flex-wrap: wrap;
-  padding: 0 var(--space-lg) var(--space-lg);
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+  border-top: 1px solid var(--color-border-subtle);
 }

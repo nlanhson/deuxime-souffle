@@ -3,9 +3,10 @@
  *
  * Where a freshly-registered coach lands. The brief locks the rest of the app while an account is
  * pending — so this is the ONLY screen shown in that state (mounted by App's auth gate), with the
- * KYC document checklist (CV · URSSAF · insurance · APA diploma) and the "Complete my application"
- * action. Document upload is the next slice (stubbed here via BlankScreen). Log out is available so
- * the coach is never truly trapped. A rejected application would get its own screen + resubmit flow
+ * KYC document checklist (CV · URSSAF · insurance · APA diploma), a per-document received/pending
+ * status (WBS AUTH-19), the indicative processing time, and the "Complete my application" action.
+ * Document upload is the next slice (stubbed here via BlankScreen). Log out is available so the
+ * coach is never truly trapped. A rejected application would get its own screen + resubmit flow
  * (deferred). Surface = coach (ink); cards reuse the shared raised-card gradient.
  */
 import React, { useState } from 'react';
@@ -19,7 +20,8 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { BlankScreen } from '../components/BlankScreen';
 import { useAuth } from '../auth/AuthContext';
 import {
-  ChevronLeft, Hourglass, Plus, FileText, ScrollText, ShieldCheck, GraduationCap, type LucideIcon,
+  ChevronLeft, Hourglass, Plus, Check, Clock, FileText, ScrollText, ShieldCheck, GraduationCap,
+  type LucideIcon,
 } from '../icons';
 
 const S = surfaces.coach;
@@ -27,6 +29,7 @@ const ON_CARD = palette.neutral[50];
 const ON_CARD_2 = palette.neutral[300];
 const DIVIDER = palette.neutral[700];
 const PENDING = { fg: palette.or[300], bg: 'rgba(242,194,0,0.13)' }; // on-ink pending tone
+const RECEIVED = { fg: palette.vert[300], bg: 'rgba(47,158,107,0.14)' }; // on-ink received tone
 const F = {
   display: 'Anton_400Regular',
   oswS: 'Oswald_600SemiBold',
@@ -34,11 +37,13 @@ const F = {
   bodyS: 'Inter_600SemiBold',
 };
 
-const DOCS: { key: keyof typeof copy.auth.pending.docs; icon: LucideIcon }[] = [
-  { key: 'cv', icon: FileText },
-  { key: 'urssaf', icon: ScrollText },
-  { key: 'insurance', icon: ShieldCheck },
-  { key: 'diploma', icon: GraduationCap },
+// Mock per-document statuses (AUTH-19): the CV and URSSAF made it in with the application;
+// insurance + diploma are still to add. Real code reads these from the application record.
+const DOCS: { key: keyof typeof copy.auth.pending.docs; icon: LucideIcon; received: boolean }[] = [
+  { key: 'cv', icon: FileText, received: true },
+  { key: 'urssaf', icon: ScrollText, received: true },
+  { key: 'insurance', icon: ShieldCheck, received: false },
+  { key: 'diploma', icon: GraduationCap, received: false },
 ];
 
 export function PendingApprovalScreen() {
@@ -76,6 +81,11 @@ export function PendingApprovalScreen() {
           <Text style={st.eyebrow}>{c.eyebrow}</Text>
           <Text style={st.title}>{c.title}</Text>
           <Text style={st.body}>{body}</Text>
+          {/* Indicative processing time (AUTH-19) — its own visible line, not buried in prose. */}
+          <View style={st.timeRow}>
+            <Clock size={15} color={ON_CARD_2} />
+            <Text style={st.timeTxt}>{c.processingTime}</Text>
+          </View>
         </View>
 
         {/* KYC documents checklist */}
@@ -95,10 +105,18 @@ export function PendingApprovalScreen() {
                 <d.icon size={18} color={ON_CARD_2} />
               </View>
               <Text style={st.docLabel} numberOfLines={1}>{c.docs[d.key]}</Text>
-              <View style={st.docChip}>
-                <Plus size={12} color={PENDING.fg} />
-                <Text style={st.docChipTxt}>{c.docStatusMissing}</Text>
-              </View>
+              {/* Received vs to-add (AUTH-19) — icon + word, never colour alone. */}
+              {d.received ? (
+                <View style={[st.docChip, st.docChipReceived]}>
+                  <Check size={12} color={RECEIVED.fg} />
+                  <Text style={[st.docChipTxt, { color: RECEIVED.fg }]}>{c.docStatusReceived}</Text>
+                </View>
+              ) : (
+                <View style={st.docChip}>
+                  <Plus size={12} color={PENDING.fg} />
+                  <Text style={st.docChipTxt}>{c.docStatusMissing}</Text>
+                </View>
+              )}
             </View>
           ))}
         </View>
@@ -134,13 +152,16 @@ const st = StyleSheet.create({
     backgroundColor: PENDING.bg, borderRadius: r.pill, paddingVertical: 4, paddingHorizontal: 12, marginBottom: sp.md,
   },
   statusTxt: { fontFamily: F.bodyS, fontSize: 12, letterSpacing: 0.3, color: PENDING.fg },
+  // Sentence case (brand rule: no all-caps).
   eyebrow: {
-    fontFamily: F.oswS, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase',
+    fontFamily: F.oswS, fontSize: 12, letterSpacing: 0.5,
     color: palette.neutral[500], marginBottom: sp.xs,
   },
   // Anton: lineHeight ≥1.2× the size avoids the clip.
   title: { fontFamily: F.display, fontSize: 34, lineHeight: 41, color: S.textPrimary, textAlign: 'center' },
   body: { fontFamily: F.body, fontSize: 15, lineHeight: 23, color: ON_CARD_2, textAlign: 'center', marginTop: sp.sm, maxWidth: 340 },
+  timeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: sp.md },
+  timeTxt: { fontFamily: F.bodyS, fontSize: 13, color: ON_CARD_2 },
 
   /* documents */
   docsEyebrow: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 1, color: palette.neutral[400], marginBottom: 4 },
@@ -160,6 +181,7 @@ const st = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: PENDING.bg, borderRadius: r.pill, paddingVertical: 4, paddingHorizontal: 9,
   },
+  docChipReceived: { backgroundColor: RECEIVED.bg },
   docChipTxt: { fontFamily: F.body, fontSize: 12, color: PENDING.fg },
 
   cta: { width: '100%', marginTop: sp.lg },

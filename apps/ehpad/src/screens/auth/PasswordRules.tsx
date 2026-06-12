@@ -21,7 +21,7 @@ export function PasswordRules({ password }: { password: string }) {
     { key: 'number', label: fr.auth.passwordRules.number },
   ];
   return (
-    <div>
+    <div className={styles.rulesBox}>
       <p className={styles.rulesTitle}>{fr.auth.passwordRules.title}</p>
       <ul className={styles.rules}>
         {rows.map((row) => {

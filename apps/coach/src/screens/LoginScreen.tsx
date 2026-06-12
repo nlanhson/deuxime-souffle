@@ -2,10 +2,10 @@
  * Coach · Log in (E01 — Auth & Account).
  *
  * Email + password sign-in for an existing coach (a 30-day session and manual logout are handled by
- * the auth layer / Profile). A cross-link leads to registration ("Coach self-registration … with
- * admin validation"). Google login is confirmed for coaches by the brief but lives on the sign-up
- * screen for now; Facebook stays gated on client sign-off. LAYOUT is a synthesis pending the coach
- * video + approved Figma.
+ * the auth layer / Profile), plus Google OAuth (WBS: "Coach can log in via Google OAuth" — stubbed
+ * here, real code wires the OAuth2 flow). A cross-link leads to registration ("Coach
+ * self-registration … with admin validation"); Facebook stays gated on client sign-off. LAYOUT is a
+ * synthesis pending the coach video + approved Figma.
  *
  * PROTOTYPE: no backend yet, so a valid-looking email + any non-empty password signs in; real code
  * wires Supabase auth and surfaces the server's error in the same error slot. Surface = coach (ink).
@@ -24,6 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
 import { copy } from '../copy';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { GoogleButton } from '../components/GoogleButton';
 import { AuthTextField } from '../components/AuthTextField';
 import { Logo } from '../components/Logo';
 import { X, Mail, Lock, Eye, EyeOff, TriangleAlert } from '../icons';
@@ -130,6 +131,16 @@ export function LoginScreen({
             <Text style={st.title}>{c.title}</Text>
             <Text style={st.subtitle}>{c.subtitle}</Text>
 
+            {/* Google OAuth (stub) — same entry as on sign-up; a real flow signs the coach in. */}
+            <View style={st.googleWrap}>
+              <GoogleButton label={c.google} onPress={onSuccess} />
+            </View>
+            <View style={st.divider}>
+              <View style={st.divLine} />
+              <Text style={st.divTxt}>{c.orDivider}</Text>
+              <View style={st.divLine} />
+            </View>
+
             <AuthTextField
               inputRef={emailRef}
               label={c.email.label}
@@ -234,13 +245,19 @@ const st = StyleSheet.create({
     backgroundColor: palette.neutral[800],
   },
 
+  // Sentence case (brand rule: no all-caps) — the red eyebrow reads as a kicker, not a shout.
   eyebrow: {
-    fontFamily: F.oswS, fontSize: 13, letterSpacing: 2, textTransform: 'uppercase',
+    fontFamily: F.oswS, fontSize: 13, letterSpacing: 0.5,
     color: color.action, marginBottom: sp.sm,
   },
   // Anton: lineHeight ≥1.2× the size avoids the descender/cap clip.
   title: { fontFamily: F.display, fontSize: 40, lineHeight: 48, color: S.textPrimary },
   subtitle: { fontFamily: F.body, fontSize: 16, lineHeight: 24, color: ON_2, marginTop: sp.xs, marginBottom: sp.sm },
+
+  googleWrap: { marginTop: sp.md },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: sp.md, marginVertical: sp.md },
+  divLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.10)' },
+  divTxt: { fontFamily: F.body, fontSize: 13, color: palette.neutral[500] },
 
   eyeBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', marginRight: -sp.xs },
 

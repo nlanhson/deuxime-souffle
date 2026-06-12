@@ -22,6 +22,7 @@ import {
   SkeletonGroup,
   TimePicker,
 } from '@/components';
+import styles from './sessions.module.css';
 
 /** SESS-10 — déplacer UNE occurrence future non assignée (le contrat ne change pas). */
 export default function EditSessionScreen() {
@@ -61,7 +62,7 @@ export default function EditSessionScreen() {
       <>
         <PageHeader title={fr.sessions.edit.title} crumbs={crumbs()} />
         <SkeletonGroup>
-          <Skeleton height={280} radius="var(--radius-xl)" />
+          <Skeleton height={280} radius="var(--radius-lg)" />
         </SkeletonGroup>
       </>
     );
@@ -145,7 +146,7 @@ export default function EditSessionScreen() {
       {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
 
       <CardSection title={fr.sessions.detail.title(formatDate(session.date))}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', maxWidth: 480 }}>
+        <div className={styles.editForm}>
           <DatePicker
             label={fr.sessions.edit.newDate}
             value={date}
@@ -167,7 +168,7 @@ export default function EditSessionScreen() {
             onChange={setTime}
             required
           />
-          <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
+          <div className={styles.actionsRow}>
             <ButtonLink to={`/sessions/${id}`} variant="ghost">
               {fr.common.cancel}
             </ButtonLink>

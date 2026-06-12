@@ -92,8 +92,9 @@ export function Wizard({
               {nextDisabledReason}
             </p>
           )}
+          {/* Avancer = bleu (chemin), seule la soumission finale est rouge. */}
           <Button
-            variant={current === steps.length - 1 ? 'primary' : 'secondary'}
+            variant={current === steps.length - 1 ? 'primary' : 'accent'}
             onClick={onNext}
             disabled={nextDisabled}
             loading={busy ?? false}

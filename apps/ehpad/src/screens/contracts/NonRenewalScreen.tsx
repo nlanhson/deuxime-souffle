@@ -69,7 +69,7 @@ export default function NonRenewalScreen() {
       <>
         <PageHeader title={copy.title} crumbs={[{ label: fr.contracts.title, to: '/contrats' }]} />
         <SkeletonGroup>
-          <Skeleton height={360} radius="var(--radius-xl)" />
+          <Skeleton height={360} radius="var(--radius-lg)" />
         </SkeletonGroup>
       </>
     );
@@ -133,9 +133,10 @@ export default function NonRenewalScreen() {
       <PageHeader title={copy.title} crumbs={crumbs} />
       {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
 
+      {/* La carte tient dans la largeur de lecture (720px) — voir .nrWrap. */}
       {step === 1 && (
-        <CardSection title={copy.step1Title}>
-          <div className={styles.nrCard}>
+        <div className={styles.nrWrap}>
+          <CardSection title={copy.step1Title}>
             <p>{copy.step1Body(upcomingCount)}</p>
             <div className={styles.nrActions}>
               {renewInstead}
@@ -143,14 +144,14 @@ export default function NonRenewalScreen() {
                 {copy.continueAnyway}
               </Button>
             </div>
-          </div>
-        </CardSection>
+          </CardSection>
+        </div>
       )}
 
       {step === 2 && (
-        <CardSection title={copy.step2Title}>
-          <div className={styles.nrCard}>
-            <p style={{ marginBottom: 'var(--space-md)' }}>{copy.step2Body}</p>
+        <div className={styles.nrWrap}>
+          <CardSection title={copy.step2Title}>
+            <p className={styles.lead}>{copy.step2Body}</p>
             <RadioGroup<Reason>
               legend={copy.step2Title}
               value={reason}
@@ -168,10 +169,10 @@ export default function NonRenewalScreen() {
                 { value: 'autre', label: copy.reasons.autre },
               ]}
             />
-            <div style={{ marginTop: 'var(--space-md)' }}>
+            <div className={styles.subBlock}>
               <Textarea label={copy.commentLabel} value={comment} onChange={setComment} />
             </div>
-            <div style={{ marginTop: 'var(--space-sm)' }}>
+            <div className={styles.subNote}>
               <ButtonLink
                 size="md"
                 variant="ghost"
@@ -195,15 +196,15 @@ export default function NonRenewalScreen() {
                 {fr.common.confirm}
               </Button>
             </div>
-          </div>
-        </CardSection>
+          </CardSection>
+        </div>
       )}
 
       {step === 3 && (
-        <CardSection title={copy.step3Title}>
-          <div className={styles.nrCard}>
+        <div className={styles.nrWrap}>
+          <CardSection title={copy.step3Title}>
             <p>{copy.step3Body}</p>
-            <ul className={styles.consequences} style={{ margin: 'var(--space-md) 0' }}>
+            <ul className={`${styles.consequences} ${styles.consequencesSpaced}`}>
               <li>{copy.consequence1}</li>
               <li>{copy.consequence2}</li>
               <li>{copy.consequence3}</li>
@@ -221,8 +222,8 @@ export default function NonRenewalScreen() {
                 {copy.confirmFinal}
               </Button>
             </div>
-          </div>
-        </CardSection>
+          </CardSection>
+        </div>
       )}
     </>
   );

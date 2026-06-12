@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
 import { useStrings } from '@/i18n';
@@ -10,7 +11,6 @@ import { unitLabel, ALL_UNIT_TYPES } from '@/lib/status';
 import {
   Button,
   ButtonLink,
-  CardSection,
   Checkbox,
   InlineAlert,
   LoadError,
@@ -27,6 +27,17 @@ import styles from './facility.module.css';
 
 let standardSeq = 0;
 
+/** Section réglée — même langage que la feuille de consultation (filet 2px
+ *  + titre 20px/600) pour que consultation et édition se lisent d'un seul objet. */
+const Section = ({ title, children }: { title: string; children: ReactNode }) => (
+  <section className={styles.section}>
+    <div className={styles.sectionHead}>
+      <h2 className={styles.sectionTitle}>{title}</h2>
+    </div>
+    {children}
+  </section>
+);
+
 interface AddressFieldsProps {
   legend: string;
   value: Address;
@@ -38,9 +49,7 @@ function AddressFields({ legend, value, onChange, errors }: AddressFieldsProps) 
   const fr = useStrings();
   return (
     <div>
-      <p className={styles.fieldLabel} style={{ marginBottom: 'var(--space-sm)' }}>
-        {legend}
-      </p>
+      <p className={styles.fieldLabel}>{legend}</p>
       <div className={styles.formGrid}>
         <TextField
           label={fr.facility.edit.addLine1}
@@ -123,7 +132,7 @@ export default function FacilityEditScreen() {
       <>
         <PageHeader title={fr.facility.edit.title} crumbs={[{ label: fr.facility.title, to: '/etablissement' }]} />
         <SkeletonGroup>
-          <Skeleton height={420} radius="var(--radius-xl)" />
+          <Skeleton height={420} radius="var(--radius-lg)" />
         </SkeletonGroup>
       </>
     );
@@ -224,8 +233,8 @@ export default function FacilityEditScreen() {
       />
       {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
 
-      <div className={styles.formStack}>
-        <CardSection title={fr.facility.general}>
+      <div className={styles.sheet}>
+        <Section title={fr.facility.general}>
           <div className={styles.formGrid}>
             <TextField
               label={fr.facility.tradeName}
@@ -258,7 +267,7 @@ export default function FacilityEditScreen() {
               helper={fr.facility.groupHelp}
             />
           </div>
-          <div style={{ marginTop: 'var(--space-md)', maxWidth: 420 }}>
+          <div className={styles.unitsField}>
             <MultiSelect
               label={fr.facility.unitsLabel}
               values={form.units}
@@ -266,9 +275,9 @@ export default function FacilityEditScreen() {
               options={ALL_UNIT_TYPES.map((unit) => ({ value: unit, label: unitLabel(unit) }))}
             />
           </div>
-        </CardSection>
+        </Section>
 
-        <CardSection title={fr.facility.addresses}>
+        <Section title={fr.facility.addresses}>
           <div className={styles.formStack}>
             <AddressFields
               legend={fr.facility.mainAddress}
@@ -298,41 +307,43 @@ export default function FacilityEditScreen() {
               />
             )}
           </div>
-        </CardSection>
+        </Section>
 
-        <CardSection title={fr.facility.standardSessions}>
+        <Section title={fr.facility.standardSessions}>
           <div className={styles.formStack}>
             {form.standardSessions.map((session) => (
               <div key={session.id} className={styles.standardRow}>
-                <TextField
-                  label={fr.facility.edit.labelLabel}
-                  value={session.label}
-                  onChange={(label) => updateStandard(session.id, { label })}
-                />
-                <Select
-                  label={fr.facility.edit.dayLabel}
-                  value={String(session.weekday)}
-                  onChange={(weekday) => updateStandard(session.id, { weekday: Number(weekday) })}
-                  options={fr.weekdays.map((day, index) => ({ value: String(index), label: day }))}
-                />
-                <TimePicker
-                  label={fr.facility.edit.timeLabel}
-                  value={session.time}
-                  onChange={(time) => updateStandard(session.id, { time })}
-                />
-                <TextField
-                  label={fr.facility.edit.durationLabel}
-                  type="number"
-                  inputMode="numeric"
-                  value={String(session.durationMin)}
-                  onChange={(value) => updateStandard(session.id, { durationMin: Number(value) || 0 })}
-                />
-                <Select
-                  label={fr.facility.edit.unitLabel}
-                  value={session.unitType}
-                  onChange={(unit) => updateStandard(session.id, { unitType: unit as UnitType })}
-                  options={ALL_UNIT_TYPES.map((unit) => ({ value: unit, label: unitLabel(unit) }))}
-                />
+                <div className={styles.standardFields}>
+                  <TextField
+                    label={fr.facility.edit.labelLabel}
+                    value={session.label}
+                    onChange={(label) => updateStandard(session.id, { label })}
+                  />
+                  <Select
+                    label={fr.facility.edit.dayLabel}
+                    value={String(session.weekday)}
+                    onChange={(weekday) => updateStandard(session.id, { weekday: Number(weekday) })}
+                    options={fr.weekdays.map((day, index) => ({ value: String(index), label: day }))}
+                  />
+                  <TimePicker
+                    label={fr.facility.edit.timeLabel}
+                    value={session.time}
+                    onChange={(time) => updateStandard(session.id, { time })}
+                  />
+                  <TextField
+                    label={fr.facility.edit.durationLabel}
+                    type="number"
+                    inputMode="numeric"
+                    value={String(session.durationMin)}
+                    onChange={(value) => updateStandard(session.id, { durationMin: Number(value) || 0 })}
+                  />
+                  <Select
+                    label={fr.facility.edit.unitLabel}
+                    value={session.unitType}
+                    onChange={(unit) => updateStandard(session.id, { unitType: unit as UnitType })}
+                    options={ALL_UNIT_TYPES.map((unit) => ({ value: unit, label: unitLabel(unit) }))}
+                  />
+                </div>
                 <Button
                   size="md"
                   variant="ghost"
@@ -370,9 +381,9 @@ export default function FacilityEditScreen() {
               </Button>
             </div>
           </div>
-        </CardSection>
+        </Section>
 
-        <CardSection title={fr.facility.pricing}>
+        <Section title={fr.facility.pricing}>
           <div className={styles.formGrid}>
             <TextField
               label={fr.facility.edit.rateLabel}
@@ -387,7 +398,7 @@ export default function FacilityEditScreen() {
               onChange={setMarkersText}
             />
           </div>
-        </CardSection>
+        </Section>
 
         <div className={styles.formActions}>
           <ButtonLink to="/etablissement" variant="ghost">

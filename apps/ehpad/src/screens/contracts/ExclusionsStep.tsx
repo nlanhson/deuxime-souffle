@@ -53,7 +53,7 @@ export function ExclusionsStep({ data, dispatch }: { data: WizardData; dispatch:
   return (
     <>
       <h3 className={styles.summaryTitle}>{copy.title}</h3>
-      <p style={{ color: 'var(--color-text-secondary)' }}>{copy.intro}</p>
+      <p className={styles.muted}>{copy.intro}</p>
 
       {/* Grille hebdomadaire jour × matin/après-midi */}
       <div className={styles.exGrid} role="group" aria-label={copy.gridCaption}>
@@ -64,7 +64,7 @@ export function ExclusionsStep({ data, dispatch }: { data: WizardData; dispatch:
           </span>
         ))}
         {(['matin', 'apres_midi'] as const).map((part) => (
-          <div key={part} style={{ display: 'contents' }}>
+          <div key={part} className={styles.exRowGroup}>
             <span className={styles.exRowLabel}>
               {part === 'matin' ? copy.morning : copy.afternoon}
             </span>
@@ -89,7 +89,7 @@ export function ExclusionsStep({ data, dispatch }: { data: WizardData; dispatch:
 
       {/* Raccourcis */}
       <div>
-        <p className={styles.summaryLabel} style={{ marginBottom: 'var(--space-xs)' }}>
+        <p className={styles.groupLabel}>
           {copy.presets}
         </p>
         <div className={styles.presetRow}>
@@ -108,7 +108,7 @@ export function ExclusionsStep({ data, dispatch }: { data: WizardData; dispatch:
       {/* Périodes spéciales */}
       <div>
         <h4 className={styles.summaryTitle}>{copy.specialTitle}</h4>
-        <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-sm)' }}>{copy.specialIntro}</p>
+        <p className={styles.mutedIntro}>{copy.specialIntro}</p>
         {data.specialPeriods.map((period) => (
           <div key={period.id} className={styles.periodRow}>
             <span>
@@ -116,7 +116,7 @@ export function ExclusionsStep({ data, dispatch }: { data: WizardData; dispatch:
               {formatDate(period.startDate)}
               {period.endDate ? ` → ${formatDate(period.endDate)}` : ''} · {fr.dayParts[period.part]}
             </span>
-            <span style={{ display: 'inline-flex', gap: 'var(--space-xs)' }}>
+            <span className={styles.rowActions}>
               <Button
                 size="md"
                 variant="ghost"
@@ -170,7 +170,7 @@ export function ExclusionsStep({ data, dispatch }: { data: WizardData; dispatch:
               placeholder={copy.periodLabelPlaceholder}
               required
             />
-            <div style={{ display: 'grid', gap: 'var(--space-md)', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+            <div className={styles.dateGrid}>
               <DatePicker
                 label={editing.kind === 'jour_unique' ? copy.periodDay : copy.periodStart}
                 value={editing.startDate || null}
@@ -196,7 +196,7 @@ export function ExclusionsStep({ data, dispatch }: { data: WizardData; dispatch:
                 { value: 'apres_midi', label: fr.dayParts.apres_midi },
               ]}
             />
-            <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
+            <div className={styles.actionRow}>
               <Button
                 size="md"
                 variant="ghost"
@@ -239,13 +239,13 @@ export function ExclusionsStep({ data, dispatch }: { data: WizardData; dispatch:
       <div>
         <h4 className={styles.summaryTitle}>{copy.recap}</h4>
         {data.weeklyExclusions.length === 0 && data.specialPeriods.length === 0 ? (
-          <p style={{ color: 'var(--color-text-secondary)' }}>{copy.recapEmpty}</p>
+          <p className={styles.muted}>{copy.recapEmpty}</p>
         ) : (
           <dl className={styles.summaryList}>
             {data.weeklyExclusions.length > 0 && (
               <div>
                 <dt className={styles.summaryLabel}>{copy.weeklyRecap}</dt>
-                <dd style={{ margin: 0 }}>
+                <dd>
                   {data.weeklyExclusions
                     .map((e) =>
                       copy.labelFor(
@@ -260,7 +260,7 @@ export function ExclusionsStep({ data, dispatch }: { data: WizardData; dispatch:
             {data.specialPeriods.length > 0 && (
               <div>
                 <dt className={styles.summaryLabel}>{copy.periodsRecap}</dt>
-                <dd style={{ margin: 0 }}>
+                <dd>
                   {data.specialPeriods
                     .map((p) => `${p.label} (${formatDate(p.startDate)}${p.endDate ? ` → ${formatDate(p.endDate)}` : ''})`)
                     .join(' · ')}

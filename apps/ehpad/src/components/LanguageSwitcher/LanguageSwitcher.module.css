@@ -5,15 +5,15 @@
   padding: 3px;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-pill);
-  background: var(--color-surface);
+  background: var(--lc-neutral-100); /* rail teinté, comme le SegmentedControl */
 }
 
 .option {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 40px;
-  min-height: 36px;
+  min-width: var(--touch-target-min);
+  min-height: 38px; /* + rail 3px ×2 + bord 1px ×2 = 46px hors-tout (≥ 44px) */
   padding: 0 var(--space-md);
   border: none;
   border-radius: var(--radius-pill);
@@ -29,7 +29,7 @@
 }
 
 .option:hover:not([data-active='true']) {
-  background: var(--lc-neutral-100);
+  background: var(--color-surface-hover);
   color: var(--color-text-primary);
 }
 

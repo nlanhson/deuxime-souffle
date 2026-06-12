@@ -1,0 +1,81 @@
+/* Carte plate de la liste — blanche, bord fin, sans ombre (règle maison :
+   l'ombre est réservée aux surfaces flottantes). */
+.listCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm) var(--space-lg);
+}
+
+/* ---- flux d'évaluation ---- */
+
+/* Rappel compact de la séance : une ligne (avatar + date/heure + coach),
+   la carte du formulaire reste le héros de l'écran. */
+.recap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm) var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.recapRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  flex-wrap: wrap;
+  min-height: var(--touch-target-min);
+}
+
+.recapDate {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body);
+}
+
+.recapCoach {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Une seule carte : note → impression → commentaire → envoi.
+   Le geste se termine dans le même contenant qu'il a commencé. */
+.formCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.submitRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.submitHint {
+  color: var(--color-text-secondary);
+}
+
+/* ---- évaluation déjà envoyée ---- */
+
+.stackSm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.metaText {
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
+}
+
+/* Squelettes : même rythme vertical que l'écran réel. */
+.skeletonStack {
+  display: grid;
+  gap: var(--space-md);
+}

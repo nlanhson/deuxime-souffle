@@ -16,7 +16,8 @@ import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MapPin, AlertTriangle, Check, CheckCircle2, Navigation, Edit3, Users, Bell, Clock, User, X, ChevronDown, ChevronUp, ChevronRight, Ban, CalendarX, StickyNote, Send, Activity, Smile, type LucideIcon } from '../icons';
+import * as Clipboard from 'expo-clipboard';
+import { MapPin, AlertTriangle, Check, CheckCircle2, Navigation, Edit3, Users, Bell, Clock, User, X, ChevronDown, ChevronUp, ChevronRight, Ban, CalendarX, StickyNote, Send, Activity, Smile, Wallet, Copy, type LucideIcon } from '../icons';
 
 import { palette, color, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
 import { copy } from '../copy';
@@ -25,6 +26,7 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { ProfileAvatar } from '../components/ProfileAvatar';
 import { Segmented } from '../components/segmented';
 import { ActionModal } from '../components/ActionModal';
+import { OptionSheet } from '../components/OptionSheet';
 import { CheckInModal } from '../components/CheckInModal';
 import { AbsenceModal } from '../components/AbsenceModal';
 import { openDirections } from '../lib/openDirections';
@@ -77,7 +79,9 @@ const F = {
 /* ---------- data model ---------- */
 
 type Status = 'checkin' | 'confirmed' | 'checkedIn' | 'reportDue' | 'reportSent';
-type Session = { id: string; time: string; end: string; place: string; addr: string; detail: string; contact: string; status: Status };
+// `dom` = day-of-month (June 2026 — TODAY = 9) for the Month view; `rate` = the coach's hourly
+// rate on this session (PLA-14 — mock; real code reads the assignment's agreed rate).
+type Session = { id: string; dom: number; time: string; end: string; place: string; addr: string; detail: string; contact: string; status: Status; rate: number };
 type Group = { label: string; items: Session[] };
 
 // Mock data — placeholder content (real code formats weekday/distance/time from data + locale).
@@ -86,20 +90,20 @@ const UPCOMING: Group[] = [
   {
     label: 'Today',
     items: [
-      { id: 'u1', time: '14:30', end: '15:30', place: 'The Lindens Care Home', addr: '12 Lilac Street, Lyon 3rd · 2.4 km', detail: 'Group · 8 residents', contact: 'Ask for Marie Laurent · Coordinator', status: 'checkin' },
-      { id: 'u2', time: '17:00', end: '18:00', place: 'Park Care Home', addr: '8 Rue Léon Blum, Villeurbanne · 3.1 km', detail: 'Individual · 1 resident', contact: 'Ask for Thomas Petit · Activities lead', status: 'confirmed' },
+      { id: 'u1', dom: 9, time: '14:30', end: '15:30', place: 'The Lindens Care Home', addr: '12 Lilac Street, Lyon 3rd · 2.4 km', detail: 'Group · 8 residents', contact: 'Ask for Marie Laurent · Coordinator', status: 'checkin', rate: 35 },
+      { id: 'u2', dom: 9, time: '17:00', end: '18:00', place: 'Park Care Home', addr: '8 Rue Léon Blum, Villeurbanne · 3.1 km', detail: 'Individual · 1 resident', contact: 'Ask for Thomas Petit · Activities lead', status: 'confirmed', rate: 35 },
     ],
   },
   {
     label: 'Tomorrow',
     items: [
-      { id: 'u3', time: '10:00', end: '11:00', place: 'The Cedars Residence', addr: '5 Avenue Jean Jaurès, Lyon 7th · 4.8 km', detail: 'Group · 6 residents', contact: 'Ask for Sophie Marchand · Coordinator', status: 'confirmed' },
+      { id: 'u3', dom: 10, time: '10:00', end: '11:00', place: 'The Cedars Residence', addr: '5 Avenue Jean Jaurès, Lyon 7th · 4.8 km', detail: 'Group · 6 residents', contact: 'Ask for Sophie Marchand · Coordinator', status: 'confirmed', rate: 40 },
     ],
   },
   {
     label: 'Thu · June 11',
     items: [
-      { id: 'u4', time: '11:00', end: '12:00', place: 'Maple Court', addr: '27 Cours Gambetta, Lyon 6th · 1.9 km', detail: 'Group · 10 residents', contact: 'Ask for Claire Dubois · Care manager', status: 'confirmed' },
+      { id: 'u4', dom: 11, time: '11:00', end: '12:00', place: 'Maple Court', addr: '27 Cours Gambetta, Lyon 6th · 1.9 km', detail: 'Group · 10 residents', contact: 'Ask for Claire Dubois · Care manager', status: 'confirmed', rate: 35 },
     ],
   },
 ];
@@ -108,17 +112,20 @@ const PAST: Group[] = [
   {
     label: 'Yesterday',
     items: [
-      { id: 'p1', time: '15:00', end: '16:00', place: 'Bellevue Residence', addr: '3 Rue Bellecombe, Lyon 6th · 1.9 km', detail: 'Group · 10 residents', contact: 'Ask for Julien Moreau · Coordinator', status: 'reportDue' },
-      { id: 'p2', time: '09:30', end: '10:30', place: 'Riverside Care Home', addr: '14 Quai Rambaud, Lyon 7th · 4.1 km', detail: 'Individual · 1 resident', contact: 'Ask for Amélie Roche · Activities lead', status: 'reportSent' },
+      { id: 'p1', dom: 8, time: '15:00', end: '16:00', place: 'Bellevue Residence', addr: '3 Rue Bellecombe, Lyon 6th · 1.9 km', detail: 'Group · 10 residents', contact: 'Ask for Julien Moreau · Coordinator', status: 'reportDue', rate: 35 },
+      { id: 'p2', dom: 8, time: '09:30', end: '10:30', place: 'Riverside Care Home', addr: '14 Quai Rambaud, Lyon 7th · 4.1 km', detail: 'Individual · 1 resident', contact: 'Ask for Amélie Roche · Activities lead', status: 'reportSent', rate: 35 },
     ],
   },
   {
     label: 'Mon · June 8',
     items: [
-      { id: 'p3', time: '14:00', end: '15:00', place: 'The Oaks', addr: '19 Montée des Soldats, Caluire · 5.2 km', detail: 'Group · 7 residents', contact: 'Ask for Luc Girard · Coordinator', status: 'reportSent' },
+      { id: 'p3', dom: 8, time: '14:00', end: '15:00', place: 'The Oaks', addr: '19 Montée des Soldats, Caluire · 5.2 km', detail: 'Group · 7 residents', contact: 'Ask for Luc Girard · Coordinator', status: 'reportSent', rate: 35 },
     ],
   },
 ];
+
+// June 2026 for the Month view — Jun 1 falls on a Monday; TODAY = 9 (matches Accueil).
+const MONTH = { label: 'June 2026', days: 30, firstCol: 0, today: 9 };
 
 /* ---------- small building blocks ---------- */
 
@@ -274,6 +281,12 @@ const SEG_OPTIONS = [
   { value: 'upcoming' as const, label: copy.sessions.seg.upcoming },
   { value: 'past' as const, label: copy.sessions.seg.past },
   { value: 'applications' as const, label: copy.sessions.seg.applications },
+];
+
+// List ↔ Month view of the confirmed sessions (PLA-02 — week view lives on the Home calendar).
+const VIEW_OPTIONS = [
+  { value: 'list' as const, label: copy.sessions.view.list },
+  { value: 'month' as const, label: copy.sessions.view.month },
 ];
 
 /* ---------- applications (C13) — cross-session list: the sessions you've applied for and
@@ -565,7 +578,11 @@ function ReportView({ session, onClose }: { session: OpenSession | null; onClose
 
 /* ---------- session detail (C22) — pageSheet modal, opened by tapping a card ---------- */
 
-function DetailRow({ Icon, label, value, first }: { Icon: LucideIcon; label: string; value: string; first?: boolean }) {
+function DetailRow({ Icon, label, value, first, onCopy, copyA11y, copied, copiedLabel }: {
+  Icon: LucideIcon; label: string; value: string; first?: boolean;
+  /** Copy-to-clipboard affordance (PLA-02 — the Where row). `copied` swaps in the confirmation. */
+  onCopy?: () => void; copyA11y?: string; copied?: boolean; copiedLabel?: string;
+}) {
   return (
     <View style={[st.dRow, !first && st.dRowDivider]}>
       <View style={st.dRowIcon}><Icon size={18} color={ON_CARD_2} /></View>
@@ -573,18 +590,46 @@ function DetailRow({ Icon, label, value, first }: { Icon: LucideIcon; label: str
         <Text style={st.dRowLabel}>{label}</Text>
         <Text style={st.dRowValue}>{value}</Text>
       </View>
+      {onCopy ? (
+        <Pressable
+          onPress={onCopy}
+          hitSlop={10}
+          style={({ pressed }) => [st.dCopyBtn, pressed && { opacity: 0.55 }]}
+          accessibilityRole="button"
+          accessibilityLabel={copyA11y}
+          accessibilityLiveRegion="polite"
+        >
+          {copied ? (
+            <>
+              <Check size={16} color={INK.ok.fg} />
+              {copiedLabel ? <Text style={st.dCopiedTxt}>{copiedLabel}</Text> : null}
+            </>
+          ) : (
+            <Copy size={18} color={ON_CARD_2} />
+          )}
+        </Pressable>
+      ) : null}
     </View>
   );
 }
 
-function SessionDetail({ detail, onClose, onCheckIn, onWriteReport, onCancel, onAbsence, onNotes, onViewReport }: { detail: OpenSession | null; onClose: () => void; onCheckIn: (d: OpenSession) => void; onWriteReport: (d: OpenSession) => void; onCancel: (d: OpenSession) => void; onAbsence: (d: OpenSession) => void; onNotes: (d: OpenSession) => void; onViewReport: (d: OpenSession) => void }) {
+function SessionDetail({ detail, onClose, onCheckIn, onWriteReport, onCancel, onAbsence, onLate, onNotes, onViewReport }: { detail: OpenSession | null; onClose: () => void; onCheckIn: (d: OpenSession) => void; onWriteReport: (d: OpenSession) => void; onCancel: (d: OpenSession) => void; onAbsence: (d: OpenSession) => void; onLate: (d: OpenSession) => void; onNotes: (d: OpenSession) => void; onViewReport: (d: OpenSession) => void }) {
   const s = detail;
-  // Cancel / absence only make sense before you've checked in or it's already done.
+  // Copy address (PLA-02) — flashes a short inline confirmation, reset per session.
+  const [copied, setCopied] = React.useState(false);
+  React.useEffect(() => { setCopied(false); }, [s?.id]);
+  const copyAddress = async () => {
+    if (!s) return;
+    await Clipboard.setStringAsync(s.addr);
+    setCopied(true);
+  };
+  // Cancel / absence / late only make sense before you've checked in or it's already done.
   const cancellable = s?.status === 'confirmed' || s?.status === 'checkin';
   const manageRows: { icon: LucideIcon; label: string; danger?: boolean; onPress?: () => void }[] = s ? [
     ...(cancellable ? [
       { icon: Ban, label: copy.sessions.manage.cancelParticipation, danger: true, onPress: () => onCancel(s) },
       { icon: CalendarX, label: copy.sessions.manage.declareAbsence, onPress: () => onAbsence(s) },
+      { icon: Clock, label: copy.sessions.manage.late, onPress: () => onLate(s) },
     ] : []),
     { icon: StickyNote, label: copy.sessions.manage.transmissionNotes, onPress: () => onNotes(s) },
   ] : [];
@@ -611,9 +656,19 @@ function SessionDetail({ detail, onClose, onCheckIn, onWriteReport, onCancel, on
             <View style={st.dCard}>
               <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
               <DetailRow Icon={Clock} label={copy.sessions.detail.when} value={`${s.day} · ${s.time} → ${s.end}`} first />
-              <DetailRow Icon={MapPin} label={copy.sessions.detail.where} value={s.addr} />
+              <DetailRow
+                Icon={MapPin}
+                label={copy.sessions.detail.where}
+                value={s.addr}
+                onCopy={copyAddress}
+                copyA11y={copy.sessions.detail.copyA11y}
+                copied={copied}
+                copiedLabel={copy.sessions.detail.copied}
+              />
               <DetailRow Icon={Users} label={copy.sessions.detail.format} value={s.detail} />
               <DetailRow Icon={User} label={copy.sessions.detail.contact} value={s.contact} />
+              {/* Coach hourly rate (PLA-14) */}
+              <DetailRow Icon={Wallet} label={copy.sessions.detail.rate} value={`${s.rate} ${copy.sessions.detail.rateUnit}`} />
             </View>
 
             {/* contextual actions — same vocabulary as the card */}
@@ -647,6 +702,8 @@ function SessionDetail({ detail, onClose, onCheckIn, onWriteReport, onCancel, on
 
 export function SeancesScreen() {
   const [seg, setSeg] = React.useState<Seg>('upcoming');
+  const [view, setView] = React.useState<'list' | 'month'>('list');               // PLA-02 list ↔ month
+  const [monthDay, setMonthDay] = React.useState<number>(MONTH.today);            // selected day in Month view
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [profileOpen, setProfileOpen] = React.useState(false);
   const [selected, setSelected] = React.useState<OpenSession | null>(null);
@@ -657,6 +714,8 @@ export function SeancesScreen() {
   const [reportFor, setReportFor] = React.useState<OpenSession | null>(null);     // C25 6-step report
   const [cancelFor, setCancelFor] = React.useState<OpenSession | null>(null);     // C24 cancel confirm
   const [absenceFor, setAbsenceFor] = React.useState<OpenSession | null>(null);   // C20 declare absence
+  const [lateFor, setLateFor] = React.useState<OpenSession | null>(null);         // PLA-14 declare delay
+  const [lateDone, setLateDone] = React.useState<OpenSession | null>(null);       //   …its acknowledgement
   const [notesFor, setNotesFor] = React.useState<OpenSession | null>(null);       // C28 transmission notes
   const [notesBySession, setNotesBySession] = React.useState<Record<string, NoteEntry[]>>(SEED_NOTES);
   const [reportViewFor, setReportViewFor] = React.useState<OpenSession | null>(null); // C27 view submitted report
@@ -665,6 +724,13 @@ export function SeancesScreen() {
   const isEmpty = groups.every((g) => g.items.length === 0);
   const tabBarInset = useTabBarInset();
   const loading = useFirstLoad('seances');
+
+  // Month view (PLA-02) — assigned sessions by day-of-month, from the live upcoming state.
+  const byDom = React.useMemo(() => {
+    const map: Record<number, { s: Session; day: string }[]> = {};
+    upcoming.forEach((g) => g.items.forEach((s) => { (map[s.dom] ??= []).push({ s, day: g.label }); }));
+    return map;
+  }, [upcoming]);
 
   // The two real loops. Both close the detail sheet first so a single pageSheet is on screen.
   const handleCheckIn = (o: OpenSession) => { setSelected(null); setCheckInFor(o); };
@@ -693,9 +759,20 @@ export function SeancesScreen() {
   const handleCancel = (o: OpenSession) => { setSelected(null); setCancelFor(o); };
   const confirmCancel = () => { if (cancelFor) removeUpcoming(cancelFor.id); setCancelFor(null); };
 
-  // C20 — declare absence: open the reason sheet, then drop the session (real app persists the reason).
+  // C20 / PLA-11 — declare absence: the 3-step form, then drop the session (real app persists
+  // the reason + message).
   const handleDeclareAbsence = (o: OpenSession) => { setSelected(null); setAbsenceFor(o); };
   const confirmAbsence = () => { if (absenceFor) removeUpcoming(absenceFor.id); setAbsenceFor(null); };
+
+  // PLA-14 — declare a delay ("Late"): pick a rough delay, then acknowledge. The session stays
+  // scheduled (unlike absence) — the real app just notifies the care home.
+  const handleLate = (o: OpenSession) => { setSelected(null); setLateFor(o); };
+  const confirmLate = () => {
+    const s = lateFor;
+    setLateFor(null);
+    // Let the option sheet's exit play before the acknowledgement (transport→vehicle idiom).
+    if (s) setTimeout(() => setLateDone(s), 260);
+  };
 
   // C27 — view the submitted report (read-only) + its review status.
   const handleViewReport = (o: OpenSession) => { setSelected(null); setReportViewFor(o); };
@@ -757,24 +834,91 @@ export function SeancesScreen() {
             <Text style={st.empty}>{seg === 'past' ? copy.sessions.emptyPast : copy.sessions.emptyUpcoming}</Text>
           </View>
         ) : (
-          /* ===== Grouped session list ===== */
-          groups.map((g) => (
-            <View key={g.label} style={st.group}>
-              <Text style={st.groupLabel}>{g.label}</Text>
-              {g.items.map((s, i) => (
-                <SessionCard
-                  key={`${g.label}-${s.time}-${s.place}`}
-                  s={s}
-                  day={g.label}
-                  first={i === 0}
-                  onOpen={setSelected}
-                  onCheckIn={handleCheckIn}
-                  onWriteReport={handleWriteReport}
-                  onViewReport={handleViewReport}
-                />
-              ))}
-            </View>
-          ))
+          <>
+            {/* List ↔ Month toggle (PLA-02) — confirmed sessions only. */}
+            {seg === 'upcoming' ? (
+              <Segmented
+                value={view}
+                onChange={setView}
+                options={VIEW_OPTIONS}
+                theme={{ track: SUBTLE, selected: palette.neutral[900] }}
+                style={{ marginTop: sp.sm }}
+              />
+            ) : null}
+
+            {seg === 'upcoming' && view === 'month' ? (
+              /* ===== Month grid — dots mark session days; tap a day to see its sessions ===== */
+              <View style={st.group}>
+                <Text style={st.groupLabel}>{MONTH.label}</Text>
+                <View style={st.monthHead}>
+                  {copy.week.weekdays.map((w, i) => (
+                    <Text key={`${w}-${i}`} style={st.monthHeadTxt}>{w}</Text>
+                  ))}
+                </View>
+                <View style={st.monthGrid}>
+                  {Array.from({ length: MONTH.firstCol }, (_, i) => (
+                    <View key={`pad-${i}`} style={st.monthCell} />
+                  ))}
+                  {Array.from({ length: MONTH.days }, (_, i) => i + 1).map((d) => {
+                    const n = byDom[d]?.length ?? 0;
+                    const on = monthDay === d;
+                    return (
+                      <Pressable
+                        key={d}
+                        style={st.monthCell}
+                        onPress={() => setMonthDay(d)}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: on }}
+                        accessibilityLabel={`${MONTH.label} ${d}, ${n ? `${n} ${copy.week.daySection.a11ySessions}` : copy.week.daySection.a11yNone}`}
+                      >
+                        <View style={[st.monthNumWrap, on && st.monthNumOn]}>
+                          <Text style={[st.monthNum, on && st.monthNumTxtOn]}>{d}</Text>
+                        </View>
+                        {n > 0 ? <View style={st.monthDot} /> : <View style={st.monthDotGhost} />}
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                {/* the tapped day's sessions */}
+                {(byDom[monthDay] ?? []).length === 0 ? (
+                  <Text style={st.empty}>{copy.sessions.monthEmptyDay}</Text>
+                ) : (
+                  (byDom[monthDay] ?? []).map(({ s, day }, i) => (
+                    <SessionCard
+                      key={s.id}
+                      s={s}
+                      day={day}
+                      first={i === 0}
+                      onOpen={setSelected}
+                      onCheckIn={handleCheckIn}
+                      onWriteReport={handleWriteReport}
+                      onViewReport={handleViewReport}
+                    />
+                  ))
+                )}
+              </View>
+            ) : (
+              /* ===== Grouped session list ===== */
+              groups.map((g) => (
+                <View key={g.label} style={st.group}>
+                  <Text style={st.groupLabel}>{g.label}</Text>
+                  {g.items.map((s, i) => (
+                    <SessionCard
+                      key={`${g.label}-${s.time}-${s.place}`}
+                      s={s}
+                      day={g.label}
+                      first={i === 0}
+                      onOpen={setSelected}
+                      onCheckIn={handleCheckIn}
+                      onWriteReport={handleWriteReport}
+                      onViewReport={handleViewReport}
+                    />
+                  ))}
+                </View>
+              ))
+            )}
+          </>
         )}
       </ScrollView>
       </Reveal>
@@ -786,8 +930,36 @@ export function SeancesScreen() {
         onWriteReport={handleWriteReport}
         onCancel={handleCancel}
         onAbsence={handleDeclareAbsence}
+        onLate={handleLate}
         onNotes={handleNotes}
         onViewReport={handleViewReport}
+      />
+
+      {/* PLA-14 — declare a delay ("Late"): pick a rough delay → acknowledgement. */}
+      <OptionSheet
+        visible={!!lateFor}
+        onClose={() => setLateFor(null)}
+        title={copy.sessions.lateModal.title}
+        help={copy.sessions.lateModal.help}
+        options={(Object.keys(copy.sessions.lateModal.options) as (keyof typeof copy.sessions.lateModal.options)[]).map((k) => ({
+          key: k,
+          label: copy.sessions.lateModal.options[k],
+          icon: Clock,
+        }))}
+        onSelect={confirmLate}
+        closeA11y={copy.sessions.lateModal.closeA11y}
+      />
+      <ActionModal
+        visible={!!lateDone}
+        onClose={() => setLateDone(null)}
+        Icon={Clock}
+        accentFg={INK.pending.fg}
+        accentBg={INK.pending.bg}
+        eyebrow={lateDone ? `${lateDone.place} · ${lateDone.day} · ${lateDone.time}` : undefined}
+        title={copy.sessions.lateModal.doneTitle}
+        body={copy.sessions.lateModal.doneBody}
+        primaryLabel={copy.profile.common.done}
+        closeA11y={copy.sessions.lateModal.closeA11y}
       />
 
       {/* C27 — read-only view of a submitted report + its review status */}
@@ -979,6 +1151,24 @@ const st = StyleSheet.create({
   dRowIcon: { width: 24, alignItems: 'center' },
   dRowLabel: { fontFamily: F.body, fontSize: 12, color: palette.neutral[500] },
   dRowValue: { fontFamily: F.bodyS, fontSize: 15, color: ON_CARD, marginTop: 2 },
+  // Copy-address affordance on the Where row (PLA-02) — 44px target, inline "Copied" swap.
+  dCopyBtn: {
+    minWidth: 44, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 5, paddingHorizontal: sp.xs,
+  },
+  dCopiedTxt: { fontFamily: F.bodyS, fontSize: 12, color: palette.vert[300] },
+
+  /* ----- month view (PLA-02) ----- */
+  monthHead: { flexDirection: 'row', marginBottom: sp.xs },
+  monthHeadTxt: { flex: 1, textAlign: 'center', fontFamily: F.oswM, fontSize: 12, color: ON_CANVAS_2 },
+  monthGrid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: sp.sm },
+  monthCell: { width: `${100 / 7}%`, alignItems: 'center', paddingVertical: 5 },
+  monthNumWrap: { width: 34, height: 34, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  monthNumOn: { backgroundColor: color.action },
+  monthNum: { fontFamily: F.bodyS, fontSize: 14, color: ON_CANVAS },
+  monthNumTxtOn: { color: color.onAction },
+  monthDot: { width: 5, height: 5, borderRadius: 999, backgroundColor: color.action, marginTop: 2 },
+  monthDotGhost: { width: 5, height: 5, marginTop: 2 },
 
   /* ----- manage group (per-session actions inside the detail sheet) ----- */
   manageTitle: {

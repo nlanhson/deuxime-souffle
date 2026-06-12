@@ -1,0 +1,27 @@
+/* Carte plate de la liste — blanche, bord fin, sans ombre (règle maison :
+   l'ombre est réservée aux surfaces flottantes). */
+.listCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm) var(--space-lg);
+}
+
+/* Pastille d'icône — ≥ 44px ; le bleu doux signale « non lue » (couleur = à traiter),
+   les lues restent neutres. */
+.typeIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-hover);
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.typeIconUnread {
+  background: var(--color-info-soft);
+  color: var(--color-accent);
+}

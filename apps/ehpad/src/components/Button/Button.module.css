@@ -6,15 +6,21 @@
   border-radius: var(--radius-pill); /* pilule — forme des boutons de l'app coach */
   border: 1px solid transparent;
   font-family: var(--font-body); /* Inter, casse normale (style coach ; pas de capitales) */
-  font-weight: 600;
-  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body); /* 16px pour toutes les variantes : une taille = un sens */
   text-decoration: none;
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--ease-standard),
     border-color var(--duration-fast) var(--ease-standard),
     box-shadow var(--duration-fast) var(--ease-standard),
     filter var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard);
+    color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+/* Retour de pression : l'interface répond sous le doigt (160 ms, geste léger). */
+.button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .button[data-size='lg'] {
@@ -37,12 +43,11 @@
   opacity: 0.55;
 }
 
-/* CTA primaire — dégradé rouge→braise + halo rouge, signature partagée avec l'app coach.
-   Un seul CTA primaire par écran (dosage conservé). */
+/* CTA primaire — dégradé rouge→braise + halo discret (dosage « apaisé » EHPAD),
+   signature partagée avec l'app coach. Un seul CTA primaire par écran. */
 .button[data-variant='primary'] {
   background: var(--gradient-cta);
   color: var(--color-on-action);
-  font-size: var(--text-body);
   box-shadow: var(--elevation-glow-action);
 }
 
@@ -59,7 +64,6 @@
 .button[data-variant='accent'] {
   background: var(--color-accent);
   color: var(--color-on-action);
-  font-size: var(--text-body);
 }
 
 .button[data-variant='accent']:hover:not(:disabled) {
@@ -74,12 +78,17 @@
 }
 
 .button[data-variant='secondary']:hover:not(:disabled) {
-  background: var(--lc-neutral-100);
+  background: var(--color-surface-hover);
 }
 
+/* Fantôme : bleu + soulignement au repos — l'affordance de lien ne dépend
+   pas du survol (public peu à l'aise avec la souris). */
 .button[data-variant='ghost'] {
   background: none;
   color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 
 .button[data-variant='ghost']:hover:not(:disabled) {
@@ -114,6 +123,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .button:active:not(:disabled) {
+    transform: none;
+  }
+
   .spinner {
     animation: none;
     border-top-color: currentcolor;

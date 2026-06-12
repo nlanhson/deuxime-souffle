@@ -1,0 +1,73 @@
+/* ---- liste des factures ---- */
+
+/* Grille KPI : le total impayé est le point focal — il occupe toute la
+   première rangée pour répondre d'un coup d'œil à « est-ce que je dois
+   quelque chose ? ». Les autres indicateurs restent neutres en dessous. */
+.kpiGrid {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.kpiGrid > :first-child {
+  grid-column: 1 / -1;
+}
+
+.searchField {
+  max-width: 420px;
+}
+
+/* La note HT colle au tableau qu'elle qualifie (espacement groupé). */
+.tableBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.htNote {
+  font-size: var(--text-body-sm);
+  color: var(--color-text-muted);
+}
+
+.numberLink {
+  font-weight: var(--weight-semibold);
+}
+
+/* Squelettes : même rythme vertical que l'écran réel. */
+.skeletonStack {
+  display: grid;
+  gap: var(--space-md);
+}
+
+/* ---- détail d'une facture ---- */
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-md);
+}
+
+.detailLabel {
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
+}
+
+.detailValue {
+  font-size: var(--text-body-lg);
+}
+
+/* Montant : chiffre « display » en encre neutre — le bleu est réservé aux
+   éléments cliquables, jamais aux données. */
+.amount {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: var(--text-h2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ls-tight);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.cardActions {
+  margin-top: var(--space-lg);
+}

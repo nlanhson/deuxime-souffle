@@ -23,6 +23,7 @@ import {
   TextField,
 } from '@/components';
 import type { ContactRole } from '@/types/models';
+import styles from './account.module.css';
 
 /** AUTH-11 (compte propre) + AUTH-14 (demande de suppression — jamais directe). */
 export default function AccountScreen() {
@@ -136,18 +137,19 @@ export default function AccountScreen() {
 
       {state.loading && (
         <SkeletonGroup>
-          <Skeleton height={360} radius="var(--radius-xl)" />
+          <Skeleton height={360} radius="var(--radius-lg)" />
         </SkeletonGroup>
       )}
       {state.error && <LoadError onRetry={state.retry} />}
 
       {me && user && (
         <>
+          {/* « Informations générales » : le h1 dit déjà « Mon compte » — pas de titre dupliqué. */}
           <CardSection
-            title={fr.account.title}
+            title={fr.facility.general}
             actions={<Chip label={fr.roles[user.role]} variant="info" />}
           >
-            <div style={{ display: 'grid', gap: 'var(--space-md)', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+            <div className={styles.fieldGrid}>
               <TextField label={fr.account.firstName} value={firstName} onChange={setFirstName} required />
               <TextField label={fr.account.lastName} value={lastName} onChange={setLastName} required />
               <TextField label={fr.account.phone} type="tel" inputMode="tel" value={phone} onChange={setPhone} />
@@ -160,7 +162,7 @@ export default function AccountScreen() {
                 helper={fr.account.emailHelp}
               />
             </div>
-            <div style={{ marginTop: 'var(--space-md)', maxWidth: 420 }}>
+            <div className={styles.rolesBlock}>
               <MultiSelect
                 label={fr.account.rolesLabel}
                 values={roles}
@@ -168,12 +170,12 @@ export default function AccountScreen() {
                 options={ROLE_OPTIONS}
               />
               {roles.includes('autre') && (
-                <div style={{ marginTop: 'var(--space-sm)' }}>
+                <div className={styles.otherRole}>
                   <TextField label={fr.contactsPage.otherRole} value={otherRole} onChange={setOtherRole} />
                 </div>
               )}
             </div>
-            <div style={{ marginTop: 'var(--space-lg)' }}>
+            <div className={styles.formActions}>
               <Button variant="primary" onClick={() => void save()} loading={busy}>
                 {fr.account.save}
               </Button>
@@ -181,9 +183,7 @@ export default function AccountScreen() {
           </CardSection>
 
           <CardSection title={fr.account.deleteTitle}>
-            <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>
-              {fr.account.deleteIntro}
-            </p>
+            <p className={styles.dangerIntro}>{fr.account.deleteIntro}</p>
             <Button variant="danger" icon={Trash2} onClick={() => setDeleteOpen(true)}>
               {fr.header.deleteRequest}
             </Button>

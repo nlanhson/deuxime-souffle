@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { CalendarPlus, FileSpreadsheet } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { CalendarClock, CalendarPlus, ChevronRight, FileSpreadsheet } from 'lucide-react';
 import { useStrings } from '@/i18n';
 import * as api from '@/data/api';
 import { useAuth } from '@/context/AuthContext';
@@ -8,7 +9,15 @@ import { useToast } from '@/context/ToastContext';
 import { useAsync } from '@/hooks/useAsync';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { downloadStub } from '@/lib/pdf';
-import { formatDate, formatMonthYear, formatTime, toIso } from '@/lib/format';
+import {
+  capitalize,
+  formatDate,
+  formatDateTime,
+  formatMonthYear,
+  formatTime,
+  parseDate,
+  toIso,
+} from '@/lib/format';
 import { unitLabel } from '@/lib/status';
 import {
   Button,
@@ -62,6 +71,40 @@ export default function DashboardScreen() {
       ),
     [version],
   );
+
+  /* La prochaine séance à venir — l'écran doit y répondre en 5 secondes,
+     en toutes lettres, pas dans une pastille de 24px au fond de la grille. */
+  const nextSession = useMemo(() => {
+    if (!state.data) return null;
+    const now = new Date();
+    const todayIso = toIso(now);
+    const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const upcoming = state.data.sessions
+      .filter(
+        (s) =>
+          (s.status === 'a_venir' || s.status === 'reportee') &&
+          (s.date > todayIso || (s.date === todayIso && s.time >= nowTime)),
+      )
+      .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    return upcoming[0] ?? null;
+  }, [state.data]);
+
+  const nextRelative = useMemo(() => {
+    if (!nextSession) return '';
+    const days = Math.round(
+      (parseDate(nextSession.date).getTime() - parseDate(toIso(new Date())).getTime()) / 86_400_000,
+    );
+    if (days <= 0) return fr.dashboard.next.today;
+    if (days === 1) return fr.dashboard.next.tomorrow;
+    return fr.dashboard.next.inDays(days);
+  }, [nextSession, fr]);
+
+  const nextSub = useMemo(() => {
+    if (!nextSession || !state.data) return '';
+    const coach = state.data.coaches.find((c) => c.id === nextSession.coachId);
+    const who = coach ? `${coach.firstName} ${coach.lastName}` : fr.calendar.unassigned;
+    return `${who} · ${unitLabel(nextSession.unitType)}`;
+  }, [nextSession, state.data, fr]);
 
   const kpis = useMemo(() => {
     if (!state.data) return null;
@@ -129,7 +172,26 @@ export default function DashboardScreen() {
 
       {state.data && kpis && (
         <>
-          {/* 1 · Vue d'ensemble — cartes d'info neutres (non cliquables, sans couleur) */}
+          {/* 1 · Le point focal : la prochaine séance, en toutes lettres */}
+          {nextSession && (
+            <Link to={`/sessions/${nextSession.id}`} className={styles.hero}>
+              <span className={styles.heroChip} aria-hidden>
+                <CalendarClock />
+              </span>
+              <span className={styles.heroBody}>
+                <span className={styles.heroEyebrow}>
+                  {fr.dashboard.next.eyebrow} · {nextRelative}
+                </span>
+                <span className={styles.heroTitle}>
+                  {capitalize(formatDateTime(nextSession.date, nextSession.time))}
+                </span>
+                <span className={styles.heroSub}>{nextSub}</span>
+              </span>
+              <ChevronRight className={styles.heroChevron} aria-hidden />
+            </Link>
+          )}
+
+          {/* 2 · Vue d'ensemble — cartes d'info neutres (non cliquables, sans couleur) */}
           <div className={styles.statRow}>
             <KpiCard
               eyebrow={fr.dashboard.kpi.sessionsMonth}
@@ -176,7 +238,7 @@ export default function DashboardScreen() {
             />
           </div>
 
-          {/* 2 · Calendrier */}
+          {/* 3 · Calendrier */}
           <Calendar
             sessions={state.data.sessions}
             coaches={state.data.coaches}

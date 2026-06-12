@@ -35,15 +35,18 @@
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: rgba(24, 23, 21, 0.5);
+  background: var(--color-scrim);
 }
 
+/* Superposition : l'ombre est permise ici (règle maison — cartes plates,
+   ombres réservées aux éléments qui flottent au-dessus de la page). */
 .drawer {
   width: min(320px, 86vw);
   height: 100%;
   background: var(--color-surface);
   padding: var(--space-md);
   overflow-y: auto;
+  box-shadow: var(--elevation-3);
   animation: drawer-in var(--duration-base) var(--ease-decelerate);
 }
 

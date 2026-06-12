@@ -20,10 +20,11 @@
   flex-wrap: wrap;
 }
 
+/* 18px : le nom d'établissement situe sans rivaliser avec le h1 de page. */
 .facility {
   font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: var(--text-subheading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body-lg);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -62,7 +63,7 @@
 }
 
 .iconBtn:hover {
-  background: var(--lc-neutral-100);
+  background: var(--color-surface-hover);
   color: var(--color-text-primary);
 }
 
@@ -79,8 +80,8 @@
   border-radius: var(--radius-pill);
   background: var(--color-accent);
   color: var(--color-on-action);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
 }
 
 .menuWrap {
@@ -144,7 +145,7 @@
 }
 
 .menuItem:hover {
-  background: var(--lc-neutral-100);
+  background: var(--color-surface-hover);
 }
 
 .menuIcon {
@@ -192,7 +193,7 @@
 }
 
 .notifItem:hover {
-  background: var(--lc-neutral-100);
+  background: var(--color-surface-hover);
 }
 
 .notifIcon {

@@ -6,8 +6,8 @@
   border-radius: var(--radius-pill);
   border: 1px solid transparent;
   font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body-sm); /* 14px plancher — lectorat âgé, fini le 13px hors gamme */
   letter-spacing: var(--ls-normal);
   /* On laisse les libellés longs (ex. « Coordinateur·rice d'animation ») passer à la
      ligne plutôt que déborder l'écran en 320px ; les puces courtes tiennent sur une ligne. */

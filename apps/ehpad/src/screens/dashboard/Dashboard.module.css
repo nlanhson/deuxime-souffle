@@ -1,3 +1,90 @@
+/* Bandeau « Prochaine séance » — LE point focal de l'écran : toute la carte est
+   cliquable (couleur = cliquable : pastille bleue, bord accent au survol), le
+   moment de la séance porte la voix (20px/600), le reste accompagne. */
+.hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.hero:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--elevation-1);
+  transform: translateY(-1px);
+}
+
+.hero:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.heroChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--lc-bleu-50);
+  color: var(--color-accent);
+}
+
+.heroChip svg {
+  width: 24px;
+  height: 24px;
+}
+
+.heroBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.heroEyebrow {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+
+.heroTitle {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-subheading);
+  line-height: var(--lh-snug);
+  color: var(--color-text-primary);
+}
+
+.heroSub {
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+
+.heroChevron {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  color: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero:hover {
+    transform: none;
+  }
+}
+
 /* Cartes statistiques — non cliquables, calmes : l'info est le sujet principal,
    les actions vivent (en plus discret) dans l'en-tête. */
 .statRow {

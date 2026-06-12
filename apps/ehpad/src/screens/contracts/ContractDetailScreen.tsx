@@ -68,9 +68,9 @@ export default function ContractDetailScreen() {
       <>
         <PageHeader title={fr.contracts.title} crumbs={[{ label: fr.contracts.detail.breadcrumb, to: '/contrats' }]} />
         <SkeletonGroup>
-          <Skeleton height={180} radius="var(--radius-xl)" />
-          <div style={{ height: 'var(--space-md)' }} />
-          <Skeleton height={320} radius="var(--radius-xl)" />
+          <Skeleton height={180} radius="var(--radius-lg)" />
+          <div className={styles.skeletonGap} />
+          <Skeleton height={320} radius="var(--radius-lg)" />
         </SkeletonGroup>
       </>
     );
@@ -141,7 +141,7 @@ export default function ContractDetailScreen() {
         </InlineAlert>
       )}
 
-      <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
+      <div className={styles.actionRow}>
         {contract.status === 'active' && (
           <Button icon={CalendarPlus} onClick={() => setPlanOpen(true)}>
             {fr.contracts.actions.oneOff}
@@ -171,13 +171,8 @@ export default function ContractDetailScreen() {
 
       <div className={styles.detailGrid}>
         <CardSection title={fr.contracts.detail.summary}>
+          {/* Le statut vit déjà dans l'en-tête de page — pas de doublon ici. */}
           <dl className={styles.fieldGrid}>
-            <div>
-              <dt>{fr.contracts.card.status}</dt>
-              <dd>
-                <StatusChip spec={contractStatusChip(contract.status)} />
-              </dd>
-            </div>
             <div>
               <dt>{fr.contracts.card.units}</dt>
               <dd>{contract.units.map(unitLabel).join(', ')}</dd>
@@ -203,13 +198,13 @@ export default function ContractDetailScreen() {
               <dd>{formatEuro(contract.rate)}</dd>
             </div>
             {contract.availabilityNotes && (
-              <div style={{ gridColumn: '1 / -1' }}>
+              <div className={styles.fieldSpan}>
                 <dt>{fr.contracts.card.notes}</dt>
                 <dd>{contract.availabilityNotes}</dd>
               </div>
             )}
           </dl>
-          <div style={{ marginTop: 'var(--space-md)' }}>
+          <div className={styles.subBlock}>
             <ProgressBar
               value={contract.completedSessionCount}
               max={Math.max(contract.generatedSessionCount, 1)}
@@ -217,7 +212,7 @@ export default function ContractDetailScreen() {
             />
           </div>
           {lastModification && (
-            <p className={styles.historyMeta} style={{ marginTop: 'var(--space-sm)' }}>
+            <p className={`${styles.historyMeta} ${styles.subNote}`}>
               {fr.contracts.detail.modifiedBy(lastModification.by, formatTimestamp(lastModification.at))}
             </p>
           )}
@@ -225,7 +220,7 @@ export default function ContractDetailScreen() {
 
         <CardSection title={fr.contracts.detail.coachesTitle}>
           {participatingCoaches.length === 0 ? (
-            <p style={{ color: 'var(--color-text-secondary)' }}>{fr.contracts.detail.coachesEmpty}</p>
+            <p className={styles.muted}>{fr.contracts.detail.coachesEmpty}</p>
           ) : (
             <>
               {participatingCoaches.map((coach) => (
@@ -241,7 +236,7 @@ export default function ContractDetailScreen() {
                 </div>
               ))}
               {contract.avgRatingFromFacility !== undefined && (
-                <div style={{ marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)', borderTop: '1px solid var(--color-border-subtle)' }}>
+                <div className={styles.ratingDivider}>
                   <p className={styles.summaryLabel}>{fr.contracts.detail.contractAvg}</p>
                   <RatingDisplay value={contract.avgRatingFromFacility} />
                 </div>
@@ -252,7 +247,7 @@ export default function ContractDetailScreen() {
 
         <CardSection title={fr.contracts.detail.sessionsTitle}>
           {contractSessions.length === 0 ? (
-            <p style={{ color: 'var(--color-text-secondary)' }}>{fr.contracts.detail.sessionsEmpty}</p>
+            <p className={styles.muted}>{fr.contracts.detail.sessionsEmpty}</p>
           ) : (
             <>
               <List label={fr.contracts.detail.sessionsTitle}>
@@ -277,7 +272,7 @@ export default function ContractDetailScreen() {
 
         <CardSection title={fr.contracts.detail.historyTitle}>
           {contract.history.length === 0 ? (
-            <p style={{ color: 'var(--color-text-secondary)' }}>{fr.contracts.detail.historyEmpty}</p>
+            <p className={styles.muted}>{fr.contracts.detail.historyEmpty}</p>
           ) : (
             <ul className={styles.historyList}>
               {[...contract.history]

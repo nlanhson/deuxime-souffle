@@ -48,7 +48,7 @@ const toMinutes = (time: string): number => {
   return (h ?? 0) * 60 + (m ?? 0);
 };
 
-/** Heure de fin lisible : `endTime('14:00', 60)` → `3:00pm` (même format 12h que formatTime). */
+/** Heure de fin lisible : `endTime('14:00', 60)` → `15h00` (même format 24 h que formatTime). */
 const endTime = (time: string, durationMin: number): string => {
   const total = toMinutes(time) + durationMin;
   const hh = String(Math.floor(total / 60)).padStart(2, '0');
@@ -56,12 +56,8 @@ const endTime = (time: string, durationMin: number): string => {
   return formatTime(`${hh}:${mm}`);
 };
 
-/** `7` → `7am`, `12` → `12pm`, `13` → `1pm` (cohérent avec formatTime). */
-const hourLabel = (h: number): string => {
-  const suffix = h < 12 ? 'am' : 'pm';
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}${suffix}`;
-};
+/** Gouttière horaire de la vue Semaine : `7` → `7h`, `14` → `14h` (24 h, cohérent avec formatTime). */
+const hourLabel = (h: number): string => `${h}h`;
 
 /** Calendrier SESS-08 — Mois / Semaine / Liste, couleurs par type d'unité
  *  (identiques dans les trois vues, toujours doublées d'un libellé), légende
@@ -243,7 +239,7 @@ export function Calendar({ sessions, coaches, view, onViewChange, emptyState, on
                 >
                   {events.map((s) => {
                     const top = ((toMinutes(s.time) - WT_START * 60) / 60) * WT_HOUR_PX;
-                    const height = Math.max((s.durationMin / 60) * WT_HOUR_PX, 22);
+                    const height = Math.max((s.durationMin / 60) * WT_HOUR_PX, 24);
                     return (
                       <Link
                         key={s.id}

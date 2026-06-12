@@ -31,7 +31,7 @@ button.row {
 
 a.row:hover,
 button.row:hover {
-  background: var(--lc-neutral-100);
+  background: var(--color-surface-hover);
 }
 
 .leading {
@@ -47,13 +47,15 @@ button.row:hover {
   gap: 2px;
 }
 
+/* 500 : le titre de ligne mène le balayage sans confisquer le 600,
+   qui garde un seul sens ici — « non lu ». */
 .primary {
-  font-weight: 400;
+  font-weight: var(--weight-medium);
   font-size: var(--text-body-lg);
 }
 
 .unread {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 .secondary {

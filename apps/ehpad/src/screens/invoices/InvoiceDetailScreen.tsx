@@ -17,6 +17,7 @@ import {
   SkeletonGroup,
   StatusChip,
 } from '@/components';
+import styles from './invoices.module.css';
 
 /** BILL-01 — détail d'une facture + téléchargement PDF (simulé). Montants HT. */
 export default function InvoiceDetailScreen() {
@@ -30,7 +31,7 @@ export default function InvoiceDetailScreen() {
       <>
         <PageHeader title={fr.invoices.title} crumbs={[{ label: fr.invoices.detail.breadcrumb, to: '/factures' }]} />
         <SkeletonGroup>
-          <Skeleton height={280} radius="var(--radius-xl)" />
+          <Skeleton height={280} radius="var(--radius-lg)" />
         </SkeletonGroup>
       </>
     );
@@ -84,50 +85,27 @@ export default function InvoiceDetailScreen() {
       />
 
       <CardSection title={invoice.period}>
-        <dl
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: 'var(--space-md)',
-            margin: 0,
-          }}
-        >
+        <dl className={styles.detailGrid}>
           <div>
-            <dt style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-body-sm)' }}>
-              {fr.invoices.table.amount}
-            </dt>
-            <dd
-              style={{
-                margin: 0,
-                fontFamily: 'var(--font-display)',
-                fontSize: 'var(--text-h2)',
-                color: 'var(--color-accent)',
-                lineHeight: 1.2,
-              }}
-            >
-              {formatEuro(invoice.amountHT)}
-            </dd>
+            <dt className={styles.detailLabel}>{fr.invoices.table.amount}</dt>
+            <dd className={styles.amount}>{formatEuro(invoice.amountHT)}</dd>
           </div>
           <div>
-            <dt style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-body-sm)' }}>
-              {fr.invoices.table.sessions}
-            </dt>
-            <dd style={{ margin: 0, fontSize: 'var(--text-body-lg)' }}>
-              {fr.invoices.detail.sessions(invoice.sessionCount)}
-            </dd>
+            <dt className={styles.detailLabel}>{fr.invoices.table.sessions}</dt>
+            <dd className={styles.detailValue}>{fr.invoices.detail.sessions(invoice.sessionCount)}</dd>
           </div>
           <div>
-            <dt style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-body-sm)' }}>
+            <dt className={styles.detailLabel}>
               {invoice.paymentDate ? fr.invoices.table.paymentDate : fr.invoices.kpi.nextDue}
             </dt>
-            <dd style={{ margin: 0, fontSize: 'var(--text-body-lg)' }}>
+            <dd className={styles.detailValue}>
               {invoice.paymentDate
                 ? fr.invoices.detail.paidOn(formatDate(invoice.paymentDate))
                 : fr.invoices.detail.dueOn(formatDate(invoice.dueDate))}
             </dd>
           </div>
         </dl>
-        <div style={{ marginTop: 'var(--space-lg)' }}>
+        <div className={styles.cardActions}>
           <Button icon={Download} onClick={downloadPdf}>
             {fr.invoices.detail.downloadPdf}
           </Button>

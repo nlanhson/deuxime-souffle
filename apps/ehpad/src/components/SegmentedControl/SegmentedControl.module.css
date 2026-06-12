@@ -1,8 +1,10 @@
+/* Rail teinté : le contrôle se lit comme un contrôle même au repos
+   (un rail blanc + filet disparaissait sur la page). */
 .group {
   display: inline-flex;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-pill);
-  background: var(--color-surface);
+  background: var(--lc-neutral-100);
   padding: 3px;
   margin: 0;
 }
@@ -11,7 +13,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 36px;
+  min-height: 38px; /* + rail 3px ×2 + bord 1px ×2 = 46px hors-tout (≥ 44px) */
   padding: 0 var(--space-md);
   border-radius: var(--radius-pill);
   font-family: var(--font-body); /* même pile que les CTA */

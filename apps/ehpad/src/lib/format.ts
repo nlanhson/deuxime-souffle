@@ -32,30 +32,30 @@ export const formatWeekday = (iso: string): string => weekdayFmt.format(parseDat
 /** `16 juin` */
 export const formatShortDate = (iso: string): string => shortDateFmt.format(parseDate(iso));
 
-/** `mardi 16 juin · 2:30pm` */
+/** `mardi 16 juin · 14h30` */
 export const formatDateTime = (iso: string, time: string): string =>
   `${formatWeekdayDate(iso)} · ${formatTime(time)}`;
 
-/** Horloge 12 h am/pm : `(14, 30)` → `2:30pm`, `(11, 0)` → `11:00am`, `(0, 15)` → `12:15am`. */
-function clock12(h: number, m: number): string {
-  const suffix = h < 12 ? 'am' : 'pm';
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${String(m).padStart(2, '0')}${suffix}`;
+/** Horloge française 24 h : `(14, 30)` → `14h30`, `(9, 0)` → `9h00`.
+    L'écriture « 14h30 » est celle que lisent nos directrices et directeurs —
+    l'am/pm anglo-saxon prêtait à confusion. */
+function clock24(h: number, m: number): string {
+  return `${h}h${String(m).padStart(2, '0')}`;
 }
 
-/** `14:30` → `2:30pm`, `11:00` → `11:00am` */
+/** `14:30` → `14h30`, `09:00` → `9h00` */
 export function formatTime(time: string): string {
   const [h, m] = time.split(':');
-  return clock12(Number(h ?? 0), Number(m ?? 0));
+  return clock24(Number(h ?? 0), Number(m ?? 0));
 }
 
 /** `juin 2026` */
 export const formatMonthYear = (date: Date): string => monthYearFmt.format(date);
 
-/** Horodatage d'événement : `11 juin 2026 à 2:10pm` */
+/** Horodatage d'événement : `11 juin 2026 à 14h10` */
 export function formatTimestamp(isoDateTime: string): string {
   const d = new Date(isoDateTime);
-  return `${dateTimeFmt.format(d)} à ${clock12(d.getHours(), d.getMinutes())}`;
+  return `${dateTimeFmt.format(d)} à ${clock24(d.getHours(), d.getMinutes())}`;
 }
 
 /** `1 240,00 €` */

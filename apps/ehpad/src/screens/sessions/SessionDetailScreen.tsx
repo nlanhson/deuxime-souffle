@@ -74,9 +74,9 @@ export default function SessionDetailScreen() {
       <>
         <PageHeader title={fr.nav.sessions} crumbs={[{ label: fr.sessions.detail.breadcrumb, to: '/sessions' }]} />
         <SkeletonGroup>
-          <Skeleton height={120} radius="var(--radius-xl)" />
+          <Skeleton height={120} radius="var(--radius-lg)" />
           <div style={{ height: 'var(--space-md)' }} />
-          <Skeleton height={280} radius="var(--radius-xl)" />
+          <Skeleton height={280} radius="var(--radius-lg)" />
         </SkeletonGroup>
       </>
     );
@@ -124,12 +124,12 @@ export default function SessionDetailScreen() {
         crumbs={[{ label: fr.sessions.detail.breadcrumb, to: '/sessions' }, { label: title }]}
       />
 
-      <section className={styles.headerCard} style={{ background: 'var(--color-surface)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--elevation-1)', padding: 'var(--space-lg)' }}>
+      <section className={styles.headerCard}>
         <div className={styles.headerMain}>
           <p className={styles.headerDate}>
             {capitalize(formatWeekdayDate(session.date))} · {formatTime(session.time)}
           </p>
-          <p style={{ color: 'var(--color-text-secondary)' }}>
+          <p className={styles.mutedText}>
             {fr.sessions.detail.duration} : {formatDuration(session.durationMin)}
           </p>
           <div className={styles.headerChips}>
@@ -183,7 +183,7 @@ export default function SessionDetailScreen() {
       <div className={styles.detailGrid}>
         <CardSection title={fr.sessions.detail.interventionTitle}>
           {session.report ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+            <div className={styles.stack}>
               <p>
                 {fr.sessions.report.participants} : <strong>{session.report.participantCount}</strong>
               </p>
@@ -201,13 +201,13 @@ export default function SessionDetailScreen() {
               <p>{session.report.evaluationSummary}</p>
             </div>
           ) : (
-            <p style={{ color: 'var(--color-text-secondary)' }}>{fr.sessions.detail.interventionEmpty}</p>
+            <p className={styles.mutedText}>{fr.sessions.detail.interventionEmpty}</p>
           )}
         </CardSection>
 
         <CardSection title={fr.sessions.detail.evaluationTitle}>
           {session.evaluation ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+            <div className={styles.stack}>
               <RatingDisplay value={session.evaluation.stars} />
               <p>{fr.evaluations.form.impressions[session.evaluation.impression]}</p>
               {session.evaluation.comment && <p>« {session.evaluation.comment} »</p>}
@@ -219,14 +219,14 @@ export default function SessionDetailScreen() {
               </p>
             </div>
           ) : canEvaluate ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', alignItems: 'flex-start' }}>
-              <p style={{ color: 'var(--color-text-secondary)' }}>{fr.sessions.detail.evaluationEmpty}</p>
+            <div className={`${styles.stack} ${styles.stackStart}`}>
+              <p className={styles.mutedText}>{fr.sessions.detail.evaluationEmpty}</p>
               <ButtonLink variant="ghost" icon={Star} to={`/evaluations/${session.id}`}>
                 {fr.sessions.detail.evaluate}
               </ButtonLink>
             </div>
           ) : (
-            <p style={{ color: 'var(--color-text-secondary)' }}>{fr.sessions.detail.evaluationEmpty}</p>
+            <p className={styles.mutedText}>{fr.sessions.detail.evaluationEmpty}</p>
           )}
         </CardSection>
 
@@ -238,7 +238,7 @@ export default function SessionDetailScreen() {
 
         <CardSection title={fr.sessions.detail.journalTitle}>
           {events.length === 0 ? (
-            <p style={{ color: 'var(--color-text-secondary)' }}>{fr.sessions.detail.journalEmpty}</p>
+            <p className={styles.mutedText}>{fr.sessions.detail.journalEmpty}</p>
           ) : (
             <ul className={styles.journal}>
               {events.map((event) => {

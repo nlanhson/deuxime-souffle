@@ -1,6 +1,7 @@
 .page {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: var(--space-lg) var(--space-md);
@@ -9,7 +10,7 @@
 .card {
   width: min(480px, 100%);
   background: var(--color-surface);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border-subtle);
   padding: var(--space-xl);
   display: flex;
@@ -17,19 +18,32 @@
   gap: var(--space-md);
 }
 
+/* Lockup logo + marque : serré, lu comme un seul objet. */
+.lockup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
 .brand {
   font-family: var(--font-heading);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   font-size: var(--text-subheading);
   display: flex;
   flex-direction: column;
-  margin-bottom: var(--space-sm);
 }
 
 .brandSub {
   font-size: var(--text-body-sm);
   letter-spacing: var(--ls-normal); /* casse normale — pas de capitales, pas d'interlettrage de label */
-  color: var(--color-accent);
+  color: var(--color-text-secondary); /* non interactif — la couleur reste réservée au cliquable */
+}
+
+/* Titre + sous-titre : une seule unité, le sous-titre colle au titre. */
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .title {
@@ -41,6 +55,20 @@
 }
 
 .form {
+  /* + écart de pile (space-md) = space-lg avant le formulaire */
+  margin-top: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Activation : respiration entre les trois groupes de champs
+   (identité / invitation en lecture seule / mot de passe). */
+.formGrouped {
+  gap: var(--space-lg);
+}
+
+.fieldGroup {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -66,39 +94,52 @@
   align-items: center;
 }
 
+/* Bloc comptes de démonstration — aide de prototype uniquement,
+   marqué par un filet pointillé. */
 .demo {
+  /* + écart de pile (space-md) = space-xl avant le bloc démo */
+  margin-top: var(--space-md);
   background: var(--color-canvas);
+  border: 1px dashed var(--color-border-subtle);
   border-radius: var(--radius-md);
   padding: var(--space-md);
   font-size: var(--text-body-sm);
   color: var(--color-text-secondary);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-xs);
 }
 
 .demoTitle {
   font-family: var(--font-heading);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   letter-spacing: var(--ls-normal);
-  font-size: 12px;
+  font-size: var(--text-body-sm);
 }
 
-.rules {
-  list-style: none;
-  margin: 0;
-  padding: var(--space-sm) var(--space-md);
+/* Règles de mot de passe : titre + liste réunis dans un même bloc teinté. */
+.rulesBox {
   background: var(--color-canvas);
   border-radius: var(--radius-md);
+  padding: var(--space-md);
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
-  font-size: var(--text-body);
+  gap: var(--space-sm);
 }
 
 .rulesTitle {
   font-size: var(--text-body);
   color: var(--color-text-secondary);
+}
+
+.rules {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-size: var(--text-body);
 }
 
 .rule {

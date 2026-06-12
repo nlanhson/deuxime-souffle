@@ -21,9 +21,13 @@
  * (the matching-freshness loop). Photo pick + document upload are mocked — no native picker is
  * wired in the prototype (real code adds expo-image-picker / a document picker + the backend).
  *
- * Scope discipline: gamification stays OUT (PRD defers it). Field lists trace to the brief; the
- * LAYOUT is a reasoned synthesis pending the coach video + approved Figma. UI text comes from
- * ../copy (the localization seam).
+ * Per the client mismatch review (2026-06): gamification is now IN (GAME-01/02 — the
+ * Progression & activity section links to Badges & level), alongside report history (SESS-05),
+ * facility feedback (SESS-06) and the delete-account request (AUTH-14). Availability follows
+ * PLA-08/09: half-day schedule, 10–90 min travel-time slider, Car + Two-wheel vehicle transport,
+ * primary + secondary departure addresses. Field lists trace to the brief; the LAYOUT is a
+ * reasoned synthesis pending the coach video + approved Figma. UI text comes from ../copy (the
+ * localization seam).
  *
  * Surface = coach. Scheme-robust like Séances/Disponibles: reads the scheme off the token and
  * uses only tokens valid in both variants + the palette. Content cards are the dark "ink
@@ -33,9 +37,10 @@ import React from 'react';
 import { Modal, View, Text, Image, ScrollView, Pressable, StyleSheet, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  X, ChevronRight, CalendarClock, Clock, Car, Footprints, MapPin, Map, CalendarX, Target, Wallet,
+  X, ChevronRight, CalendarClock, Clock, Car, Bike, Footprints, MapPin, Map, CalendarX, Target, Wallet,
   FileText, ScrollText, ShieldCheck, GraduationCap, User, CalendarCheck, KeyRound,
-  CircleHelp, Mail, CheckCircle2, LogOut, Camera, Edit3, type LucideIcon,
+  CircleHelp, Mail, CheckCircle2, LogOut, Camera, Edit3, Trophy, ClipboardList, MessageSquare,
+  Trash2, type LucideIcon,
 } from '../icons';
 
 import { palette, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
@@ -45,7 +50,11 @@ import { ProfileAvatar } from '../components/ProfileAvatar';
 import { ActionModal } from '../components/ActionModal';
 import { OptionSheet, type SheetOption } from '../components/OptionSheet';
 import { FieldEditSheet, type EditField, type EditChoice } from '../components/FieldEditSheet';
-import { MultiSelectSheet } from '../components/MultiSelectSheet';
+import { SliderSheet } from '../components/SliderSheet';
+import { HalfDayScheduleSheet, type HalfDayValue } from '../components/HalfDayScheduleSheet';
+import { BadgesScreen } from './BadgesScreen';
+import { ReportHistoryScreen } from './ReportHistoryScreen';
+import { FeedbackScreen } from './FeedbackScreen';
 import { useAuth } from '../auth/AuthContext';
 import { useFirstLoad } from '../lib/useFirstLoad';
 import { Reveal } from '../components/Reveal';
@@ -85,12 +94,23 @@ type DocStatus = 'verified' | 'pending';
 type FieldKind = 'vehicle' | 'departure' | 'areas' | 'unavailability' | 'rate' | 'target' | 'personal' | 'password';
 type SheetKind =
   | 'avatar' | 'schedule' | 'transport' | 'travel' | 'field'
-  | 'confirmAvail' | 'gcal' | 'doc' | 'logout' | 'about';
+  | 'confirmAvail' | 'gcal' | 'doc' | 'logout' | 'about' | 'delete' | 'deleteDone';
 
-// Format the selected weekday keys for the row value (ordered Mon→Sun, joined; empty → "not set").
-function formatDays(days: string[], order: readonly string[], notSet: string): string {
-  const ordered = order.filter((d) => days.includes(d));
-  return ordered.length ? ordered.join(' · ') : notSet;
+// Travel-time slider bounds (WBS PLA-08: slider, 10–90 minutes).
+const TRAVEL = { min: 10, max: 90, step: 5 };
+
+// Format the half-day slots for the row value: full day → "Mon"; one half → "Mon (am)".
+// The (am)/(pm) tags are data formatting (like dates/km), composed in-component.
+function formatSlots(slots: HalfDayValue, order: readonly string[], notSet: string): string {
+  const parts = order
+    .map((d) => {
+      const s = slots[d];
+      if (!s || (!s.am && !s.pm)) return null;
+      if (s.am && s.pm) return d;
+      return `${d} (${s.am ? 'am' : 'pm'})`;
+    })
+    .filter(Boolean);
+  return parts.length ? parts.join(' · ') : notSet;
 }
 
 type ProfileData = {
@@ -100,11 +120,13 @@ type ProfileData = {
   photoUrl: string | null;
   gcalConnected: boolean;
   updatedDaysAgo: number;
+  deleteRequested: boolean;
   av: {
-    days: string[];
-    travel: string;
+    slots: HalfDayValue;
+    travelMin: number;
     transport: string;
-    departure: string;
+    /** Primary first; an optional secondary departure point follows (PLA-08). */
+    departures: string[];
     areas: string;
     unavailability: string;
   };
@@ -119,11 +141,20 @@ const INITIAL: ProfileData = {
   photoUrl: null,
   gcalConnected: true,
   updatedDaysAgo: 6,
+  deleteRequested: false,
   av: {
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    travel: '≤ 45 min',
+    slots: {
+      Mon: { am: true, pm: true },
+      Tue: { am: true, pm: true },
+      Wed: { am: true, pm: false },
+      Thu: { am: true, pm: true },
+      Fri: { am: false, pm: true },
+      Sat: { am: false, pm: false },
+      Sun: { am: false, pm: false },
+    },
+    travelMin: 45,
     transport: 'Car',
-    departure: '12 Rue de la République, Lyon 2nd',
+    departures: ['12 Rue de la République, Lyon 2nd'],
     areas: 'Lyon 3rd · 6th · 7th · Villeurbanne',
     unavailability: 'None upcoming',
   },
@@ -138,7 +169,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 }
 
 function Row({
-  icon: Icon, label, value, chip, first, onPress,
+  icon: Icon, label, value, chip, first, onPress, tint,
 }: {
   icon: LucideIcon;
   label: string;
@@ -146,6 +177,8 @@ function Row({
   chip?: React.ReactNode;
   first?: boolean;
   onPress?: () => void;
+  /** Label + icon colour override — the destructive rows (delete account), never colour alone. */
+  tint?: string;
 }) {
   const a11y = value ? `${label}, ${value}` : label;
   return (
@@ -156,13 +189,13 @@ function Row({
       accessibilityLabel={a11y}
     >
       <View style={st.rowIcon}>
-        <Icon size={18} color={ON_CARD_2} />
+        <Icon size={18} color={tint ?? ON_CARD_2} />
       </View>
       {chip != null ? (
         // Chip rows: the label grows and WRAPS to a 2nd line if long, so it never overlaps the
         // chip; the chip + chevron keep their natural width, pinned right.
         <>
-          <Text style={[st.rowLabel, st.rowLabelGrow]} numberOfLines={2}>{label}</Text>
+          <Text style={[st.rowLabel, st.rowLabelGrow, tint != null && { color: tint }]} numberOfLines={2}>{label}</Text>
           <View style={st.rowChipRight}>
             {chip}
             <ChevronRight size={18} color={ON_CARD_3} />
@@ -171,7 +204,7 @@ function Row({
       ) : (
         // Value rows: short label; the (often long) value shrinks/ellipsizes on the right.
         <>
-          <Text style={st.rowLabel} numberOfLines={2}>{label}</Text>
+          <Text style={[st.rowLabel, tint != null && { color: tint }]} numberOfLines={2}>{label}</Text>
           <View style={st.rowRight}>
             {value ? <Text style={st.rowValue} numberOfLines={1}>{value}</Text> : null}
             <ChevronRight size={18} color={ON_CARD_3} />
@@ -213,6 +246,10 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
   const [sheet, setSheet] = React.useState<SheetKind | null>(null);
   const [fieldKind, setFieldKind] = React.useState<FieldKind>('departure');
   const [docKey, setDocKey] = React.useState<DocKey>('cv');
+  // Progression & activity destinations (GAME-01/02, SESS-05/06) — full pageSheet modals.
+  const [badgesOpen, setBadgesOpen] = React.useState(false);
+  const [reportsOpen, setReportsOpen] = React.useState(false);
+  const [feedbackOpen, setFeedbackOpen] = React.useState(false);
   const loading = useFirstLoad('profile', { active: visible, ms: 550 });
 
   const close = () => setSheet(null);
@@ -244,14 +281,27 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
 
   // Compose the FieldEditSheet props for whichever field row was tapped.
   const e = c.edit;
-  // Transport is a free string: 'Car' / 'Walking', or a custom vehicle typed via "Other".
-  const isCustomTransport = p.av.transport !== e.transport.car && p.av.transport !== e.transport.walking;
+  // Transport is a free string: one of the named modes, or a custom vehicle typed via "Other".
+  const NAMED_TRANSPORT = [e.transport.car, e.transport.twoWheel, e.transport.walking] as string[];
+  const isCustomTransport = !NAMED_TRANSPORT.includes(p.av.transport);
   const fieldSheet: { title: string; fields: EditField[]; choice?: EditChoice; validate?: (v: Record<string, string>) => string | null; onSave: (v: Record<string, string>, ch?: string) => void } = (() => {
     switch (fieldKind) {
       case 'vehicle':
         return { title: e.vehicle.title, fields: [{ key: 'v', label: e.vehicle.label, value: isCustomTransport ? p.av.transport : '', placeholder: e.vehicle.placeholder, autoCapitalize: 'sentences' }], onSave: (v) => editAv({ transport: v.v.trim() || e.transport.car }) };
       case 'departure':
-        return { title: e.departure.title, fields: [{ key: 'v', label: e.departure.label, value: p.av.departure, help: e.departure.help, autoCapitalize: 'words' }], onSave: (v) => editAv({ departure: v.v.trim() || p.av.departure }) };
+        // Primary + optional secondary (PLA-08 "Departure addresses").
+        return {
+          title: e.departure.title,
+          fields: [
+            { key: 'primary', label: e.departure.primaryLabel, value: p.av.departures[0] ?? '', help: e.departure.help, autoCapitalize: 'words' },
+            { key: 'secondary', label: `${e.departure.secondaryLabel} (${e.departure.secondaryOptional})`, value: p.av.departures[1] ?? '', autoCapitalize: 'words' },
+          ],
+          onSave: (v) => {
+            const primary = v.primary.trim() || p.av.departures[0] || '';
+            const secondary = v.secondary.trim();
+            editAv({ departures: secondary ? [primary, secondary] : [primary] });
+          },
+        };
       case 'areas':
         return { title: e.areas.title, fields: [{ key: 'v', label: e.areas.label, value: p.av.areas, help: e.areas.help, autoCapitalize: 'words' }], onSave: (v) => editAv({ areas: v.v.trim() || p.av.areas }) };
       case 'unavailability':
@@ -360,10 +410,10 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
             </Pressable>
           ) : null}
           <Card>
-            <Row first icon={CalendarClock} label={c.availability.schedule} value={formatDays(p.av.days, e.schedule.weekdays, e.schedule.notSet)} onPress={() => setSheet('schedule')} />
-            <Row icon={Clock} label={c.availability.travel} value={p.av.travel} onPress={() => setSheet('travel')} />
+            <Row first icon={CalendarClock} label={c.availability.schedule} value={formatSlots(p.av.slots, e.schedule.weekdays, e.schedule.notSet)} onPress={() => setSheet('schedule')} />
+            <Row icon={Clock} label={c.availability.travel} value={`≤ ${p.av.travelMin} min`} onPress={() => setSheet('travel')} />
             <Row icon={Car} label={c.availability.transport} value={p.av.transport} onPress={() => setSheet('transport')} />
-            <Row icon={MapPin} label={c.availability.departure} value={p.av.departure} onPress={() => openField('departure')} />
+            <Row icon={MapPin} label={c.availability.departure} value={p.av.departures.join(' · ')} onPress={() => openField('departure')} />
             <Row icon={Map} label={c.availability.areas} value={p.av.areas} onPress={() => openField('areas')} />
             <Row icon={CalendarX} label={c.availability.unavailability} value={p.av.unavailability} onPress={() => openField('unavailability')} />
           </Card>
@@ -374,6 +424,14 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
           <Card>
             <Row first icon={Target} label={c.goals.target} value={`${p.goals.target} sessions · ${p.goals.flexibility}`} onPress={() => openField('target')} />
             <Row icon={Wallet} label={c.goals.rate} value={`${p.goals.rate} € / hour`} onPress={() => openField('rate')} />
+          </Card>
+
+          {/* ===== Progression & activity (GAME-01/02 · SESS-05 · SESS-06) ===== */}
+          <View style={st.sectionHead}><Eyebrow>{c.activity.eyebrow}</Eyebrow></View>
+          <Card>
+            <Row first icon={Trophy} label={c.activity.badges} value={c.activity.badgesValue} onPress={() => setBadgesOpen(true)} />
+            <Row icon={ClipboardList} label={c.activity.reports} value={c.activity.reportsValue} onPress={() => setReportsOpen(true)} />
+            <Row icon={MessageSquare} label={c.activity.feedback} value={c.activity.feedbackValue} onPress={() => setFeedbackOpen(true)} />
           </Card>
 
           {/* ===== My documents ===== */}
@@ -398,6 +456,14 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
               onPress={() => setSheet('gcal')}
             />
             <Row icon={KeyRound} label={c.account.password} onPress={() => openField('password')} />
+            {/* Delete account (AUTH-14) — destructive: red icon + label, never colour alone. */}
+            <Row
+              icon={Trash2}
+              label={c.account.deleteAccount}
+              tint={palette.rouge[300]}
+              chip={p.deleteRequested ? <StatusChip tone="pending" icon={Clock} label={c.account.deleteRequested} /> : undefined}
+              onPress={() => setSheet(p.deleteRequested ? 'deleteDone' : 'delete')}
+            />
           </Card>
 
           {/* ===== Support ===== */}
@@ -432,15 +498,17 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
           onSelect={(k) => setP((s) => ({ ...s, photoUrl: k === 'choose' ? DEMO_PHOTO : null }))}
         />
 
-        {/* Weekly schedule — multiple-choice day picker (multi-select, commit on Save). */}
-        <MultiSelectSheet
+        {/* Weekly schedule — half-day grid, Mon→Sun (PLA-09), commit on Save. */}
+        <HalfDayScheduleSheet
           visible={sheet === 'schedule'}
           onClose={close}
           title={e.schedule.title}
           help={e.schedule.help}
-          options={e.schedule.weekdays.map((d) => ({ key: d, label: d }))}
-          selected={p.av.days}
-          onSave={(days) => editAv({ days })}
+          days={e.schedule.weekdays}
+          amLabel={e.schedule.am}
+          pmLabel={e.schedule.pm}
+          value={p.av.slots}
+          onSave={(slots) => editAv({ slots })}
           saveLabel={c.common.save}
           cancelLabel={c.common.cancel}
         />
@@ -452,6 +520,7 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
           selectedKey={isCustomTransport ? 'other' : p.av.transport}
           options={[
             { key: e.transport.car, label: e.transport.car, icon: Car },
+            { key: e.transport.twoWheel, label: e.transport.twoWheel, icon: Bike },
             { key: e.transport.walking, label: e.transport.walking, icon: Footprints },
             { key: 'other', label: isCustomTransport ? `${e.transport.other} · ${p.av.transport}` : e.transport.other, icon: Edit3 },
           ]}
@@ -462,14 +531,22 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
           }}
         />
 
-        <OptionSheet
+        {/* Max travel time — slider, 10–90 min (PLA-08), commit on Save. */}
+        <SliderSheet
           visible={sheet === 'travel'}
           onClose={close}
-          title={c.edit.travel.title}
-          help={c.edit.travel.help}
-          selectedKey={p.av.travel}
-          options={c.travelOptions.map((t) => ({ key: t, label: t }))}
-          onSelect={(k) => editAv({ travel: k })}
+          title={e.travel.title}
+          help={e.travel.help}
+          min={TRAVEL.min}
+          max={TRAVEL.max}
+          step={TRAVEL.step}
+          value={p.av.travelMin}
+          format={(v) => `≤ ${v} min`}
+          onSave={(v) => editAv({ travelMin: v })}
+          saveLabel={c.common.save}
+          cancelLabel={c.common.cancel}
+          decA11y={e.travel.decA11y}
+          incA11y={e.travel.incA11y}
         />
 
         <FieldEditSheet
@@ -492,7 +569,7 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
           accentBg={INK.pending.bg}
           title={c.confirmAvail.title}
           body={c.confirmAvail.body}
-          note={`${p.av.transport} · ${p.av.travel}`}
+          note={`${p.av.transport} · ≤ ${p.av.travelMin} min`}
           primaryLabel={c.confirmAvail.primary}
           onPrimary={markFresh}
           secondaryLabel={c.confirmAvail.secondary}
@@ -553,6 +630,41 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
           primaryLabel={c.common.close}
           closeA11y={c.common.close}
         />
+
+        {/* Delete account (AUTH-14): confirm the request, then acknowledge it was sent. */}
+        <ActionModal
+          visible={sheet === 'delete'}
+          onClose={close}
+          Icon={Trash2}
+          accentFg={palette.rouge[300]}
+          accentBg="rgba(225,50,43,0.16)"
+          title={c.deleteConfirm.title}
+          body={c.deleteConfirm.body}
+          primaryLabel={c.deleteConfirm.confirm}
+          onPrimary={() => {
+            setP((s) => ({ ...s, deleteRequested: true }));
+            // Let this sheet's exit play, then surface the acknowledgement (transport→vehicle idiom).
+            setTimeout(() => setSheet('deleteDone'), 260);
+          }}
+          secondaryLabel={c.common.cancel}
+          closeA11y={c.common.close}
+        />
+        <ActionModal
+          visible={sheet === 'deleteDone'}
+          onClose={close}
+          Icon={Clock}
+          accentFg={INK.pending.fg}
+          accentBg={INK.pending.bg}
+          title={c.deleteConfirm.requestedTitle}
+          body={c.deleteConfirm.requestedBody}
+          primaryLabel={c.common.close}
+          closeA11y={c.common.close}
+        />
+
+        {/* Progression & activity destinations (GAME-01/02 · SESS-05 · SESS-06). */}
+        <BadgesScreen visible={badgesOpen} onClose={() => setBadgesOpen(false)} />
+        <ReportHistoryScreen visible={reportsOpen} onClose={() => setReportsOpen(false)} />
+        <FeedbackScreen visible={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       </View>
     </Modal>
   );

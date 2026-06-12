@@ -22,22 +22,17 @@ const Row = ({ label, children }: { label: string; children: ReactNode }) => (
 );
 
 const Section = ({
-  no,
   title,
   action,
   children,
 }: {
-  no: string;
   title: string;
   action?: ReactNode;
   children: ReactNode;
 }) => (
   <section className={styles.section}>
     <div className={styles.sectionHead}>
-      <div className={styles.sectionHeadLeft}>
-        <span className={styles.sectionNo}>{no}</span>
-        <h2 className={styles.sectionTitle}>{title}</h2>
-      </div>
+      <h2 className={styles.sectionTitle}>{title}</h2>
       {action}
     </div>
     {children}
@@ -115,7 +110,7 @@ export default function FacilityScreen() {
       />
 
       <div className={styles.sheet}>
-        <Section no="01" title={fr.facility.general}>
+        <Section title={fr.facility.general}>
           <dl className={styles.rows}>
             <Row label={fr.facility.tradeName}>{facility.tradeName}</Row>
             <Row label={fr.facility.companyName}>{facility.companyName}</Row>
@@ -133,7 +128,7 @@ export default function FacilityScreen() {
           </dl>
         </Section>
 
-        <Section no="02" title={fr.facility.addresses}>
+        <Section title={fr.facility.addresses}>
           <dl className={styles.rows}>
             <Row label={fr.facility.mainAddress}>{addressLines(facility.addresses.main)}</Row>
             <Row label={fr.facility.billingAddress}>{addressLines(facility.addresses.billing)}</Row>
@@ -148,7 +143,6 @@ export default function FacilityScreen() {
         </Section>
 
         <Section
-          no="03"
           title={fr.facility.contactsTitle}
           action={
             <Link to="/contacts" className={styles.sectionLink}>
@@ -175,7 +169,7 @@ export default function FacilityScreen() {
           </dl>
         </Section>
 
-        <Section no="04" title={fr.facility.standardSessions}>
+        <Section title={fr.facility.standardSessions}>
           {facility.standardSessions.length === 0 ? (
             <p className={styles.muted}>{fr.facility.standardSessionsEmpty}</p>
           ) : (
@@ -192,7 +186,7 @@ export default function FacilityScreen() {
           )}
         </Section>
 
-        <Section no="05" title={fr.facility.pricing}>
+        <Section title={fr.facility.pricing}>
           <dl className={styles.rows}>
             <Row label={fr.facility.defaultRate}>{formatEuro(facility.defaultSessionRate)}</Row>
             <Row label={fr.facility.markers}>
@@ -201,7 +195,7 @@ export default function FacilityScreen() {
           </dl>
         </Section>
 
-        <Section no="06" title={fr.facility.statsTitle}>
+        <Section title={fr.facility.statsTitle}>
           <dl className={styles.rows}>
             <Row label={fr.facility.statTotal}>
               <span className={styles.num}>{facility.stats.totalCompleted}</span>
@@ -219,7 +213,6 @@ export default function FacilityScreen() {
         </Section>
 
         <Section
-          no="07"
           title={fr.facility.contractsTitle}
           action={
             <Link to="/contrats" className={styles.sectionLink}>

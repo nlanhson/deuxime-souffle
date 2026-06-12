@@ -76,7 +76,7 @@ export default function EditContractScreen() {
       <>
         <PageHeader title={copy.title} crumbs={[{ label: fr.contracts.title, to: '/contrats' }]} />
         <SkeletonGroup>
-          <Skeleton height={420} radius="var(--radius-xl)" />
+          <Skeleton height={420} radius="var(--radius-lg)" />
         </SkeletonGroup>
       </>
     );
@@ -161,26 +161,26 @@ export default function EditContractScreen() {
   const stepEdit = (
     <>
       <section>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-xs)', flexWrap: 'wrap' }}>
-          <h3 className={styles.summaryTitle} style={{ marginBottom: 0 }}>{copy.minorTitle}</h3>
+        <div className={styles.titleRow}>
+          <h3 className={styles.summaryTitle}>{copy.minorTitle}</h3>
           <Chip label={copy.minorBadge} variant="progress" icon={Zap} />
         </div>
-        <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>{copy.minorHelp}</p>
+        <p className={styles.mutedLead}>{copy.minorHelp}</p>
         <Textarea label={copy.notesLabel} value={notes} onChange={setNotes} />
-        <div style={{ marginTop: 'var(--space-sm)' }}>
+        <div className={styles.subNote}>
           <ButtonLink size="md" variant="ghost" to="/sessions">
             {copy.oneOffLink}
           </ButtonLink>
         </div>
       </section>
 
-      <section style={{ borderTop: '1px solid var(--color-border-subtle)', paddingTop: 'var(--space-lg)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-xs)', flexWrap: 'wrap' }}>
-          <h3 className={styles.summaryTitle} style={{ marginBottom: 0 }}>{copy.majorTitle}</h3>
+      <section className={styles.majorSection}>
+        <div className={styles.titleRow}>
+          <h3 className={styles.summaryTitle}>{copy.majorTitle}</h3>
           <Chip label={copy.majorBadge} variant="pending" icon={Hourglass} />
         </div>
-        <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>{copy.majorHelp}</p>
-        <div style={{ display: 'grid', gap: 'var(--space-md)' }}>
+        <p className={styles.mutedLead}>{copy.majorHelp}</p>
+        <div className={styles.formStack}>
           <Select
             label={copy.fields.frequency}
             value={frequency ?? ''}
@@ -199,7 +199,7 @@ export default function EditContractScreen() {
               { value: 'individuelle', label: fr.sessionTypes.individuelle },
             ]}
           />
-          <div style={{ display: 'grid', gap: 'var(--space-md)', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+          <div className={styles.dateGrid}>
             <DatePicker
               label={fr.contracts.card.start}
               value={startDate}

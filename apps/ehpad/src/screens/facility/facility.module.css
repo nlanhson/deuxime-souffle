@@ -1,12 +1,22 @@
 /* ============================================================
    « Mon établissement » — feuille d'information, une colonne.
-   Grille suisse : pas de boîtes, sections réglées par des filets,
-   couples libellé/valeur alignés sur une colonne fixe. Lisibilité
-   de l'information avant le décor.
+   Grille suisse : une seule feuille blanche posée sur le papier
+   teinté, sections réglées par des filets, couples libellé/valeur
+   alignés sur une colonne fixe. Lisibilité avant le décor.
    ============================================================ */
 
 .sheet {
   max-width: 860px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+}
+
+@media (max-width: 600px) {
+  .sheet {
+    padding: var(--space-lg);
+  }
 }
 
 /* ---- Section : filet épais en tête, généreux interligne vertical ---- */
@@ -17,7 +27,7 @@
 }
 
 .section:first-child {
-  margin-top: var(--space-lg);
+  margin-top: 0;
 }
 
 .sectionHead {
@@ -29,22 +39,9 @@
   margin-bottom: var(--space-md);
 }
 
-.sectionHeadLeft {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-md);
-}
-
-.sectionNo {
-  font-size: var(--text-body-sm);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-muted);
-}
-
 .sectionTitle {
   font-size: var(--text-subheading);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   line-height: var(--lh-snug);
   color: var(--color-text-primary);
 }
@@ -55,7 +52,7 @@
   align-items: center;
   min-height: var(--touch-target-min);
   font-size: var(--text-body-sm);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   color: var(--color-accent);
   text-decoration: none;
 }
@@ -87,7 +84,7 @@
 
 .rowLabel {
   font-size: var(--text-body-sm);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   line-height: var(--lh-snug);
   color: var(--color-text-secondary);
 }
@@ -112,10 +109,15 @@
   color: var(--color-text-secondary);
 }
 
+/* Palier « display » des statistiques : même grammaire que les cartes KPI
+   (32px/700, chiffres tabulaires), encre neutre — une stat n'alerte pas. */
 .num {
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  font-size: var(--text-body-lg);
+  font-weight: var(--weight-display);
+  font-size: var(--text-h2);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-tight);
+  color: var(--color-text-primary);
 }
 
 /* ---- Listes en ligne (séances, contrats) — rangées, pas de cartes ---- */
@@ -151,7 +153,7 @@
 
 .lineMain {
   font-size: var(--text-body);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   color: var(--color-text-primary);
   overflow-wrap: anywhere;
 }
@@ -174,15 +176,17 @@
   }
 }
 
-/* ---- édition ---- */
+/* ---- Édition : même feuille réglée, sections remplies de champs ---- */
 
+/* Légende d'un groupe d'adresses : même anatomie que les libellés de champ
+   (16px/600), elle mène le groupe qu'elle introduit. */
 .fieldLabel {
   font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body);
   letter-spacing: var(--ls-normal);
-  color: var(--color-text-secondary);
-  margin-bottom: 2px;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-sm);
 }
 
 .formStack {
@@ -192,23 +196,47 @@
 }
 
 .formGrid {
-  display: grid;
-  gap: var(--space-md);
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  composes: gridCards from '../../styles/utilities.module.css';
 }
 
+.unitsField {
+  margin-top: var(--space-md);
+  max-width: 420px;
+}
+
+/* Rangée de séance type : les champs dans une grille fluide, la suppression
+   dans une fente dédiée en fin de rangée — l'action destructive ne se
+   déguise pas en champ de saisie. */
 .standardRow {
   display: grid;
-  gap: var(--space-sm);
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: 1fr auto;
+  gap: var(--space-sm) var(--space-md);
   align-items: end;
   padding: var(--space-md);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
 }
 
+.standardFields {
+  display: grid;
+  gap: var(--space-sm);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: end;
+}
+
+@media (max-width: 600px) {
+  .standardRow {
+    grid-template-columns: 1fr;
+  }
+
+  .standardRow > :last-child {
+    justify-self: start;
+  }
+}
+
 .formActions {
   display: flex;
   gap: var(--space-sm);
   flex-wrap: wrap;
+  margin-top: var(--space-xl);
 }

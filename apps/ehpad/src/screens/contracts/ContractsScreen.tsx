@@ -54,7 +54,8 @@ export default function ContractsScreen() {
   const gateReason = isAdmin ? undefined : fr.common.adminOnly;
 
   const ContractCard = ({ contract }: { contract: Contract }) => (
-    <Card className={styles.contractCard}>
+    // Une carte « à renouveler » appelle une action : elle porte l'accent bleu.
+    <Card className={styles.contractCard} accent={contract.status === 'a_renouveler'}>
       <div className={styles.cardHead}>
         <p className={styles.reference}>{contract.reference}</p>
         <StatusChip spec={contractStatusChip(contract.status)} />
@@ -92,7 +93,7 @@ export default function ContractsScreen() {
           <dd>{contract.completedSessionCount}</dd>
         </div>
         {contract.availabilityNotes && (
-          <div style={{ gridColumn: '1 / -1' }}>
+          <div className={styles.fieldSpan}>
             <dt>{fr.contracts.card.notes}</dt>
             <dd>{contract.availabilityNotes}</dd>
           </div>
@@ -111,7 +112,7 @@ export default function ContractsScreen() {
         {contract.status === 'a_renouveler' && (
           <Button
             size="md"
-            variant="ghost"
+            variant="accent"
             icon={RefreshCw}
             disabled={!isAdmin}
             disabledReason={gateReason}

@@ -237,7 +237,7 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
       <>
         <PageHeader title={title} crumbs={[{ label: fr.contracts.title, to: '/contrats' }]} />
         <SkeletonGroup>
-          <Skeleton height={420} radius="var(--radius-xl)" />
+          <Skeleton height={420} radius="var(--radius-lg)" />
         </SkeletonGroup>
       </>
     );
@@ -332,21 +332,10 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
           { value: 'individuelle', label: fr.sessionTypes.individuelle },
         ]}
       />
-      <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-        <legend
-          style={{
-            fontFamily: 'var(--font-heading)',
-            fontWeight: 600,
-            fontSize: 'var(--text-body-sm)',
-            textTransform: 'uppercase',
-            letterSpacing: 'var(--ls-label)',
-            marginBottom: 'var(--space-xs)',
-          }}
-        >
+      <fieldset className={styles.unitsFieldset}>
+        <legend className={styles.formLegend}>
           {fr.contracts.wizard.unitsLabel}{' '}
-          <span style={{ fontFamily: 'var(--font-body)', textTransform: 'none', letterSpacing: 0, color: 'var(--color-text-secondary)', fontWeight: 400 }}>
-            ({fr.contracts.wizard.unitsHelp.toLowerCase()})
-          </span>
+          <span className={styles.legendHint}>({fr.contracts.wizard.unitsHelp.toLowerCase()})</span>
         </legend>
         {unitOptions.map((unit) => (
           <Checkbox
@@ -364,7 +353,7 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
           />
         ))}
         {data.units.includes('AUTRE') && (
-          <div style={{ marginTop: 'var(--space-sm)', maxWidth: 420 }}>
+          <div className={styles.otherUnitField}>
             <TextField
               label={fr.contracts.wizard.otherUnitLabel}
               value={data.otherUnitLabel}
@@ -403,7 +392,7 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
   const stepPeriod = (
     <>
       <h3 className={styles.summaryTitle}>{fr.contracts.wizard.period.title}</h3>
-      <div style={{ display: 'grid', gap: 'var(--space-md)', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+      <div className={styles.dateGrid}>
         <DatePicker
           label={fr.contracts.wizard.period.start}
           value={data.startDate}
@@ -421,7 +410,7 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
         />
       </div>
       <div>
-        <p className={styles.summaryLabel} style={{ marginBottom: 'var(--space-xs)' }}>
+        <p className={styles.groupLabel}>
           {fr.contracts.wizard.period.preset}
         </p>
         <div className={styles.presetRow}>
@@ -442,11 +431,11 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
   const stepSlots = (
     <>
       <h3 className={styles.summaryTitle}>{fr.contracts.wizard.slots.title}</h3>
-      <p style={{ color: 'var(--color-text-secondary)' }}>{fr.contracts.wizard.slots.intro}</p>
+      <p className={styles.muted}>{fr.contracts.wizard.slots.intro}</p>
       {suggestions.loading && (
         <SkeletonGroup>
-          <p style={{ color: 'var(--color-text-secondary)' }}>{fr.contracts.wizard.slots.loading}</p>
-          <div style={{ display: 'grid', gap: 'var(--space-sm)' }}>
+          <p className={styles.muted}>{fr.contracts.wizard.slots.loading}</p>
+          <div className={styles.skeletonStack}>
             <Skeleton height={76} radius="var(--radius-lg)" />
             <Skeleton height={76} radius="var(--radius-lg)" />
             <Skeleton height={76} radius="var(--radius-lg)" />
@@ -565,18 +554,18 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
   const stepSummary = (
     <>
       <h3 className={styles.summaryTitle}>{fr.contracts.wizard.summary.title}</h3>
-      <p style={{ color: 'var(--color-text-secondary)' }}>{fr.contracts.wizard.summary.intro}</p>
+      <p className={styles.muted}>{fr.contracts.wizard.summary.intro}</p>
       {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
       <dl className={styles.summaryList}>
         {summaryRows.map((row) => (
           <div key={row.label}>
             <dt className={styles.summaryLabel}>{row.label}</dt>
-            <dd style={{ margin: 0 }}>{row.value}</dd>
+            <dd>{row.value}</dd>
           </div>
         ))}
         <div>
           <dt className={styles.summaryLabel}>{fr.contracts.wizard.summary.estimatedRate}</dt>
-          <dd style={{ margin: 0 }}>{formatEuro(source.data?.rate ?? 65)}</dd>
+          <dd>{formatEuro(source.data?.rate ?? 65)}</dd>
         </div>
       </dl>
     </>
@@ -585,12 +574,12 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
   const aside =
     step === 0 ? undefined : (
       <div>
-        <p className={styles.summaryTitle}>{fr.contracts.wizard.runningSummary}</p>
+        <p className={styles.asideTitle}>{fr.contracts.wizard.runningSummary}</p>
         <dl className={styles.summaryList}>
           {summaryRows.slice(0, 5).map((row) => (
             <div key={row.label}>
               <dt className={styles.summaryLabel}>{row.label}</dt>
-              <dd style={{ margin: 0 }}>{row.value}</dd>
+              <dd>{row.value}</dd>
             </div>
           ))}
         </dl>
@@ -619,7 +608,7 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
           variant="info"
           title={fr.contracts.wizard.draftBanner(draftBanner.savedBy, formatTimestamp(draftBanner.savedAt))}
           action={
-            <span style={{ display: 'inline-flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
+            <span className={styles.bannerActions}>
               <Button
                 size="md"
                 onClick={() => {
