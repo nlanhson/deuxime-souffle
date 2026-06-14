@@ -67,7 +67,7 @@ export default function LoginScreen() {
 
   return (
     <AuthLayout title={fr.auth.login.title} subtitle={fr.auth.login.subtitle}>
-      {formError && <InlineAlert variant="danger" title={formError} />}
+      {formError && <InlineAlert variant="danger" title={formError} autoFocus />}
       <form className={styles.form} onSubmit={submit} noValidate>
         <TextField
           label={fr.auth.login.email}

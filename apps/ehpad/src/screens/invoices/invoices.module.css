@@ -1,27 +1,181 @@
 /* ---- liste des factures ---- */
 
-/* Grille KPI : le total impayé est le point focal — il occupe toute la
-   première rangée pour répondre d'un coup d'œil à « est-ce que je dois
-   quelque chose ? ». Les autres indicateurs restent neutres en dessous. */
-.kpiGrid {
-  display: grid;
+/* Corps de la page sous l'en-tête : conteneur unique de la vue chargée (bandeau +
+   note de retard + bloc table). L'écart sous le titre reste au rythme de base de
+   .contentInner (marge basse de PageHeader 24px + gap 16px = 40px) — aucune marge
+   ajoutée ici. L'air « de section » est posé plus bas, entre la vue d'ensemble et
+   la table (cf. .tableBlock margin-top). Le gap interne (md) garde la note de retard
+   collée en pied du bandeau. padding-bottom : un peu d'air en bas de page quand elle
+   défile. flex:1 + min-height:0 : conserve la chaîne de croissance pour que le bloc
+   table puisse s'étirer en pleine hauteur (cf. DataTable fillHeight). */
+.pageBody {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-md);
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  padding-bottom: var(--space-xl);
 }
 
-.kpiGrid > :first-child {
-  grid-column: 1 / -1;
+/* Vue d'ensemble — le MÊME bandeau éditorial que l'Accueil (cf.
+   Dashboard.module.css → .statBand) : UN seul objet (une feuille blanche divisée
+   par des filets fins), pas quatre cartes flottantes identiques (« le tic
+   tableau de bord généré »). Calme, non cliquable — la couleur reste réservée
+   aux liens (numéro de facture, ligne de table). Chiffres « display » à l'échelle
+   KPI de la maison (32/h2) — les montants et dates y tiennent mieux qu'en 40px. */
+.statBand {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
-.searchField {
-  max-width: 420px;
-}
-
-/* La note HT colle au tableau qu'elle qualifie (espacement groupé). */
-.tableBlock {
+.stat {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  min-width: 0; /* laisse les valeurs longues (€/date) se contenir dans la cellule */
+  /* 20px vertical (pas de jeton entre 16 et 24), comme l'Accueil */
+  padding: 20px var(--space-md);
+}
+
+.stat + .stat {
+  border-left: 1px solid var(--color-border-subtle);
+}
+
+.statEyebrow {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Chiffre « display » — même voix que l'Accueil (Inter 600, chiffres tabulaires,
+   approche serrée), calé sur l'échelle h2 pour les montants/dates des factures. */
+.statNumber {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-h2);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-tight);
+  color: var(--color-text-primary);
+}
+
+.statUnit {
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-regular);
+  color: var(--color-text-secondary);
+}
+
+/* Sous 720px : 2 colonnes, filets recomposés et chiffre rétréci d'un cran (h3)
+   pour que « 1 105,00 € » / « 26 juin 2026 » tiennent dans la demi-largeur. */
+@media (max-width: 719px) {
+  .statBand {
+    grid-template-columns: 1fr 1fr;
+  }
+  .stat + .stat {
+    border-left: 0;
+  }
+  .stat:nth-child(even) {
+    border-left: 1px solid var(--color-border-subtle);
+  }
+  .stat:nth-child(n + 3) {
+    border-top: 1px solid var(--color-border-subtle);
+  }
+  .statNumber {
+    font-size: var(--text-h3);
+  }
+}
+
+/* Retard, niveau discret — note en pied de bandeau (même recette que la ligne de
+   fraîcheur des contacts, cf. contacts.module.css → .freshness) : texte gris muet,
+   petite icône ambre, action en lien bleu souligné. Demande sans crier ; ne reprend
+   la voix d'une bannière que si c'est sérieux (cf. computed.severity). L'espacement
+   vient du gap de .pageBody (16px) — aucune marge manuelle. */
+.overdueNote {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+  color: var(--color-text-muted);
+  font-size: var(--text-body-sm);
+}
+
+.overdueNote svg {
+  flex: none;
+  /* 18px à --lc-or-700 : même teinte que l'icône de la bannière « warning » et
+     contraste non-textuel AA (WCAG 1.4.11) — jamais --color-warning (trop clair). */
+  width: 18px;
+  height: 18px;
+  color: var(--lc-or-700);
+}
+
+/* Le montant en retard reste en pleine encre (rétrogradé, pas masqué) — le reste
+   de la phrase est en gris muet. */
+.overdueNoteAmount {
+  color: var(--color-text-primary);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+  /* « · 520,00 € HT » reste d'un seul tenant — le séparateur ne s'isole jamais
+     en fin de ligne quand la note se replie (cf. InvoicesScreen). */
+  white-space: nowrap;
+}
+
+/* Action = lien discret (bleu = interactif), jamais un bouton plein — recette
+   identique à .freshnessAction des contacts. */
+.overdueNoteAction {
+  appearance: none;
+  font: inherit;
+  font-weight: var(--weight-medium);
+  color: var(--color-info);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.overdueNoteAction:hover {
+  color: var(--lc-bleu-700);
+}
+
+.overdueNoteAction:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Le bloc table = barre d'outils + tableau, collés (la recherche se cale ainsi
+   au coin haut-droit du tableau, pas flottante loin au-dessus). margin-top : détache
+   nettement la table de la vue d'ensemble (bandeau + sa note de retard en pied) —
+   l'air « de section » demandé entre le résumé et le tableau. S'ajoute au gap de
+   .pageBody (16px) → ~56px entre les deux blocs. */
+.tableBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: calc(var(--space-lg) + var(--space-md));
+}
+
+/* Barre d'outils, juste au-dessus du tableau : note HT à gauche, recherche
+   tertiaire à droite. align-items:center aligne la note (texte) sur la pilule
+   (36px) ; flex-wrap pour qu'elles s'empilent proprement en étroit. */
+.tableTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+/* Recherche + compteur (sr-only) = item droit de la barre d'outils. */
+.tableSearch {
+  display: flex;
+  align-items: center;
 }
 
 .htNote {
@@ -31,6 +185,17 @@
 
 .numberLink {
   font-weight: var(--weight-semibold);
+  white-space: nowrap; /* « F-2026-052 » ne se coupe jamais au tiret */
+}
+
+/* Puce de statut à largeur uniforme (même idée que les contrats) : toutes les
+   pastilles ont la même empreinte et s'alignent à gauche. Plancher à 120px : il
+   uniformise les libellés courts (« Payée à DS » est le plus long) tout en tenant
+   dans la colonne « Statut » (dimensionnée au contenu) aux largeurs de bureau. */
+.statusCell > span {
+  min-width: 120px;
+  justify-content: flex-start;
+  white-space: nowrap;
 }
 
 /* Squelettes : même rythme vertical que l'écran réel. */

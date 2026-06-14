@@ -24,14 +24,20 @@ interface NavItem {
   end?: boolean | undefined;
 }
 
-/** Ordre WBS (E05) — les notifications vivent dans la cloche de la barre du haut. */
-const NAV_ITEMS: NavItem[] = [
+/** Navigation groupée par pertinence (réduction de la charge mentale) :
+   le travail quotidien en haut, et — comme « réglages » et « aide » sont
+   rarement consultés — l'établissement et le support sont envoyés en bas.
+   Les notifications vivent dans la cloche de la barre du haut. */
+const NAV_PRIMARY: NavItem[] = [
   { to: '/', key: 'home', icon: Home, end: true },
   { to: '/sessions', key: 'sessions', icon: CalendarDays },
   { to: '/evaluations', key: 'evaluations', icon: Star },
   { to: '/contrats', key: 'contracts', icon: FileText },
   { to: '/contacts', key: 'contacts', icon: Users },
   { to: '/factures', key: 'invoices', icon: Receipt },
+];
+
+const NAV_SECONDARY: NavItem[] = [
   { to: '/etablissement', key: 'facility', icon: Building2 },
   { to: '/contact', key: 'support', icon: Mail },
 ];
@@ -51,34 +57,41 @@ interface NavListProps {
   onNavigate?: (() => void) | undefined;
 }
 
-/** Liste de navigation — icône + libellé TOUJOURS visible (jamais icône seule). */
+/** Liste de navigation — icône + libellé TOUJOURS visible (jamais icône seule).
+   Deux groupes : le principal, puis le secondaire (réglages/aide) ancré en bas. */
 export function NavList({ onNavigate }: NavListProps) {
   const fr = useStrings();
   const pendingEvals = usePendingEvalCount();
+
+  const renderItem = (item: NavItem) => {
+    const badge = item.key === 'evaluations' && pendingEvals > 0 ? pendingEvals : 0;
+    return (
+      <li key={item.to}>
+        <NavLink
+          to={item.to}
+          end={item.end ?? false}
+          className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}
+          onClick={onNavigate}
+        >
+          <item.icon className={styles.icon} aria-hidden />
+          <span className={styles.label}>{fr.nav[item.key]}</span>
+          {badge > 0 && (
+            <span className={styles.badge} aria-label={fr.nav.pendingEval(badge)}>
+              {badge}
+            </span>
+          )}
+        </NavLink>
+      </li>
+    );
+  };
+
   return (
-    <ul className={styles.navList}>
-      {NAV_ITEMS.map((item) => {
-        const badge = item.key === 'evaluations' && pendingEvals > 0 ? pendingEvals : 0;
-        return (
-          <li key={item.to}>
-            <NavLink
-              to={item.to}
-              end={item.end ?? false}
-              className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}
-              onClick={onNavigate}
-            >
-              <item.icon className={styles.icon} aria-hidden />
-              <span className={styles.label}>{fr.nav[item.key]}</span>
-              {badge > 0 && (
-                <span className={styles.badge} aria-label={fr.nav.pendingEval(badge)}>
-                  {badge}
-                </span>
-              )}
-            </NavLink>
-          </li>
-        );
-      })}
-    </ul>
+    <>
+      <ul className={styles.navList}>{NAV_PRIMARY.map(renderItem)}</ul>
+      <ul className={`${styles.navList} ${styles.navSecondary}`}>
+        {NAV_SECONDARY.map(renderItem)}
+      </ul>
+    </>
   );
 }
 
@@ -89,7 +102,7 @@ export function Sidebar() {
       <div className={styles.brandRow}>
         <Logo size={40} />
         <p className={styles.brand}>
-          {fr.app.name}
+          <span className={styles.brandName}>{fr.app.name}</span>
           <span className={styles.brandSub}>{fr.app.space}</span>
         </p>
       </div>

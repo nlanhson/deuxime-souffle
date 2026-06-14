@@ -108,9 +108,9 @@ const OPEN_BY_DAY: Record<number, Avail[]> = {
   ],
   12: [{ dom: 12, time: '16:00', end: '17:00', dur: '1h', place: 'The Cedars Residence', address: '5 Avenue Jean Jaurès, Lyon 7th', loc: 'Lyon 7th · 4.8 km', km: 4.8, state: 'applied', unit: 'Memory care · Ground floor', access: 'Reception desk, ground floor', contact: 'Ask for Marie Laurent · Coordinator', sessionType: 'regular' }],
   13: [{ dom: 13, time: '11:00', end: '12:00', dur: '1h', place: 'The Oaks', address: '19 Montée des Soldats, Caluire', loc: 'Caluire · 5.2 km', km: 5.2, state: 'open', unit: 'Long-term care · 3rd floor', access: 'Main entrance — sign in at the desk', contact: 'Ask for Julien Roy · Nurse manager', sessionType: 'first' }],
-  // A genuinely far session (~15 km) so the over-limit travel warning (PLA-06) is demonstrable —
-  // ~39 min by car, past the coach's 30-min preference, but still applyable.
-  16: [{ dom: 16, time: '14:00', end: '15:00', dur: '1h', place: 'Greenfield Lodge', address: '22 Rue de la République, Meyzieu', loc: 'Meyzieu · 15.4 km', km: 15.4, state: 'open', unit: 'Long-term care · 2nd floor', access: 'Main gate, visitor parking', contact: 'Ask for Émilie Garnier · Coordinator', sessionType: 'regular' }],
+  // A genuinely far session (~21 km) so the over-limit travel warning (PLA-06) is demonstrable —
+  // ~54 min by car, past the coach's 45-min preference, but still applyable.
+  16: [{ dom: 16, time: '14:00', end: '15:00', dur: '1h', place: 'Greenfield Lodge', address: '22 Rue de la République, Meyzieu', loc: 'Meyzieu · 21.5 km', km: 21.5, state: 'open', unit: 'Long-term care · 2nd floor', access: 'Main gate, visitor parking', contact: 'Ask for Émilie Garnier · Coordinator', sessionType: 'regular' }],
   // further-out weeks (mock) so paging + the Month view have content to show
   18: [{ dom: 18, time: '10:00', end: '11:00', dur: '1h', place: 'Park Care Home', address: '8 Rue Léon Blum, Villeurbanne', loc: 'Villeurbanne · 3.1 km', km: 3.1, state: 'open', unit: 'Memory care · 2nd floor', access: 'Staff entrance, Rue Léon Blum (buzz APA)', contact: 'Ask for Marc Dubois · Activities lead', sessionType: 'regular' }],
   20: [{ dom: 20, time: '15:00', end: '16:00', dur: '1h', place: 'Riverside Care Home', address: '14 Quai Rambaud, Lyon 7th', loc: 'Lyon 7th · 4.1 km', km: 4.1, state: 'open', unit: 'Long-term care · Ground floor', access: 'Main entrance, 14 Quai Rambaud', contact: 'Ask for Sophie Bernard · Coordinator', sessionType: 'regular' }],
@@ -417,7 +417,9 @@ function urgencyLabel(dom: number): string {
    code reads this from the coach's profile. Travel time is DERIVED from each session's distance
    (a.km) + the preference, so there is no per-session travel field to drift out of sync. */
 type TravelMode = 'car' | 'foot';
-const TRAVEL_PREF: { mode: TravelMode; maxMin: number } = { mode: 'car', maxMin: 30 };
+// Mirrors the coach's Profile availability default (Car · ≤ 45 min) so the demo is coherent —
+// the over-limit warning checks against the same number shown in Profile → Availability.
+const TRAVEL_PREF: { mode: TravelMode; maxMin: number } = { mode: 'car', maxMin: 45 };
 const TRAVEL_SPEED_KMH: Record<TravelMode, number> = { car: 24, foot: 4.8 }; // conservative city speeds
 const TRAVEL_ICON: Record<TravelMode, LucideIcon> = { car: Car, foot: Footprints };
 // km → whole minutes (ceil so we never under-promise; floor 1). Pure + deterministic.
@@ -519,8 +521,13 @@ function WeekView({ days, selected, onSelect, fade, x, pan }: {
               <View style={[st.dayNumWrap, on && st.dayNumSel]}>
                 <Text style={[st.dayN, on && st.dayNSelText, day.empty && !on && { color: S.textSecondary }, day.today && { color: palette.neutral[0] }]}>{day.dom}</Text>
               </View>
+              {/* Explicit per-day count (PLA-04) — a small red count pill, dot for one, blank for none. */}
               <View style={st.load}>
-                {Array.from({ length: day.load }).map((_, i) => (<View key={i} style={st.loadDot} />))}
+                {day.load > 0 ? (
+                  <View style={st.countPill}>
+                    <Text style={st.countTxt}>{day.load}</Text>
+                  </View>
+                ) : null}
               </View>
             </Pressable>
           );
@@ -1317,7 +1324,11 @@ export function DisponiblesScreen() {
           </View>
         ) : (
           <View style={st.group}>
-            <Text style={st.groupLabel}>{dayLabel(selectedDate)}</Text>
+            {/* Day label + explicit count per day (PLA-04) */}
+            <Text style={st.groupLabel}>
+              {dayLabel(selectedDate)}
+              {daySessions.length > 0 ? ` · ${daySessions.length} ${copy.availableScreen.cal.dayCountSuffix}` : ''}
+            </Text>
             {daySessions.length === 0 ? (
               <EmptyState />
             ) : (
@@ -1414,8 +1425,14 @@ const st = StyleSheet.create({
   dayNumSel: { backgroundColor: color.action },
   dayN: { fontFamily: F.oswM, fontSize: 20, color: ON_CANVAS },
   dayNSelText: { color: color.onAction },
-  load: { flexDirection: 'row', gap: 3, marginTop: 6, minHeight: 5 },
+  load: { flexDirection: 'row', gap: 3, marginTop: 6, minHeight: 16, alignItems: 'center' },
   loadDot: { width: 5, height: 5, borderRadius: 999, backgroundColor: color.action },
+  // Explicit per-day count pill (PLA-04) — red, compact, reads as a session tally.
+  countPill: {
+    minWidth: 16, height: 16, borderRadius: 999, paddingHorizontal: 4,
+    backgroundColor: 'rgba(225,50,43,0.16)', alignItems: 'center', justifyContent: 'center',
+  },
+  countTxt: { fontFamily: F.bodyS, fontSize: 11, color: palette.rouge[300] },
 
   /* month grid — 7-column calendar; one red dot marks days with open sessions */
   moHead: { flexDirection: 'row', marginBottom: sp.xs },

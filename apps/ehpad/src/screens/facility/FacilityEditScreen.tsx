@@ -120,19 +120,90 @@ export default function FacilityEditScreen() {
   }
 
   if (state.loading || !form) {
+    const editCrumbs = [
+      { label: fr.facility.title, to: '/etablissement' },
+      { label: fr.facility.edit.title },
+    ];
     if (state.error) {
       return (
         <>
-          <PageHeader title={fr.facility.edit.title} crumbs={[{ label: fr.facility.title, to: '/etablissement' }]} />
+          <PageHeader title={fr.facility.edit.title} crumbs={editCrumbs} />
           <LoadError onRetry={state.retry} />
         </>
       );
     }
+    const SkeletonSection = ({ children }: { children: ReactNode }) => (
+      <section className={styles.section}>
+        <div className={styles.sectionHead}>
+          <Skeleton height={24} width={200} radius="var(--radius-pill)" />
+        </div>
+        {children}
+      </section>
+    );
     return (
       <>
-        <PageHeader title={fr.facility.edit.title} crumbs={[{ label: fr.facility.title, to: '/etablissement' }]} />
+        <PageHeader title={fr.facility.edit.title} crumbs={editCrumbs} />
         <SkeletonGroup>
-          <Skeleton height={420} radius="var(--radius-lg)" />
+          <div className={styles.sheet}>
+            {/* Général — 6-field auto-fit grid + units MultiSelect */}
+            <SkeletonSection>
+              <div className={styles.formGrid}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} height={64} radius="var(--radius-md)" />
+                ))}
+              </div>
+              <div className={styles.unitsField}>
+                <Skeleton height={64} radius="var(--radius-md)" />
+              </div>
+            </SkeletonSection>
+
+            {/* Adresses — two address groups (label + 3 fields) + checkbox */}
+            <SkeletonSection>
+              <div className={styles.formStack}>
+                {Array.from({ length: 2 }).map((_, group) => (
+                  <div key={group}>
+                    <Skeleton height={18} width={120} radius="var(--radius-md)" />
+                    <div className={styles.formGrid} style={{ marginTop: 'var(--space-sm)' }}>
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <Skeleton key={i} height={64} radius="var(--radius-md)" />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <Skeleton height={24} width={220} radius="var(--radius-md)" />
+              </div>
+            </SkeletonSection>
+
+            {/* Séances standard — two bordered standardRow cards + add button */}
+            <SkeletonSection>
+              <div className={styles.formStack}>
+                {Array.from({ length: 2 }).map((_, row) => (
+                  <div key={row} className={styles.standardRow}>
+                    <div className={styles.standardFields}>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Skeleton key={i} height={56} radius="var(--radius-md)" />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <Skeleton height={40} width={180} radius="var(--radius-pill)" />
+              </div>
+            </SkeletonSection>
+
+            {/* Tarification — 2-field grid */}
+            <SkeletonSection>
+              <div className={styles.formGrid}>
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <Skeleton key={i} height={64} radius="var(--radius-md)" />
+                ))}
+              </div>
+            </SkeletonSection>
+
+            <div className={styles.formActions}>
+              <Skeleton height={44} width={120} radius="var(--radius-pill)" />
+              <Skeleton height={44} width={120} radius="var(--radius-pill)" />
+            </div>
+          </div>
         </SkeletonGroup>
       </>
     );
@@ -231,7 +302,7 @@ export default function FacilityEditScreen() {
         title={fr.facility.edit.title}
         crumbs={[{ label: fr.facility.title, to: '/etablissement' }, { label: fr.facility.edit.title }]}
       />
-      {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
+      {failed && <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />}
 
       <div className={styles.sheet}>
         <Section title={fr.facility.general}>

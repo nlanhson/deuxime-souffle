@@ -16,6 +16,9 @@ import { Modal, View, Text, ScrollView, Pressable, StyleSheet } from 'react-nati
 import { X, Star, Building2 } from '../icons';
 import { palette, spacing as sp, radius as r, surfaces } from '../theme/theme';
 import { copy } from '../copy';
+import { useFirstLoad } from '../lib/useFirstLoad';
+import { Reveal } from '../components/Reveal';
+import { FeedbackSkeleton } from './skeletons';
 
 const S = surfaces.coach;
 const ON_CANVAS = S.textPrimary;
@@ -72,6 +75,7 @@ const AVG = (FEEDBACK.reduce((s, f) => s + f.rating, 0) / FEEDBACK.length).toFix
 
 export function FeedbackScreen({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const c = copy.ehpadFeedback;
+  const loading = useFirstLoad('ehpadFeedback', { active: visible, ms: 550 });
 
   return (
     <Modal visible={visible} onRequestClose={onClose} animationType="slide" presentationStyle="pageSheet">
@@ -86,6 +90,7 @@ export function FeedbackScreen({ visible, onClose }: { visible: boolean; onClose
           </Pressable>
         </View>
 
+        <Reveal loading={loading} skeleton={<FeedbackSkeleton />}>
         <ScrollView contentContainerStyle={st.scroll} showsVerticalScrollIndicator={false}>
           {/* ===== Average hero ===== */}
           <View style={st.hero} accessible accessibilityLabel={`${c.averageLabel} ${AVG}, ${FEEDBACK.length} ${c.countSuffix}`}>
@@ -126,6 +131,7 @@ export function FeedbackScreen({ visible, onClose }: { visible: boolean; onClose
 
           <Text style={st.note}>{c.note}</Text>
         </ScrollView>
+        </Reveal>
       </View>
     </Modal>
   );

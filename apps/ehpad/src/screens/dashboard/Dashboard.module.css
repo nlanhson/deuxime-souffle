@@ -5,12 +5,17 @@
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-md) var(--space-lg);
+  width: 100%;
+  /* 20px vertical : pas de jeton (l'échelle saute 16→24), valeur littérale assumée */
+  padding: 20px var(--space-lg);
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
+  text-align: left;
   text-decoration: none;
+  font: inherit;
   color: inherit;
+  cursor: pointer;
   transition: border-color var(--duration-fast) var(--ease-standard),
     box-shadow var(--duration-fast) var(--ease-standard),
     transform var(--duration-fast) var(--ease-standard);
@@ -35,8 +40,8 @@
   width: 48px;
   height: 48px;
   border-radius: var(--radius-md);
-  background: var(--lc-bleu-50);
-  color: var(--color-accent);
+  background: var(--lc-cta-ember-soft);
+  color: var(--lc-cta-ember);
 }
 
 .heroChip svg {
@@ -85,10 +90,116 @@
   }
 }
 
-/* Cartes statistiques — non cliquables, calmes : l'info est le sujet principal,
-   les actions vivent (en plus discret) dans l'en-tête. */
-.statRow {
+/* Bandeau de statistiques — UN seul objet (pas quatre cartes flottantes
+   identiques, le tic « tableau de bord généré ») : une feuille blanche divisée
+   par des filets fins, chiffres en serif éditoriale. Calme, non cliquable —
+   sauf la cellule « à évaluer » qui s'éclaire d'un voile bleu + un lien. */
+.statBand {
   display: grid;
-  gap: var(--space-md);
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  /* respiration supplémentaire avant le calendrier (en plus du gap du contenu) */
+  margin-bottom: var(--space-lg);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  /* 20px vertical (pas de jeton entre 16 et 24) pour aérer les cellules */
+  padding: 20px var(--space-md);
+}
+
+.stat + .stat {
+  border-left: 1px solid var(--color-border-subtle);
+}
+
+/* Cellule actionnable (évaluations en attente) : pas de fond teinté — le chiffre
+   accent + le lien « Évaluer → » suffisent à la signaler. */
+
+.statEyebrow {
+  font-family: var(--font-heading); /* Inter — c'est un libellé, pas un titre */
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Le chiffre « display » : le repère qu'on lit en premier (Inter, chiffres
+   tabulaires pour l'alignement). */
+.statNumber {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-h1);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: var(--ls-tight);
+  color: var(--color-text-primary);
+}
+
+.statUnit {
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-regular);
+  color: var(--color-text-secondary);
+}
+
+.statDetail {
+  font-size: var(--text-body-sm);
+  color: var(--color-text-muted);
+}
+
+/* Carte « note moyenne » : on descend un peu la rangée d'étoiles pour dégager
+   la virgule de « 4,5 » au-dessus (line-height:1 fait plonger son jambage). */
+.statRating {
+  margin-top: var(--space-xs);
+}
+
+/* « réalisées » en vert positif — repère de réussite, contraste AA sur blanc */
+.statDone {
+  color: var(--color-progress-strong);
+}
+
+/* Lien « Évaluer → » aligné sur la ligne de détail des autres cellules
+   (à plat sous le chiffre), pas un bouton qui descend et alourdit la bande. */
+.statLink {
+  align-self: flex-start;
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body-sm);
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.statLink:hover {
+  text-decoration: underline;
+}
+
+.statLink:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+@media (max-width: 719px) {
+  .statBand {
+    grid-template-columns: 1fr 1fr;
+  }
+  .stat + .stat {
+    border-left: 0;
+  }
+  .stat:nth-child(even) {
+    border-left: 1px solid var(--color-border-subtle);
+  }
+  .stat:nth-child(n + 3) {
+    border-top: 1px solid var(--color-border-subtle);
+  }
+  .statNumber {
+    font-size: var(--text-h2);
+  }
 }

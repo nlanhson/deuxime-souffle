@@ -24,14 +24,21 @@
   --lc-vert-400:#41B47E; --lc-vert-500:#2F9E6B; --lc-vert-600:#268158; --lc-vert-700:#1D6444;
   --lc-vert-800:#154A32; --lc-vert-900:#0D2F20;
 
+  /* Rose — hors rampes de marque, dédié à la catégorie calendaire « Personnel
+     soignant » : un vrai rose (pas le saumon de la rampe rouge). */
+  --lc-rose-100:#FCE7F3; --lc-rose-600:#DB2777; --lc-rose-800:#9D174D;
+
   /* Bout chaud (0–200) = « papier » de marque pour les surfaces claires.
      Bout sombre (300–900) = gris vrai-neutre, aligné sur la source canonique (theme.ts)
      et sur l'app coach — texte/bordures nets, plus de taupe (cohésion de marque). */
   --lc-neutral-0:#FFFFFF; --lc-neutral-50:#FAFAFA; --lc-neutral-100:#F2F2F2; --lc-neutral-200:#E5E5E5;
+  /* 250 : palier intermédiaire pour le bord des champs — plus doux que le 300
+     (trop net/dur au repos), mais encore plus présent que le liseré des cartes (200). */
+  --lc-neutral-250:#D4D4D4;
   --lc-neutral-300:#BBBBBB; --lc-neutral-400:#9C9C9C; --lc-neutral-500:#818181;
-  /* 550 : gris « estompé » le plus clair qui tient AA (≥ 4,5:1) sur blanc ET sur
-     le papier bleuté --lc-bleu-25 — le 500 (3,9:1) ne suffit pas pour du texte. */
-  --lc-neutral-550:#6F6F6F; --lc-neutral-600:#646464;
+  /* 550 : gris « estompé » le plus clair qui tient AA (≥ 4,5:1) sur blanc —
+     le 500 (#818181, 3,9:1) ne suffit pas pour du texte. */
+  --lc-neutral-550:#6A6A6A; --lc-neutral-600:#646464;
   --lc-neutral-700:#484848; --lc-neutral-800:#2B2B2B; --lc-neutral-900:#171717;
 
   --lc-gradient-movement: linear-gradient(135deg, #E1322B 0%, #F2C200 100%);
@@ -39,6 +46,9 @@
   /* Dégradé d'action signature (identique à l'app coach › PrimaryButton) :
      le rouge tient 0→70 %, puis braise orangée dans le coin bas-droit. */
   --lc-cta-ember:#F5821F;
+  /* Tient clair de la braise — fond doux pour pastille/chip orange (ex. icône
+     « Prochaine séance »), pendant chaud des *-soft existants. */
+  --lc-cta-ember-soft:#FDEBDC;
   --gradient-cta: linear-gradient(135deg, var(--lc-rouge-500) 0%, var(--lc-rouge-500) 70%, var(--lc-cta-ember) 100%);
 
   /* ---- Semantic: shared alias layer ---- */
@@ -69,6 +79,7 @@
   --color-text-on-ink:      var(--lc-neutral-50);
 
   --color-border-subtle:    var(--lc-neutral-200);
+  --color-border-field:     var(--lc-neutral-250); /* bord des champs de saisie — net mais pas dur */
   --color-border-strong:    var(--lc-neutral-300);
 
   /* surface defaults (admin/ehpad white baseline) */
@@ -82,10 +93,10 @@
   /* Voile des superpositions (tiroir mobile, modales) — aligné sur neutral-900. */
   --color-scrim:            rgba(23, 23, 23, 0.5);
 
-  /* ---- Typography ---- */
-  /* Police unique : TOUT en Inter (décision EHPAD). display/heading restent des
-     alias sémantiques → Inter, pour ne pas réécrire les ~46 références var(--font-*)
-     des composants. Hiérarchie portée désormais par le POIDS et la TAILLE, pas la famille. */
+  /* ---- Typography ----
+     Police unique : tout en Inter (choix client). La hiérarchie tient au POIDS et
+     à la TAILLE, pas à la famille. display/heading sont des alias sémantiques →
+     Inter, pour ne pas réécrire les références var(--font-*) des composants. */
   --font-display: "Inter", system-ui, sans-serif;
   --font-heading: "Inter", system-ui, sans-serif;
   --font-body:    "Inter", system-ui, sans-serif;
@@ -119,6 +130,11 @@
      (l'app coach garde son halo fort ; ici le rouge doit rester rare et calme). */
   --elevation-glow-action:0 1px 2px rgba(225,50,43,.18), 0 4px 14px rgba(225,50,43,.22);
 
+  /* Chevron du <select> natif — même tracé que l'icône lucide ChevronDown
+     (les autres champs en lucide) ; teinte neutral-600 fixée ici, seul endroit
+     où le hex brut est admis (un data-URI ne lit pas les variables CSS). */
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23646464' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
   /* ---- Motion ---- */
   --duration-fast:120ms; --duration-base:200ms; --duration-slow:320ms;
   --ease-standard:cubic-bezier(0.2,0,0,1);
@@ -147,10 +163,10 @@
   --color-data-lead:     var(--lc-or-500);
 }
 
-/* EHPAD: papier bleuté en fond, cartes blanches posées dessus (cran tonal) ;
-   rouge quasi absent ; bleu + vert mènent (info / santé). */
+/* EHPAD: tout blanc (canvas, chrome et cartes) — la structure tient aux liserés
+   fins. Rouge quasi absent ; bleu + vert mènent (info / santé). */
 [data-surface="ehpad"] {
-  --color-canvas:           var(--lc-bleu-25);
+  --color-canvas:           var(--lc-neutral-0);
   --color-surface:          var(--lc-neutral-0);
   --color-text-primary:     var(--lc-neutral-900);
   --color-accent:           var(--color-info);

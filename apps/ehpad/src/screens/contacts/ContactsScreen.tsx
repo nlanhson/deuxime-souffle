@@ -1,5 +1,27 @@
 import { useState } from 'react';
-import { OctagonX, Pencil, Plus, UserCheck } from 'lucide-react';
+import {
+  Activity,
+  Brain,
+  Briefcase,
+  Building2,
+  CalendarCheck,
+  CheckCircle2,
+  Clock,
+  Dumbbell,
+  HandHeart,
+  Mail,
+  OctagonX,
+  PartyPopper,
+  Pencil,
+  Phone,
+  Plus,
+  Receipt,
+  ShieldAlert,
+  ShieldCheck,
+  Star,
+  UserRound,
+  type LucideIcon,
+} from 'lucide-react';
 import { useStrings } from '@/i18n';
 import * as api from '@/data/api';
 import { useAuth } from '@/context/AuthContext';
@@ -8,33 +30,48 @@ import { useToast } from '@/context/ToastContext';
 import { useAsync } from '@/hooks/useAsync';
 import { formatPhone, formatSince } from '@/lib/format';
 import {
-  Avatar,
   Button,
   Card,
   Checkbox,
-  Chip,
   EmptyState,
   InlineAlert,
   LoadError,
   Modal,
   MultiSelect,
   PageHeader,
-  SegmentedControl,
   Select,
-  SkeletonCards,
+  Skeleton,
   SkeletonGroup,
   TextField,
 } from '@/components';
 import type { Contact, ContactRole } from '@/types/models';
 import styles from './contacts.module.css';
 
-const TWO_MONTHS_MS = 1000 * 60 * 60 * 24 * 61;
+const DAY_MS = 1000 * 60 * 60 * 24;
+/** ~2 mois : on invite à vérifier, mais en sourdine (simple ligne grise). */
+const NUDGE_AFTER_MS = DAY_MS * 61;
+/** ~5 mois : là, c'est vraiment en retard — on hausse le ton (bannière douce). */
+const OVERDUE_AFTER_MS = DAY_MS * 150;
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
+
+/** Une icône par fonction : on scanne la page par « qui fait quoi », pas par visage. */
+const ROLE_ICON: Record<ContactRole, LucideIcon> = {
+  comptable: Receipt,
+  coordinateur_animation: PartyPopper,
+  directeur: Building2,
+  psychomotricien: Activity,
+  ergotherapeute: HandHeart,
+  psychologue: Brain,
+  specialiste_apa: Dumbbell,
+  directeur_adjoint: Briefcase,
+  autre: UserRound,
+};
 
 let newContactSeq = 0;
 
-/** AUTH-21 — gestion des contacts : cartes, rôles multiples, suppression avec
- *  confirmation, horloge de fraîcheur bimestrielle. Écriture réservée à l'Admin. */
+/** AUTH-21 — gestion des contacts. Affichage hiérarchisé : un contact principal mis
+ *  en avant, les autres en grille menée par la FONCTION (pas le nom), e-mail et
+ *  téléphone joignables d'un geste. Écriture réservée à l'Admin. */
 export default function ContactsScreen() {
   const fr = useStrings();
   const ROLE_OPTIONS = (Object.keys(fr.contactRoles) as ContactRole[]).map((role) => ({
@@ -60,9 +97,9 @@ export default function ContactsScreen() {
   const [failed, setFailed] = useState(false);
 
   const gateReason = isAdmin ? undefined : fr.common.adminOnly;
-  const stale =
-    state.data !== null &&
-    Date.now() - new Date(state.data.lastConfirmed).getTime() > TWO_MONTHS_MS;
+  const ageMs = state.data ? Date.now() - new Date(state.data.lastConfirmed).getTime() : 0;
+  const stale = state.data !== null && ageMs > NUDGE_AFTER_MS;
+  const overdue = state.data !== null && ageMs > OVERDUE_AFTER_MS;
 
   const startNew = () => {
     setDraftErrors({});
@@ -126,18 +163,22 @@ export default function ContactsScreen() {
     });
   };
 
+  /** Les fonctions d'un contact, dans l'ordre d'importance (coordination des séances
+   *  d'abord — c'est l'interlocuteur clé pour DS), prêtes à servir de titre + icône. */
+  const functionsOf = (contact: Contact): { icon: LucideIcon; label: string }[] => [
+    ...(contact.isSessionCoordinator
+      ? [{ icon: CalendarCheck, label: fr.contactsPage.coordinator }]
+      : []),
+    ...contact.roles.map((role) => ({
+      icon: ROLE_ICON[role],
+      label:
+        role === 'autre' && contact.otherRoleLabel ? contact.otherRoleLabel : fr.contactRoles[role],
+    })),
+  ];
+
   const editForm = (contact: Contact) => (
     <div className={styles.form}>
-      <SegmentedControl
-        label={fr.contactsPage.civility}
-        value={contact.civility}
-        onChange={(civility) => setDraft({ ...contact, civility })}
-        options={[
-          { value: 'M', label: fr.civility.M },
-          { value: 'Mme', label: fr.civility.Mme },
-          { value: 'Mlle', label: fr.civility.Mlle },
-        ]}
-      />
+      {/* Le nom mène — deux champs par ligne, jamais trois. */}
       <div className={styles.formGrid}>
         <TextField
           label={fr.contactsPage.firstName}
@@ -153,6 +194,8 @@ export default function ContactsScreen() {
           error={draftErrors.lastName ?? null}
           required
         />
+      </div>
+      <div className={styles.formGrid}>
         <TextField
           label={fr.contactsPage.email}
           type="email"
@@ -171,15 +214,29 @@ export default function ContactsScreen() {
           required
         />
       </div>
-      <Select
-        label={fr.contactsPage.type}
-        value={contact.type}
-        onChange={(type) => setDraft({ ...contact, type: type as Contact['type'] })}
-        options={[
-          { value: 'principal', label: fr.contactsPage.types.principal },
-          { value: 'additionnel', label: fr.contactsPage.types.additionnel },
-        ]}
-      />
+      {/* Civilité (secondaire) rangée avec le type — deux petits sélecteurs sur une
+          ligne, plus jamais en tête de formulaire. */}
+      <div className={styles.formGrid}>
+        <Select
+          label={fr.contactsPage.civility}
+          value={contact.civility}
+          onChange={(civility) => setDraft({ ...contact, civility: civility as Contact['civility'] })}
+          options={[
+            { value: 'M', label: fr.civility.M },
+            { value: 'Mme', label: fr.civility.Mme },
+            { value: 'Mlle', label: fr.civility.Mlle },
+          ]}
+        />
+        <Select
+          label={fr.contactsPage.type}
+          value={contact.type}
+          onChange={(type) => setDraft({ ...contact, type: type as Contact['type'] })}
+          options={[
+            { value: 'principal', label: fr.contactsPage.types.principal },
+            { value: 'additionnel', label: fr.contactsPage.types.additionnel },
+          ]}
+        />
+      </div>
       <Checkbox
         label={fr.contactsPage.coordinator}
         checked={contact.isSessionCoordinator}
@@ -190,6 +247,7 @@ export default function ContactsScreen() {
         values={contact.roles}
         onChange={(roles) => setDraft({ ...contact, roles: roles as ContactRole[] })}
         options={ROLE_OPTIONS}
+        searchable
       />
       {contact.roles.includes('autre') && (
         <TextField
@@ -198,148 +256,241 @@ export default function ContactsScreen() {
           onChange={(otherRoleLabel) => setDraft({ ...contact, otherRoleLabel })}
         />
       )}
-      <div className={styles.formActions}>
-        <Button variant="ghost" onClick={() => setDraft(null)}>
-          {fr.common.cancel}
-        </Button>
-        <Button variant="primary" onClick={() => void saveDraft()} loading={busy}>
-          {fr.contactsPage.save}
-        </Button>
-      </div>
     </div>
   );
 
-  const contactCard = (contact: Contact) => {
-    if (draft && draft.id === contact.id) {
-      return (
-        <Card key={contact.id} className={styles.card}>
-          {editForm(draft)}
-        </Card>
-      );
-    }
-    return (
-      <Card key={contact.id} className={styles.card}>
-        <div className={styles.cardHead}>
-          <Avatar firstName={contact.firstName} lastName={contact.lastName} decorative />
-          <div className={styles.identity}>
-            <p className={styles.name}>
-              {fr.civility[contact.civility]} {contact.firstName} {contact.lastName}
-            </p>
-            <p className={styles.meta}>{fr.contactsPage.types[contact.type]}</p>
-          </div>
+  const contactCard = (contact: Contact, hero = false) => {
+    const fns = functionsOf(contact);
+    // Héros : l'étoile « contact principal » mène ; secondaires : la fonction mène.
+    const lead = hero
+      ? { icon: Star, label: fr.contactsPage.types.principal }
+      : (fns[0] ?? { icon: UserRound, label: fr.contactsPage.types[contact.type] });
+    const LeadIcon = lead.icon;
+    // Le reste des casquettes en une ligne calme — fini la « soupe de pastilles ».
+    const extraLabels = (hero ? fns : fns.slice(1)).map((f) => f.label);
+    const fullName = `${contact.firstName} ${contact.lastName}`;
+
+    const identity = (
+      <>
+        <div className={`${styles.lead} ${hero ? styles.leadPrincipal : ''}`}>
+          <span className={styles.leadIcon}>
+            <LeadIcon aria-hidden />
+          </span>
+          <span className={styles.leadLabel}>{lead.label}</span>
         </div>
-        <p className={styles.line}>{contact.email}</p>
-        <p className={styles.line}>{formatPhone(contact.phone)}</p>
-        <div className={styles.chips}>
-          {contact.isSessionCoordinator && (
-            <Chip label={fr.contactsPage.coordinator} variant="info" icon={UserCheck} />
-          )}
-          {contact.roles.map((role) => (
-            <Chip
-              key={role}
-              label={role === 'autre' && contact.otherRoleLabel ? contact.otherRoleLabel : fr.contactRoles[role]}
-              variant="neutral"
-            />
-          ))}
-        </div>
+        <p className={`${styles.name} ${hero ? styles.heroName : ''}`}>
+          {fr.civility[contact.civility]} {fullName}
+        </p>
+        {extraLabels.length > 0 && <p className={styles.roleLine}>{extraLabels.join(' · ')}</p>}
+      </>
+    );
+
+    const reach = (
+      <div className={styles.channels}>
+        <a
+          className={styles.channel}
+          href={`mailto:${contact.email}`}
+          aria-label={fr.contactsPage.emailLabel(fullName)}
+        >
+          <Mail aria-hidden />
+          <span>{contact.email}</span>
+        </a>
+        <a
+          className={styles.channel}
+          href={`tel:${contact.phone.replace(/\s/g, '')}`}
+          aria-label={fr.contactsPage.callLabel(fullName)}
+        >
+          <Phone aria-hidden />
+          <span>{formatPhone(contact.phone)}</span>
+        </a>
         {contact.account && (
-          <p className={styles.meta}>
-            {contact.account.active ? fr.contactsPage.hasAccount : fr.contactsPage.accountInactive}
+          <p className={`${styles.account} ${contact.account.active ? '' : styles.accountInactive}`}>
+            {contact.account.active ? <ShieldCheck aria-hidden /> : <ShieldAlert aria-hidden />}
+            <span>
+              {contact.account.active ? fr.contactsPage.hasAccount : fr.contactsPage.accountInactive}
+            </span>
           </p>
         )}
-        <div className={styles.cardActions}>
-          <Button
-            size="md"
-            icon={Pencil}
-            disabled={!isAdmin}
-            disabledReason={gateReason}
-            onClick={() => {
-              setDraftErrors({});
-              setDraft({ ...contact });
-            }}
-          >
-            {fr.common.edit}
-          </Button>
-          <Button
-            size="md"
-            variant="danger"
-            icon={OctagonX}
-            disabled={!isAdmin || contact.type === 'principal'}
-            disabledReason={
-              !isAdmin ? gateReason : contact.type === 'principal' ? fr.contactsPage.cannotDeletePrincipal : undefined
-            }
-            onClick={() => setDeleting(contact)}
-          >
-            {fr.common.delete}
-          </Button>
-        </div>
+      </div>
+    );
+
+    const actions = (
+      <div className={styles.cardActions}>
+        <Button
+          variant="secondary"
+          size="md"
+          icon={Pencil}
+          disabled={!isAdmin}
+          disabledReason={gateReason}
+          onClick={() => {
+            setDraftErrors({});
+            setDraft({ ...contact });
+          }}
+        >
+          {fr.common.edit}
+        </Button>
+        <Button
+          size="md"
+          variant="danger"
+          icon={OctagonX}
+          disabled={!isAdmin || contact.type === 'principal'}
+          disabledReason={
+            !isAdmin
+              ? gateReason
+              : contact.type === 'principal'
+                ? fr.contactsPage.cannotDeletePrincipal
+                : undefined
+          }
+          onClick={() => setDeleting(contact)}
+        >
+          {fr.common.delete}
+        </Button>
+      </div>
+    );
+
+    return (
+      <Card key={contact.id} className={styles.card}>
+        {hero ? (
+          <>
+            <div className={styles.heroBody}>
+              <div>{identity}</div>
+              <div>{reach}</div>
+            </div>
+            {actions}
+          </>
+        ) : (
+          <>
+            {identity}
+            {reach}
+            {actions}
+          </>
+        )}
       </Card>
     );
   };
 
+  const principal = state.data?.contacts.find((c) => c.type === 'principal') ?? null;
+  const others = state.data?.contacts.filter((c) => c.type !== 'principal') ?? [];
+  // Édition/ajout : un brouillon « tout neuf » porte un id temporaire `c-nouveau-…`.
+  const editingNew = draft !== null && draft.id.startsWith('c-nouveau-');
+
   return (
     <>
-      <PageHeader
-        title={fr.contactsPage.title}
-        intro={fr.contactsPage.intro}
-        actions={
-          <Button
-            variant="primary"
-            icon={Plus}
-            disabled={!isAdmin || draft !== null}
-            disabledReason={gateReason}
-            onClick={startNew}
-          >
-            {fr.contactsPage.addContact}
-          </Button>
-        }
-      />
-
-      {!isAdmin && <InlineAlert variant="info">{fr.common.adminOnlyBody}</InlineAlert>}
-      {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
-
-      {state.data && isAdmin && stale && (
-        <InlineAlert
-          variant="info"
-          title={fr.contactsPage.refreshNudge(formatSince(state.data.lastConfirmed))}
-          action={
-            <Button size="md" onClick={confirmFresh}>
-              {fr.contactsPage.confirmFresh}
-            </Button>
-          }
-        />
-      )}
-      {state.data && !stale && (
-        <InlineAlert variant="success" title={fr.contactsPage.upToDate} />
-      )}
-
-      {state.loading && (
-        <SkeletonGroup>
-          <SkeletonCards count={3} height={260} />
-        </SkeletonGroup>
-      )}
-      {state.error && <LoadError onRetry={state.retry} />}
-
-      {state.data && state.data.contacts.length === 0 && !draft && (
-        <EmptyState
-          title={fr.contactsPage.empty}
-          body={fr.contactsPage.emptyBody}
-          action={
-            <Button variant="primary" disabled={!isAdmin} disabledReason={gateReason} onClick={startNew}>
+      <div className={styles.page}>
+        <PageHeader
+          title={fr.contactsPage.title}
+          intro={fr.contactsPage.intro}
+          actions={
+            <Button
+              variant="primary"
+              icon={Plus}
+              disabled={!isAdmin || draft !== null}
+              disabledReason={gateReason}
+              onClick={startNew}
+            >
               {fr.contactsPage.addContact}
             </Button>
           }
         />
-      )}
 
-      {state.data && (state.data.contacts.length > 0 || draft) && (
-        <div className={styles.grid}>
-          {state.data.contacts.map(contactCard)}
-          {draft && !state.data.contacts.some((c) => c.id === draft.id) && (
-            <Card className={styles.card}>{editForm(draft)}</Card>
-          )}
-        </div>
-      )}
+        {!isAdmin && <InlineAlert variant="info">{fr.common.adminOnlyBody}</InlineAlert>}
+        {failed && draft === null && (
+          <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />
+        )}
+
+        {/* Fraîcheur des coordonnées : discrète par défaut (simple ligne grise),
+            elle ne reprend la voix d'une bannière que si c'est vraiment en retard. */}
+        {state.data && isAdmin && overdue && (
+          <InlineAlert
+            variant="info"
+            title={fr.contactsPage.refreshNudge(formatSince(state.data.lastConfirmed))}
+            action={
+              <Button size="md" onClick={confirmFresh}>
+                {fr.contactsPage.confirmFresh}
+              </Button>
+            }
+          />
+        )}
+        {state.data && isAdmin && !overdue && (
+          <div className={`${styles.freshness} ${stale ? '' : styles.freshnessFresh}`}>
+            {stale ? <Clock aria-hidden /> : <CheckCircle2 aria-hidden />}
+            <span>
+              {stale
+                ? fr.contactsPage.refreshNudge(formatSince(state.data.lastConfirmed))
+                : fr.contactsPage.upToDate}
+            </span>
+            {stale && (
+              <button type="button" className={styles.freshnessAction} onClick={confirmFresh}>
+                {fr.contactsPage.confirmFresh}
+              </button>
+            )}
+          </div>
+        )}
+
+        {state.loading && (
+          <SkeletonGroup>
+            {/* Hero : le contact principal, longue bande pleine largeur. */}
+            <Skeleton height={220} width="100%" radius="var(--radius-lg)" />
+            {/* Section « Autres contacts » : titre puis grille 3 → 2 → 1. */}
+            <div className={styles.section}>
+              <Skeleton height={20} width={140} radius="var(--radius-pill)" />
+              <div className={styles.grid}>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} height={180} radius="var(--radius-lg)" />
+                ))}
+              </div>
+            </div>
+          </SkeletonGroup>
+        )}
+        {state.error && <LoadError onRetry={state.retry} />}
+
+        {state.data && state.data.contacts.length === 0 && !draft && (
+          <EmptyState
+            title={fr.contactsPage.empty}
+            body={fr.contactsPage.emptyBody}
+            action={
+              <Button variant="primary" disabled={!isAdmin} disabledReason={gateReason} onClick={startNew}>
+                {fr.contactsPage.addContact}
+              </Button>
+            }
+          />
+        )}
+
+        {state.data && state.data.contacts.length > 0 && (
+          <>
+            {principal && contactCard(principal, true)}
+
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>{fr.contactsPage.othersTitle}</h2>
+              {others.length === 0 ? (
+                <p className={styles.roleLine}>{fr.contactsPage.noOthers}</p>
+              ) : (
+                <div className={styles.grid}>{others.map((c) => contactCard(c))}</div>
+              )}
+            </section>
+          </>
+        )}
+      </div>
+
+      <Modal
+        open={draft !== null}
+        onClose={() => setDraft(null)}
+        title={editingNew ? fr.contactsPage.addContact : fr.contactsPage.editTitle}
+        wide
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setDraft(null)}>
+              {fr.common.cancel}
+            </Button>
+            <Button variant="primary" onClick={() => void saveDraft()} loading={busy}>
+              {fr.contactsPage.save}
+            </Button>
+          </>
+        }
+      >
+        {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
+        {draft && editForm(draft)}
+      </Modal>
 
       <Modal
         open={deleting !== null}

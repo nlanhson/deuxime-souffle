@@ -26,7 +26,7 @@ export function NextSessionDetailModal({ visible, onClose, onCheckIn }: { visibl
       accentBg="rgba(255,255,255,0.05)"
       eyebrow={c.detailEyebrow}
       title={c.place}
-      body={`${c.start} → ${c.end} · ${c.duration}\n${c.address}`}
+      body={`${c.start} → ${c.end} · ${c.duration}\n${c.address}\n${c.unitLabel}: ${c.unit}`}
       note={c.contact}
       primaryLabel={c.checkInCta}
       onPrimary={onCheckIn}

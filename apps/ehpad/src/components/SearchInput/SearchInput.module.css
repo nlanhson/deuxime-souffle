@@ -1,0 +1,46 @@
+/* Recherche tertiaire : petite, fond gris recessé, sans bordure au repos —
+   elle aide sans attirer l'œil. Au focus seulement, un anneau net (accessibilité).
+   Forme pilule, cohérente avec les boutons et les filtres déroulants. */
+.searchBox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  height: 36px;
+  padding: 0 var(--space-md);
+  width: min(260px, 100%);
+  background: var(--color-surface-hover);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+}
+
+.searchBox:focus-within {
+  background: var(--color-surface);
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.searchIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  color: var(--color-text-primary);
+  padding: 0;
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+.searchInput:focus {
+  outline: none;
+}

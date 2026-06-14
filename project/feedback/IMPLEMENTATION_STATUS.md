@@ -3,7 +3,8 @@
 Source: `DS_UI_vs_WBS_Mismatch.xlsx` (client mismatch analysis, 28 rows) + the client's
 back-office "Invite a coach" form (screenshot, 2026-06-12).
 Scope decisions: **keep the 4 EXTRA items** (client-accepted enhancements) · **build all 5
-missing features**. Last updated: 2026-06-12. Typecheck: clean (`npx tsc --noEmit`).
+missing features**. Last updated: 2026-06-13 — **all actionable items implemented**.
+Typecheck: clean (`npx tsc --noEmit`).
 
 ## Done ✅
 
@@ -26,31 +27,24 @@ missing features**. Last updated: 2026-06-12. Typecheck: clean (`npx tsc --noEmi
 | GAME-01/02 badges & levels | Level card with rouge→or progress meter, earned + in-progress badge grid; linked from Profile | new `BadgesScreen.tsx` |
 | SESS-05 report history | Chronological list, facility filter chips, "Show more" pagination, review-status chips | new `ReportHistoryScreen.tsx` |
 | SESS-06 EHPAD feedback | Average-rating hero + per-session rating/comment cards | new `FeedbackScreen.tsx` |
+| PLA-01 dashboard coach badge | Gold "Lv 3" chip in the Accueil header → opens Badges & level | `AccueilScreen.tsx` |
+| PLA-01 unit type | Care-unit row ("Protected unit · Ground floor") on the next-session hero + its detail modal | `AccueilScreen.tsx`, `NextSessionDetailModal.tsx` |
+| PLA-04 per-day counts | Red count pill on each week-strip day + "· N open" on the selected-day header | `DisponiblesScreen.tsx` |
+| PLA-06 travel warning | Aligned the mock max to the Profile default (45 min) and bumped Greenfield Lodge to 21.5 km (~54 min) so the over-limit banner fires; logic was already correct | `DisponiblesScreen.tsx` |
+| SESS-01 engagement scale | 5-star "atmosphere" → 4 emoji options (😴 Rather tired / 😐 Average / 🙂 Well engaged / 🔥 Very dynamic) | `ReportScreen.tsx`, `SeancesScreen.tsx`, `copy.report.engagement` |
+| SESS-01 difficulty field | New "Perceived session difficulty" question (Easy / Standard / Demanding), shown in the read-only report too | `ReportScreen.tsx`, `SeancesScreen.tsx` |
+| No-all-caps sweep | Removed the last `textTransform: 'uppercase'` (Welcome, Splash, CheckInModal demo label) — zero remain app-wide | various |
 | EXTRA ×4 | Kept as-is per decision (activities multi-select, facility-ready, access line, application statuses) | — |
 
-## Not tackled yet ⏳
+## Not tackled — by design ⏳
 
-1. **PLA-01 — dashboard coach badge**: `BadgesScreen` exists and exports `CURRENT_LEVEL`, but
-   the level/badge chip is **not yet added to the Accueil header**, and tapping it should open
-   BadgesScreen. (`AccueilScreen.tsx` untouched.)
-2. **PLA-01 — unit type on next-session card**: the hero card on Accueil doesn't show the care
-   unit yet (the data exists on the Disponibles `Avail.unit` model).
-3. **PLA-04 — per-day session counts**: Available weekly view still shows dots only; the WBS
-   wants an explicit count per day.
-4. **PLA-06 — travel-time warning**: copy + helpers exist in `copy.ts`
-   (`availableScreen.travel.overLimit…`) and DisponiblesScreen has estimate plumbing, but per
-   the client's video the warning never fires (e.g. Greenfield Lodge 15.4 km vs 45-min max) —
-   the trigger logic needs verifying/fixing in `DisponiblesScreen.tsx` / `AvailableDetailModal`.
-5. **SESS-01 — engagement scale**: report still uses the 5-point star "Session atmosphere";
-   WBS wants 4 emoji options (😴 Rather tired / 😐 Average / 🙂 Well engaged / 🔥 Very dynamic).
-   Touches `ReportScreen.tsx`, the read-only `ReportView` in `SeancesScreen.tsx`, and
-   `copy.report.atmosphere`.
-6. **SESS-01 — difficulty field**: Easy / Standard / Demanding single-select not yet added to
-   the report form (would become a 7th step or fold into the existing numbering).
-7. **QA pass (not run)**: no-all-caps sweep on the untouched screens (Accueil, Disponibles,
-   Welcome, Splash still have `textTransform: 'uppercase'` eyebrows; Login/SignUp/Pending were
-   fixed), reduced-motion review of the new sheets, and a visual run in the simulator/web.
-8. **French translation**: copy.ts is still EN-for-review (project-wide, pre-existing).
+1. **Simulator / device run**: code typechecks clean but hasn't been run on a device build
+   (`npx expo run:ios` is a heavy dev build not set up in this environment). Recommend a visual
+   pass before sign-off. Reduced motion is safe by construction — the new sheets ride
+   `BottomSheet` (cross-fades, no slide, under reduced motion) and the new pageSheet screens add
+   no custom entrance animation.
+2. **French translation**: `copy.ts` is still EN-for-review (project-wide, pre-existing — out of
+   scope for the mismatch fixes).
 
 ## Notes / judgement calls (flag to client if needed)
 
@@ -61,3 +55,8 @@ missing features**. Last updated: 2026-06-12. Typecheck: clean (`npx tsc --noEmi
 - Two-wheel vehicle icon is a ⚡ bolt placeholder — heroicons has no bicycle glyph.
 - Month view is a static June 2026 grid (no month paging) — prototype-grade, matches mock data.
 - Absence step 2 (message) is optional; only the reason is required.
+- PLA-06: the warning logic was already correct; the demo just never tripped it because the two
+  mock travel-max values disagreed (Profile 45 min vs Disponibles 30 min). Aligned both to 45 and
+  made Greenfield Lodge genuinely far (21.5 km) so it now fires as the client expected.
+- PLA-01 coach badge shows level only ("Lv 3"); the full badge collection lives one tap away in
+  the Badges & level screen — kept the header chip minimal so it doesn't crowd the greeting.

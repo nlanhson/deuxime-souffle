@@ -3,9 +3,10 @@
  *
  * Replaces the old "Start report" preview popup: the home banner and the Sessions
  * "Write report" CTA now open THIS straight away, so the coach lands on the real form,
- * not a teaser. Mirrors the WBS 6-step report (SESS-01): a participant stepper, a single
- * activity choice, three Yes/No questions (two reveal a text field), and a 5-point
- * atmosphere rating. Submitting validates the session and triggers billing.
+ * not a teaser. Mirrors the WBS report (SESS-01): a participant stepper, an activities
+ * multi-choice, three Yes/No questions (two reveal a text field), a 4-emoji participant
+ * engagement scale, and a difficulty selector. Submitting validates the session and triggers
+ * billing.
  *
  * Surface = coach (ink canvas, dark cards, light text inside them). Report accent = gold,
  * the same "needs attention" colour the home banner uses. UI text comes from ../copy.
@@ -17,7 +18,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { X, Check, Minus, Plus, Star, FileText, CheckCircle2, type LucideIcon } from '../icons';
+import { X, Check, Minus, Plus, FileText, CheckCircle2, type LucideIcon } from '../icons';
 
 import { palette, color, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
 import { copy } from '../copy';
@@ -202,38 +203,52 @@ function Note({ value, onChange, placeholder }: { value: string; onChange: (v: s
   );
 }
 
-// 5-point atmosphere rating: stars + the current emoji/word.
-function Rating({ value, onChange }: { value: number | null; onChange: (v: number) => void }) {
-  const level = value != null ? C.atmosphere.levels[value] : null;
+// Participant engagement (WBS SESS-01) — 4 emoji options, single-select. Each option is a
+// card with its emoji + word; the chosen one carries the gold accent (never colour alone — the
+// emoji + word + checked state all read it).
+function Engagement({ value, onChange }: { value: number | null; onChange: (v: number) => void }) {
   return (
-    <View>
-      <View style={st.stars}>
-        {C.atmosphere.levels.map((_, i) => {
-          const filled = value != null && i <= value;
-          return (
-            <Pressable
-              key={i}
-              onPress={() => onChange(i)}
-              hitSlop={6}
-              style={st.star}
-              accessibilityRole="button"
-              accessibilityLabel={`${C.atmosphere.starA11y} ${i + 1} of 5`}
-            >
-              <Star
-                size={34}
-                color={filled ? GOLD.fg : palette.neutral[600]}
-                fill={filled ? GOLD.fg : 'transparent'}
-              />
-            </Pressable>
-          );
-        })}
-      </View>
-      {level ? (
-        <View style={st.ratingTag}>
-          <Text style={st.ratingEmoji}>{level.emoji}</Text>
-          <Text style={st.ratingWord}>{level.word}</Text>
-        </View>
-      ) : null}
+    <View style={st.engRow}>
+      {C.engagement.levels.map((lvl, i) => {
+        const on = value === i;
+        return (
+          <Pressable
+            key={i}
+            onPress={() => onChange(i)}
+            style={[st.engCell, on && st.engCellOn]}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: on }}
+            accessibilityLabel={`${C.engagement.a11y}: ${lvl.word}`}
+          >
+            <Text style={st.engEmoji}>{lvl.emoji}</Text>
+            <Text style={[st.engWord, on && st.engWordOn]} numberOfLines={2}>{lvl.word}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+// Perceived session difficulty (WBS SESS-01) — Easy / Standard / Demanding, single-select pills.
+function Difficulty({ value, onChange }: { value: number | null; onChange: (v: number) => void }) {
+  return (
+    <View style={st.diffRow}>
+      {C.difficulty.options.map((opt, i) => {
+        const on = value === i;
+        return (
+          <Pressable
+            key={opt.key}
+            onPress={() => onChange(i)}
+            style={[st.diffPill, on && st.diffPillOn]}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: on }}
+            accessibilityLabel={`${C.difficulty.a11y}: ${opt.word}`}
+          >
+            {on ? <Check size={15} color={GOLD.fg} style={{ marginRight: 6 }} /> : null}
+            <Text style={[st.diffTxt, on && st.diffTxtOn]}>{opt.word}</Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -251,7 +266,8 @@ export function ReportScreen({ visible, onClose, session }: Props) {
   const [nextNotes, setNextNotes] = React.useState<boolean | null>(null);
   const [nextText, setNextText] = React.useState('');
   const [readiness, setReadiness] = React.useState<boolean | null>(null);
-  const [atmosphere, setAtmosphere] = React.useState<number | null>(null);
+  const [engagement, setEngagement] = React.useState<number | null>(null);
+  const [difficulty, setDifficulty] = React.useState<number | null>(null);
   const [showErrors, setShowErrors] = React.useState(false);
   const [submitted, setSubmitted] = React.useState(false);
 
@@ -265,7 +281,8 @@ export function ReportScreen({ visible, onClose, session }: Props) {
     flag: flag == null,
     nextNotes: nextNotes == null || (nextNotes && nextText.trim() === ''),
     readiness: readiness == null,
-    atmosphere: atmosphere == null,
+    engagement: engagement == null,
+    difficulty: difficulty == null,
   };
   const incomplete = Object.values(missing).some(Boolean);
 
@@ -273,7 +290,8 @@ export function ReportScreen({ visible, onClose, session }: Props) {
   const handleClose = () => {
     setParticipants(session?.participants ?? 8);
     setActivities([]); setFlag(null); setFlagText('');
-    setNextNotes(null); setNextText(''); setReadiness(null); setAtmosphere(null);
+    setNextNotes(null); setNextText(''); setReadiness(null);
+    setEngagement(null); setDifficulty(null);
     setShowErrors(false); setSubmitted(false);
     onClose();
   };
@@ -356,9 +374,14 @@ export function ReportScreen({ visible, onClose, session }: Props) {
                 <YesNo value={readiness} onChange={setReadiness} />
               </Question>
 
-              {/* 6 · atmosphere */}
-              <Question n={6} label={C.atmosphere.label} help={C.atmosphere.help} missing={err('atmosphere')}>
-                <Rating value={atmosphere} onChange={setAtmosphere} />
+              {/* 6 · participant engagement (4 emoji options) */}
+              <Question n={6} label={C.engagement.label} help={C.engagement.help} missing={err('engagement')}>
+                <Engagement value={engagement} onChange={setEngagement} />
+              </Question>
+
+              {/* 7 · perceived session difficulty */}
+              <Question n={7} label={C.difficulty.label} help={C.difficulty.help} missing={err('difficulty')}>
+                <Difficulty value={difficulty} onChange={setDifficulty} />
               </Question>
             </ScrollView>
 
@@ -466,12 +489,28 @@ const st = StyleSheet.create({
     fontFamily: F.body, fontSize: 15, lineHeight: 21, color: ON_CARD,
   },
 
-  /* rating */
-  stars: { flexDirection: 'row', gap: sp.sm },
-  star: { padding: 2 },
-  ratingTag: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: sp.md },
-  ratingEmoji: { fontSize: 22 },
-  ratingWord: { fontFamily: F.oswS, fontSize: 16, color: GOLD.fg, letterSpacing: 0.6 },
+  /* engagement (4 emoji options) */
+  engRow: { flexDirection: 'row', gap: sp.sm },
+  engCell: {
+    flex: 1, paddingVertical: sp.md, paddingHorizontal: 4, borderRadius: r.lg,
+    alignItems: 'center', justifyContent: 'flex-start', gap: 6, minHeight: 92,
+    borderWidth: 1.5, borderColor: palette.neutral[600],
+  },
+  engCellOn: { backgroundColor: GOLD.bg, borderColor: GOLD.fg },
+  engEmoji: { fontSize: 26 },
+  engWord: { fontFamily: F.bodyS, fontSize: 12, lineHeight: 16, color: ON_CARD_2, textAlign: 'center' },
+  engWordOn: { color: GOLD.fg },
+
+  /* difficulty (3 pills) */
+  diffRow: { flexDirection: 'row', gap: sp.sm },
+  diffPill: {
+    flex: 1, minHeight: 48, borderRadius: r.pill, flexDirection: 'row',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: palette.neutral[600],
+  },
+  diffPillOn: { backgroundColor: GOLD.bg, borderColor: GOLD.fg },
+  diffTxt: { fontFamily: F.bodyS, fontSize: 15, color: ON_CARD_2 },
+  diffTxtOn: { color: GOLD.fg },
 
   /* footer */
   footer: {

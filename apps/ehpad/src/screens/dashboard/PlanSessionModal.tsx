@@ -18,10 +18,12 @@ interface PlanSessionModalProps {
   initialContractId?: string | undefined;
   /** Préselectionne la date (entrée « + » sur une case du calendrier). */
   initialDate?: string | undefined;
+  /** Préselectionne l'heure (entrée « clic sur un créneau » de la vue Semaine). */
+  initialTime?: string | undefined;
 }
 
 /** SESS-08 « Planifier une séance » — séance ponctuelle depuis un contrat ACTIF. */
-export function PlanSessionModal({ open, onClose, contracts, initialContractId, initialDate }: PlanSessionModalProps) {
+export function PlanSessionModal({ open, onClose, contracts, initialContractId, initialDate, initialTime }: PlanSessionModalProps) {
   const fr = useStrings();
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -37,6 +39,9 @@ export function PlanSessionModal({ open, onClose, contracts, initialContractId, 
     if (open && initialDate) setDate(initialDate);
   }, [open, initialDate]);
   const [time, setTime] = useState('10:00');
+  useEffect(() => {
+    if (open && initialTime) setTime(initialTime);
+  }, [open, initialTime]);
   const [contractError, setContractError] = useState<string | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -114,7 +119,7 @@ export function PlanSessionModal({ open, onClose, contracts, initialContractId, 
       ) : (
         <>
           <p>{fr.dashboard.plan.intro}</p>
-          {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
+          {failed && <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />}
           <Select
             label={fr.dashboard.plan.contract}
             value={contractId}

@@ -2,10 +2,10 @@
 .group {
   display: inline-flex;
   align-items: center;
-  padding: 3px;
+  padding: 2px;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-pill);
-  background: var(--lc-neutral-100); /* rail teinté, comme le SegmentedControl */
+  background: var(--lc-neutral-50); /* rail teinté clair, comme le SegmentedControl */
 }
 
 .option {
@@ -13,7 +13,8 @@
   align-items: center;
   justify-content: center;
   min-width: var(--touch-target-min);
-  min-height: 38px; /* + rail 3px ×2 + bord 1px ×2 = 46px hors-tout (≥ 44px) */
+  min-height: 32px; /* + rail 2px ×2 + bord 1px ×2 = 38px hors-tout ; chaque option
+                       reste 44px de large → cible tactile confortable (≥ AA, 24px) */
   padding: 0 var(--space-md);
   border: none;
   border-radius: var(--radius-pill);

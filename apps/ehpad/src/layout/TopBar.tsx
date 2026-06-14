@@ -20,6 +20,7 @@ import { useDataVersion } from '@/context/DataContext';
 import { getDb } from '@/data/store';
 import * as api from '@/data/api';
 import { formatSince } from '@/lib/format';
+import { notificationContent } from '@/lib/labels';
 import { Avatar } from '@/components/Avatar';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import type { AppNotification } from '@/types/models';
@@ -144,6 +145,7 @@ export function TopBar({ onOpenMenu, showMenuButton }: TopBarProps) {
                 <ul className={styles.notifList}>
                   {recent.map((notification) => {
                     const Icon = TYPE_ICONS[notification.type];
+                    const { title, body } = notificationContent(fr, notification);
                     return (
                       <li key={notification.id}>
                         <button
@@ -162,10 +164,10 @@ export function TopBar({ onOpenMenu, showMenuButton }: TopBarProps) {
                           <span className={styles.notifTexts}>
                             <span className={styles.notifTitle}>
                               {!notification.read && <span className={styles.notifDot} aria-hidden />}
-                              {notification.title}
+                              {title}
                             </span>
                             <span className={styles.notifBody}>
-                              {notification.body} — {formatSince(notification.createdAt)}
+                              {body} — {formatSince(notification.createdAt)}
                             </span>
                           </span>
                         </button>

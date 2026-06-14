@@ -15,6 +15,10 @@ export const copy = {
     greeting: 'Hi, Karim',
     notificationsA11y: 'Notifications, 2 unread',
     profileA11y: "Karim's profile",
+    // Coach badge / level chip in the header (WBS PLA-01: "Dashboard displays Coach badge").
+    // "Lv" + the number is composed in-component; opens the Badges & level screen.
+    levelPrefix: 'Lv',
+    levelA11y: 'Your level and badges',
   },
   reportBanner: {
     title: 'Report to complete',
@@ -93,19 +97,30 @@ export const copy = {
       label: 'Was the facility ready for you?',
       help: 'Room set up, residents gathered, equipment available.',
     },
-    // 6 · atmosphere (5-point rating + emoji).
-    atmosphere: {
-      label: 'Session atmosphere',
-      help: 'Overall energy and engagement.',
-      // index 0–4 → 1–5 stars; emoji + word shown for the current choice.
+    // 6 · participant engagement (WBS SESS-01: 4 emoji options, not a star rating).
+    engagement: {
+      label: 'Overall participant engagement',
+      help: 'How engaged the group was overall.',
+      // index 0–3, low → high. The WBS's verbatim four levels.
       levels: [
-        { emoji: '😴', word: 'Flat' },
-        { emoji: '😐', word: 'Quiet' },
-        { emoji: '🙂', word: 'Good' },
-        { emoji: '😄', word: 'Lively' },
-        { emoji: '🔥', word: 'On fire' },
+        { emoji: '😴', word: 'Rather tired' },
+        { emoji: '😐', word: 'Average' },
+        { emoji: '🙂', word: 'Well engaged' },
+        { emoji: '🔥', word: 'Very dynamic' },
       ],
-      starA11y: 'Rate atmosphere', // composed in-component: "Rate atmosphere 3 of 5"
+      a11y: 'Participant engagement',
+    },
+    // 7 · perceived session difficulty (WBS SESS-01: Easy / Standard / Demanding).
+    difficulty: {
+      label: 'Perceived session difficulty',
+      help: 'How demanding the session felt to run.',
+      // index 0–2, light → hard.
+      options: [
+        { key: 'easy', word: 'Easy' },
+        { key: 'standard', word: 'Standard' },
+        { key: 'demanding', word: 'Demanding' },
+      ],
+      a11y: 'Session difficulty',
     },
     submit: 'Submit report',
     incomplete: 'Answer the highlighted questions to submit.',
@@ -132,6 +147,9 @@ export const copy = {
     status: 'Confirmed',
     place: 'The Lindens Care Home',
     address: '12 Lilac Street, Lyon 3rd · 2.4 km',
+    // Care unit within the EHPAD (WBS PLA-01: "Session cards display Unit type").
+    unit: 'Protected unit · Ground floor',
+    unitLabel: 'Unit',
     // Client session-detail fields (WBS Coach Planning & Check-in): EHPAD name, time,
     // address, contact person. `contact` = the on-site person to ask for on arrival.
     contact: 'Ask for Marie Laurent · Coordinator',
@@ -279,6 +297,9 @@ export const copy = {
       prevWeekA11y: 'Previous week',
       nextWeekA11y: 'Next week',
       tiles: { open: 'Open', applied: 'Applied', unit: 'sessions' },
+      // Per-day count (WBS PLA-04: "displays count per day"). Suffix for the day-detail header,
+      // composed in-component as "{n} open" / "{n} open sessions".
+      dayCountSuffix: 'open',
       dayEmpty: 'No open sessions this day.',
       // Whole shown week / month has no open sessions (PLA-04 / PLA-05) — reachable now the
       // calendar pages freely past the seeded period.
@@ -389,10 +410,6 @@ export const copy = {
     emptyUpcoming: 'No upcoming sessions.',
     expandA11y: 'Show session details',
     collapseA11y: 'Hide session details',
-    // List ↔ Month view toggle on the Confirmed segment (WBS PLA-02: "list/week/month view";
-    // week lives on Home — here the coach flips between the list and a month grid).
-    view: { list: 'List', month: 'Month', a11y: 'Sessions view' },
-    monthEmptyDay: 'No session this day.',
     // Session detail page (C22 "View session details") — opens when a session card is tapped.
     detail: {
       title: 'Session details',

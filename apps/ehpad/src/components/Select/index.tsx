@@ -227,6 +227,8 @@ interface MultiSelectProps {
   error?: string | null | undefined;
   required?: boolean | undefined;
   disabled?: boolean | undefined;
+  /** Ajoute un champ de recherche en tête du popover pour filtrer les options. */
+  searchable?: boolean | undefined;
 }
 
 /** Choix multiple — bouton-champ qui révèle une liste de cases (✓ + fond, jamais
@@ -240,11 +242,22 @@ export function MultiSelect({
   error,
   required,
   disabled,
+  searchable,
 }: MultiSelectProps) {
   const fr = useStrings();
   const id = useId();
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const rootRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Recherche : à l'ouverture, on repart d'un filtre vide et le curseur s'y place.
+  useEffect(() => {
+    if (open && searchable) {
+      setQuery('');
+      searchRef.current?.focus();
+    }
+  }, [open, searchable]);
 
   useEffect(() => {
     if (!open) return;
@@ -273,6 +286,9 @@ export function MultiSelect({
         ? values.map((v) => options.find((o) => o.value === v)?.label ?? v).join(', ')
         : `${values.length} sélectionnés`;
 
+  const q = query.trim().toLowerCase();
+  const shown = searchable && q ? options.filter((o) => o.label.toLowerCase().includes(q)) : options;
+
   return (
     <div className={styles.field} ref={rootRef}>
       <span className={styles.label} id={`${id}-label`}>
@@ -295,23 +311,38 @@ export function MultiSelect({
         </button>
         {open && (
           <div className={own.popover} role="group" aria-labelledby={`${id}-label`}>
-            {options.map((option) => {
-              const checked = values.includes(option.value);
-              return (
-                <label key={option.value} className={styles.choiceRow}>
-                  <input
-                    type="checkbox"
-                    className={styles.srInput}
-                    checked={checked}
-                    onChange={() => toggle(option.value)}
-                  />
-                  <span className={styles.box} aria-hidden>
-                    <Check size={16} />
-                  </span>
-                  <span className={styles.choiceLabel}>{option.label}</span>
-                </label>
-              );
-            })}
+            {searchable && (
+              <input
+                ref={searchRef}
+                type="text"
+                className={own.multiSearch}
+                placeholder={fr.common.search}
+                aria-label={fr.common.search}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            )}
+            {shown.length === 0 ? (
+              <p className={own.multiEmpty}>{fr.common.noResults}</p>
+            ) : (
+              shown.map((option) => {
+                const checked = values.includes(option.value);
+                return (
+                  <label key={option.value} className={styles.choiceRow}>
+                    <input
+                      type="checkbox"
+                      className={styles.srInput}
+                      checked={checked}
+                      onChange={() => toggle(option.value)}
+                    />
+                    <span className={styles.box} aria-hidden>
+                      <Check size={16} />
+                    </span>
+                    <span className={styles.choiceLabel}>{option.label}</span>
+                  </label>
+                );
+              })
+            )}
           </div>
         )}
       </div>

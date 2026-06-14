@@ -94,8 +94,8 @@ const st = StyleSheet.create({
     fontFamily: F.display, fontSize: 34, lineHeight: 41, letterSpacing: 0.5,
     color: S.textPrimary, textAlign: 'center', paddingHorizontal: sp.xl,
   },
+  // Sentence case (brand rule: no all-caps); a touch of tracking keeps the tagline feel.
   tag: {
-    fontFamily: F.oswM, fontSize: 13, letterSpacing: 4, color: color.action,
-    textTransform: 'uppercase',
+    fontFamily: F.oswM, fontSize: 13, letterSpacing: 1.5, color: color.action,
   },
 });

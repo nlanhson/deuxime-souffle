@@ -6,8 +6,8 @@
   max-width: min(420px, calc(100vw - 2 * var(--space-lg)));
 }
 
-/* L'état est double-codé : icône colorée + liseré gauche de la même teinte
-   (le succès, l'info et l'erreur se distinguent d'un coup d'œil, pas qu'à l'icône). */
+/* L'état est porté par l'icône colorée (succès / info / erreur) — surface plate
+   bordée d'un trait neutre, sans liseré de couleur. */
 .toast {
   display: flex;
   align-items: flex-start;
@@ -15,18 +15,9 @@
   padding: var(--space-md) var(--space-lg);
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
-  border-left: 4px solid var(--color-progress-strong);
   border-radius: var(--radius-lg);
   box-shadow: var(--elevation-2);
   animation: toast-in var(--duration-base) var(--ease-decelerate);
-}
-
-.toast[data-kind='neutral'] {
-  border-left-color: var(--color-accent);
-}
-
-.toast[data-kind='danger'] {
-  border-left-color: var(--color-danger);
 }
 
 /* Entrée depuis le bord droit (toast ancré en bas à droite).

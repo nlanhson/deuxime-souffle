@@ -36,6 +36,7 @@ export const fr = {
     delete: 'Supprimer',
     search: 'Rechercher',
     clearFilters: 'Effacer les filtres',
+    noResults: 'Aucun résultat',
     notFound: 'Page introuvable',
     notFoundBody: 'La page demandée n’existe pas ou n’est plus disponible.',
     backHome: 'Revenir à l’accueil',
@@ -47,6 +48,13 @@ export const fr = {
     no: 'Non',
     at: 'à',
     stub: 'Document de démonstration',
+  },
+
+  pagination: {
+    label: 'Pagination',
+    previous: 'Page précédente',
+    next: 'Page suivante',
+    status: (page: number, total: number) => `Page ${page} sur ${total}`,
   },
 
   nav: {
@@ -126,10 +134,10 @@ export const fr = {
     contract: {
       active: 'Actif',
       a_renouveler: 'À renouveler',
-      en_attente_validation: 'En attente de validation',
+      en_attente_validation: 'En attente',
       expire: 'Expiré',
       rejete: 'Rejeté',
-      modification_en_attente: 'Modification en attente',
+      modification_en_attente: 'En révision',
       non_renouvele: 'Non reconduit',
     },
     invoice: {
@@ -178,6 +186,7 @@ export const fr = {
       lastName: 'Nom',
       phone: 'Téléphone',
       rolesLabel: 'Rôles',
+      rolesHelper: 'Défini par votre invitation. Contactez l’équipe DS pour le modifier.',
       password: 'Mot de passe',
       passwordConfirm: 'Confirmer le mot de passe',
       submit: 'Activer mon compte',
@@ -231,8 +240,8 @@ export const fr = {
     title: 'Accueil',
     kpi: {
       sessionsMonth: 'Séances ce mois',
-      sessionsMonthDetail: (done: number, upcoming: number) =>
-        `${done} ${plural(done, 'réalisée', 'réalisées')} · ${upcoming} à venir`,
+      sessionsDone: (done: number) => `${done} ${plural(done, 'réalisée', 'réalisées')}`,
+      sessionsUpcoming: (upcoming: number) => `${upcoming} à venir`,
       activeContracts: 'Contrats actifs',
       pendingEvaluations: 'Évaluations en attente',
       evaluate: 'Évaluer',
@@ -252,12 +261,10 @@ export const fr = {
       tomorrow: 'demain',
       inDays: (n: number) => `dans ${n} jours`,
     },
+    /* « Voir toutes les séances » — réutilisé par la fiche contrat ; les autres
+       libellés de widgets ont été retirés avec les widgets sous le calendrier. */
     widgets: {
-      completed: 'Séances réalisées',
-      upcoming: 'Séances à venir',
-      awaitingEvaluation: 'Séances en attente d’évaluation',
       seeAll: 'Voir toutes les séances',
-      seeEvaluations: 'Voir les évaluations',
     },
     plan: {
       title: 'Planifier une séance',
@@ -274,6 +281,12 @@ export const fr = {
         'La planification se fait à partir d’un contrat actif. Créez d’abord votre contrat.',
       goToContracts: 'Voir les contrats',
     },
+    quickCreate: {
+      title: 'Nouvelle séance',
+      create: 'Créer',
+      more: 'Plus d’options',
+      noContract: 'Aucun contrat actif — créez-en un d’abord.',
+    },
     emptyCalendar: 'Aucune séance planifiée pour l’instant.',
     emptyCalendarAction: 'Planifier une séance',
   },
@@ -286,7 +299,7 @@ export const fr = {
     today: 'Aujourd’hui',
     tomorrow: 'Demain',
     legend: 'Légende des unités',
-    nextBadge: 'Prochaine',
+    nextBadge: 'Prochaine séance',
     nextSession: 'Prochaine séance',
     unassigned: 'Coach à confirmer',
     moreEvents: (n: number) => `+ ${n} ${plural(n, 'autre séance', 'autres séances')}`,
@@ -349,6 +362,8 @@ export const fr = {
       postpone: 'Reporter la séance',
       evaluate: 'Évaluer la séance',
       duration: 'Durée',
+      openFull: 'Voir la fiche complète',
+      upcomingNote: 'Le compte rendu et l’évaluation du coach apparaîtront ici après la séance.',
     },
 
     edit: {
@@ -410,10 +425,16 @@ export const fr = {
     empty: 'Aucune évaluation en attente — tout est à jour !',
     emptyBody: 'Les séances terminées à évaluer apparaîtront ici.',
     sessionOf: (date: string, time: string) => `Séance du ${date} à ${time}`,
+    tabs: { pending: 'À évaluer', history: 'Historique' },
+    historyTitle: 'Évaluations passées',
+    historyEmpty: 'Aucune évaluation pour l’instant',
+    historyEmptyBody: 'Les séances que vous avez évaluées apparaîtront ici.',
+    viewEvaluation: 'Voir mon évaluation',
 
     form: {
       title: 'Évaluer la séance',
       sessionInfo: 'Séance concernée',
+      heading: 'Votre évaluation',
       starsLabel: 'Quelle note donnez-vous à cette séance ?',
       starsValue: (n: number) => `Note : ${n} sur 5`,
       impressionLabel: 'Quelle est votre impression générale ?',
@@ -432,13 +453,6 @@ export const fr = {
       missingStars: 'Choisissez une note pour continuer',
       missingImpression: 'Choisissez une impression générale pour continuer',
       submittedOn: (date: string, by: string) => `Envoyée le ${date} par ${by}`,
-    },
-
-    impressionsShort: {
-      tres_bien: 'Très bien',
-      bien: 'Bien',
-      correct: 'Correct',
-      a_ameliorer: 'Points à améliorer',
     },
   },
 
@@ -465,6 +479,18 @@ export const fr = {
       rate: 'Tarif par séance',
     },
 
+    columns: {
+      reference: 'Contrat',
+      units: 'Unité',
+      progress: 'Avancement',
+      endDate: 'Échéance',
+    },
+    tableCaption: 'Liste des contrats, triée par priorité',
+    progressLabel: (done: number, total: number) => `${done} / ${total} séances`,
+    count: (n: number) => `${n} contrat${n > 1 ? 's' : ''}`,
+    searchLabel: 'Rechercher un contrat',
+    searchPlaceholder: 'Référence, unité, date, statut…',
+
     actions: {
       detail: 'Voir le détail',
       oneOff: 'Créer une séance ponctuelle',
@@ -486,6 +512,8 @@ export const fr = {
       historyTitle: 'Historique des modifications',
       historyEmpty: 'Aucune modification pour l’instant.',
       modifiedBy: (name: string, date: string) => `Modifié par ${name} le ${date}`,
+      sessionsProgress: (done: number, total: number) =>
+        `${done} séances réalisées sur ${total} générées`,
       rejectionTitle: 'Contrat rejeté',
       pendingInfo: 'Ce contrat est en attente de validation par l’équipe DS. Il ne peut pas encore être utilisé pour planifier des séances.',
       modifPendingInfo: 'Une modification majeure attend la validation de l’équipe DS. Elle sera appliquée après approbation.',
@@ -703,7 +731,12 @@ export const fr = {
   contactsPage: {
     title: 'Contacts',
     intro: 'Les bonnes informations permettent à l’équipe DS de joindre la bonne personne.',
+    othersTitle: 'Autres contacts',
+    noOthers: 'Aucun autre contact pour l’instant.',
+    callLabel: (name: string) => `Appeler ${name}`,
+    emailLabel: (name: string) => `Envoyer un e-mail à ${name}`,
     addContact: 'Ajouter un contact',
+    editTitle: 'Modifier le contact',
     empty: 'Aucun contact pour l’instant',
     emptyBody: 'Ajoutez les personnes à joindre pour les séances, la facturation ou la direction.',
     upToDate: 'Tous les contacts sont à jour',
@@ -740,6 +773,10 @@ export const fr = {
     overdueBanner: (n: number, amount: string) =>
       `${n} ${plural(n, 'facture en retard', 'factures en retard')} — ${amount} HT à régler`,
     overdueTitle: 'En retard',
+    // Niveau discret (« dont … en retard ») : le séparateur « · » et le montant
+    // (mis en valeur) suivent en JSX, collés par une espace insécable.
+    overdueMild: (n: number) => `dont ${n} ${plural(n, 'facture en retard', 'factures en retard')}`,
+    vatShort: 'HT',
     contactDs: 'Contacter l’équipe DS',
     kpi: {
       unpaid: 'Montant total impayé (HT)',
@@ -753,12 +790,14 @@ export const fr = {
       number: 'Numéro',
       period: 'Période',
       sessions: 'Nombre de séances',
+      sessionsShort: 'Séances', // en-tête de colonne (table serrée) ; libellé long gardé pour le détail
       amount: 'Montant HT',
       status: 'Statut',
       paymentDate: 'Date de paiement',
     },
-    searchLabel: 'Rechercher par numéro de facture',
-    searchPlaceholder: 'Ex. : F-2026-052',
+    searchLabel: 'Rechercher une facture',
+    searchPlaceholder: 'Numéro, période, montant, statut…',
+    count: (n: number) => `${n} facture${n > 1 ? 's' : ''}`,
     noResults: 'Aucune facture ne correspond.',
     clearSearch: 'Effacer la recherche',
     empty: 'Aucune facture pour l’instant',
@@ -814,6 +853,17 @@ export const fr = {
     contractsTitle: 'Contrats',
     seeContracts: 'Voir tous les contrats',
     lastModified: (name: string, date: string) => `Modifié par ${name} le ${date}`,
+    legalTitle: 'Identité & immatriculation',
+    contactDsLink: 'Nous contacter',
+    contractUntil: (date: string) => `jusqu’au ${date}`,
+    contactModal: {
+      type: 'Type',
+      additional: 'Contact additionnel',
+      role: 'Rôle',
+      coordinator: 'Coordinateur de séance',
+      email: 'E-mail',
+      phone: 'Téléphone',
+    },
 
     edit: {
       title: 'Modifier mon établissement',
@@ -838,6 +888,7 @@ export const fr = {
   account: {
     title: 'Mon compte',
     intro: 'Ces informations concernent votre accès personnel. Les données de l’établissement se trouvent dans « Mon établissement ».',
+    infoTitle: 'Mes informations',
     firstName: 'Prénom',
     lastName: 'Nom',
     phone: 'Téléphone',
@@ -870,6 +921,35 @@ export const fr = {
     welcomeToast: (n: number) =>
       `Vous avez ${n} ${plural(n, 'notification non lue', 'notifications non lues')}`,
     welcomeToastAction: 'Voir',
+    /* Titre + corps par type — recomposés à l'affichage (jamais figés au seed). */
+    types: {
+      coachLate: {
+        title: 'Coach en retard',
+        body: (time: string) => `Le coach est en retard pour la séance de ${time}`,
+      },
+      evalDue: {
+        title: 'Évaluations en attente',
+        body: (n: number) =>
+          `${n} ${plural(n, 'séance terminée attend', 'séances terminées attendent')} votre évaluation.`,
+      },
+      renewal: {
+        title: 'Contrat à renouveler',
+        body: (ref: string, days: number) =>
+          `Le contrat ${ref} arrive à échéance dans ${days} jours. Pensez au renouvellement.`,
+      },
+      invoice: {
+        title: 'Facture en retard',
+        body: (ref: string) => `La facture ${ref} attend votre règlement.`,
+      },
+      contacts: {
+        title: 'Vos contacts sont-ils à jour ?',
+        body: 'Dernière vérification il y a plus de 2 mois. Une vérification rapide garantit que les bonnes personnes sont prévenues.',
+      },
+      system: {
+        title: 'Bienvenue sur votre espace EHPAD',
+        body: 'Suivez vos séances, contrats, évaluations et factures depuis cette interface.',
+      },
+    },
   },
 
   support: {
@@ -880,8 +960,23 @@ export const fr = {
     dsEmail: 'bonjour@deuxiemesouffle.fr',
     dsPhone: '04 72 00 11 22',
     formTitle: 'Écrivez-nous',
+    sendingAs: (name: string, email: string) => `Vous écrivez en tant que ${name} (${email})`,
+    requestType: 'Type de demande',
+    requestTypePlaceholder: 'Choisissez un type',
+    requestTypes: {
+      facturation: 'Facturation',
+      planning: 'Planning des séances',
+      contrat: 'Contrat',
+      compte: 'Compte & accès',
+      autre: 'Autre',
+    },
     subject: 'Sujet',
     message: 'Message',
+    replyPreference: 'Préférence de réponse',
+    replyPreferences: {
+      email: 'Par e-mail',
+      telephone: 'Par téléphone',
+    },
     submit: 'Envoyer le message',
     success: 'Votre message a été envoyé.',
     subjectRequired: 'Indiquez un sujet pour envoyer votre message',
@@ -890,7 +985,6 @@ export const fr = {
       cancellation: 'Demande d’annulation définitive d’une séance',
       overdue: 'Question sur une facture en retard',
       callback: 'Demande de rappel avant décision de non-reconduction',
-      invitation: 'Problème avec un lien d’invitation',
     },
   },
 
@@ -909,12 +1003,15 @@ export const fr = {
   history: {
     creation: 'Demande de contrat créée',
     soumission: 'Contrat soumis pour validation',
+    validation: 'Contrat validé par l’équipe DS',
     modification_mineure: 'Ajustement mineur appliqué',
     modification_majeure: 'Modification majeure soumise pour validation',
     rejet: 'Contrat rejeté par l’équipe DS',
     resoumission: 'Contrat corrigé et resoumis',
     renouvellement: 'Renouvellement demandé',
     non_renouvellement: 'Non-reconduction confirmée',
+    detailFreqDouble: '— Fréquence : une fois par semaine → deux fois par semaine',
+    detailReasonBudget: '— motif : budget réduit',
   },
 
   a11y: {

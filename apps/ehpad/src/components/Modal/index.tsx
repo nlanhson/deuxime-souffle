@@ -15,13 +15,19 @@ interface ModalProps {
    *  un choix explicite est requis. */
   destructive?: boolean | undefined;
   wide?: boolean | undefined;
+  /** Grand dialogue (aperçu de séance type Google Agenda) — large et spacieux. */
+  large?: boolean | undefined;
+  /** Titre discret : quand le corps porte déjà un gros en-tête (ex. la date d'une
+   *  séance), on rend le titre du dialogue en sourdine pour éviter la redondance.
+   *  Reste la cible d'aria-labelledby (nom accessible inchangé). */
+  quietTitle?: boolean | undefined;
 }
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /** Dialogue centré — focus piégé, rendu au déclencheur à la fermeture. */
-export function Modal({ open, onClose, title, children, footer, destructive, wide }: ModalProps) {
+export function Modal({ open, onClose, title, children, footer, destructive, wide, large, quietTitle }: ModalProps) {
   const fr = useStrings();
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -73,21 +79,23 @@ export function Modal({ open, onClose, title, children, footer, destructive, wid
       onMouseDown={destructive ? undefined : (e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        className={`${styles.dialog} ${wide ? styles.wide : ''}`}
+        className={`${styles.dialog} ${large ? styles.large : wide ? styles.wide : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         ref={dialogRef}
         tabIndex={-1}
       >
-        <header className={styles.header}>
-          <h2 className={styles.title} id={titleId}>
+        {/* <div> et non <header> : un <header> compterait comme repère « banner »
+            à l'intérieur du dialogue (role=dialog n'est pas du contenu de section). */}
+        <div className={styles.header}>
+          <h2 className={`${styles.title} ${quietTitle ? styles.titleQuiet : ''}`.trim()} id={titleId}>
             {title}
           </h2>
           <button type="button" className={styles.close} onClick={onClose} aria-label={fr.common.close}>
             <X aria-hidden />
           </button>
-        </header>
+        </div>
         <div className={styles.body}>{children}</div>
         {footer && <footer className={styles.footer}>{footer}</footer>}
       </div>

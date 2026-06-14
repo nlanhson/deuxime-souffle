@@ -9,11 +9,11 @@ import { useDataVersion } from '@/context/DataContext';
 import { useAsync } from '@/hooks/useAsync';
 import { capitalize, formatDate, formatEuro, formatTime, formatTimestamp } from '@/lib/format';
 import { contractStatusChip, sessionStatusChip, unitLabel } from '@/lib/status';
+import { historyText } from '@/lib/labels';
 import {
   Avatar,
   Button,
   ButtonLink,
-  CardSection,
   EmptyState,
   InlineAlert,
   List,
@@ -66,11 +66,78 @@ export default function ContractDetailScreen() {
   if (state.loading) {
     return (
       <>
-        <PageHeader title={fr.contracts.title} crumbs={[{ label: fr.contracts.detail.breadcrumb, to: '/contrats' }]} />
-        <SkeletonGroup>
-          <Skeleton height={180} radius="var(--radius-lg)" />
-          <div className={styles.skeletonGap} />
-          <Skeleton height={320} radius="var(--radius-lg)" />
+        <PageHeader
+          title={fr.contracts.title}
+          crumbs={[{ label: fr.contracts.detail.breadcrumb, to: '/contrats' }]}
+          actions={<Skeleton height={28} width={120} radius="var(--radius-pill)" />}
+        />
+        {/* Squelette calqué sur la page « document » dé-encadrée : les QUATRE
+            sections réelles (résumé, coachs, séances, historique), chacune
+            séparée d'un filet (titre + lignes), pas de grandes cartes. */}
+        <div className={styles.actionRow} style={{ marginBottom: 'var(--space-lg)' }}>
+          <Skeleton height={40} width={150} radius="var(--radius-md)" />
+          <Skeleton height={40} width={150} radius="var(--radius-md)" />
+        </div>
+        <SkeletonGroup className={styles.detailFlow}>
+          {/* 1 — Résumé : titre + grille de champs + barre de progression. */}
+          <div className={styles.section}>
+            <Skeleton height={22} width={160} />
+            <div className={styles.fieldGrid}>
+              {Array.from({ length: 6 }, (_, i) => (
+                <div key={i} className={styles.skeletonField}>
+                  <Skeleton height={12} width="55%" />
+                  <Skeleton height={16} width="80%" />
+                </div>
+              ))}
+            </div>
+            <Skeleton height={8} width="60%" radius="var(--radius-pill)" />
+          </div>
+          {/* 2 — Coachs : titre + rangées avatar / nom / note. */}
+          <div className={styles.section}>
+            <Skeleton height={22} width={150} />
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className={styles.coachRow}>
+                <Skeleton height={36} width={36} radius="var(--radius-pill)" />
+                <div className={styles.coachName} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+                  <Skeleton height={14} width="40%" />
+                  <Skeleton height={12} width="55%" />
+                </div>
+                <Skeleton height={14} width={72} radius="var(--radius-pill)" />
+              </div>
+            ))}
+          </div>
+          {/* 3 — Séances : titre + rangées de liste (date/heure + statut). */}
+          <div className={styles.section}>
+            <Skeleton height={22} width={170} />
+            {Array.from({ length: 4 }, (_, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 'var(--space-md)',
+                  minHeight: 48,
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)', flex: 1, minWidth: 0 }}>
+                  <Skeleton height={15} width="55%" />
+                  <Skeleton height={12} width="35%" />
+                </div>
+                <Skeleton height={22} width={90} radius="var(--radius-pill)" />
+              </div>
+            ))}
+          </div>
+          {/* 4 — Historique : titre + entrées (texte + ligne méta). */}
+          <div className={styles.section}>
+            <Skeleton height={22} width={140} />
+            {Array.from({ length: 4 }, (_, i) => (
+              <div key={i} className={styles.historyItem} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+                <Skeleton height={15} width="70%" />
+                <Skeleton height={12} width="45%" />
+              </div>
+            ))}
+          </div>
         </SkeletonGroup>
       </>
     );
@@ -169,8 +236,9 @@ export default function ContractDetailScreen() {
         )}
       </div>
 
-      <div className={styles.detailGrid}>
-        <CardSection title={fr.contracts.detail.summary}>
+      <div className={styles.detailFlow}>
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>{fr.contracts.detail.summary}</h2>
           {/* Le statut vit déjà dans l'en-tête de page — pas de doublon ici. */}
           <dl className={styles.fieldGrid}>
             <div>
@@ -208,7 +276,10 @@ export default function ContractDetailScreen() {
             <ProgressBar
               value={contract.completedSessionCount}
               max={Math.max(contract.generatedSessionCount, 1)}
-              label={`${contract.completedSessionCount} ${fr.contracts.card.completed.toLowerCase()} sur ${contract.generatedSessionCount} ${fr.contracts.card.generated.toLowerCase()}`}
+              label={fr.contracts.detail.sessionsProgress(
+                contract.completedSessionCount,
+                contract.generatedSessionCount,
+              )}
             />
           </div>
           {lastModification && (
@@ -216,9 +287,10 @@ export default function ContractDetailScreen() {
               {fr.contracts.detail.modifiedBy(lastModification.by, formatTimestamp(lastModification.at))}
             </p>
           )}
-        </CardSection>
+        </section>
 
-        <CardSection title={fr.contracts.detail.coachesTitle}>
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>{fr.contracts.detail.coachesTitle}</h2>
           {participatingCoaches.length === 0 ? (
             <p className={styles.muted}>{fr.contracts.detail.coachesEmpty}</p>
           ) : (
@@ -243,9 +315,10 @@ export default function ContractDetailScreen() {
               )}
             </>
           )}
-        </CardSection>
+        </section>
 
-        <CardSection title={fr.contracts.detail.sessionsTitle}>
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>{fr.contracts.detail.sessionsTitle}</h2>
           {contractSessions.length === 0 ? (
             <p className={styles.muted}>{fr.contracts.detail.sessionsEmpty}</p>
           ) : (
@@ -268,9 +341,10 @@ export default function ContractDetailScreen() {
               )}
             </>
           )}
-        </CardSection>
+        </section>
 
-        <CardSection title={fr.contracts.detail.historyTitle}>
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>{fr.contracts.detail.historyTitle}</h2>
           {contract.history.length === 0 ? (
             <p className={styles.muted}>{fr.contracts.detail.historyEmpty}</p>
           ) : (
@@ -279,7 +353,7 @@ export default function ContractDetailScreen() {
                 .sort((a, b) => b.at.localeCompare(a.at))
                 .map((entry) => (
                   <li key={entry.id} className={styles.historyItem}>
-                    {entry.label}
+                    {historyText(fr, entry)}
                     <span className={styles.historyMeta}>
                       {fr.contracts.detail.modifiedBy(entry.by, formatTimestamp(entry.at))}
                     </span>
@@ -287,7 +361,7 @@ export default function ContractDetailScreen() {
                 ))}
             </ul>
           )}
-        </CardSection>
+        </section>
       </div>
 
       <PlanSessionModal

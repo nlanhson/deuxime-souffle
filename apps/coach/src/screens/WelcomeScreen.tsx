@@ -102,8 +102,9 @@ const st = StyleSheet.create({
   brandWord: { flex: 1, fontFamily: F.oswS, fontSize: 18, letterSpacing: 0.3, color: S.textPrimary },
 
   /* headline + body */
+  // Sentence case (brand rule: no all-caps) — the red eyebrow reads as a kicker, not a shout.
   eyebrow: {
-    fontFamily: F.oswS, fontSize: 13, letterSpacing: 2, textTransform: 'uppercase',
+    fontFamily: F.oswS, fontSize: 13, letterSpacing: 0.5,
     color: color.action, marginBottom: sp.sm,
   },
   // Anton: lineHeight ≥1.2× the size keeps multi-line display type from clipping.

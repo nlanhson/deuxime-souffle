@@ -237,7 +237,62 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
       <>
         <PageHeader title={title} crumbs={[{ label: fr.contracts.title, to: '/contrats' }]} />
         <SkeletonGroup>
-          <Skeleton height={420} radius="var(--radius-lg)" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+            {/* Bandeau de progression — posé sur le canevas, pas une carte */}
+            <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+              <Skeleton height={18} width={220} radius="var(--radius-md)" />
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 'var(--space-md)',
+                  marginTop: 'var(--space-sm)',
+                }}
+              >
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+                    <Skeleton height={28} width={28} radius="var(--radius-pill)" />
+                    <Skeleton height={12} width={64} radius="var(--radius-pill)" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Carte de contenu — l'étape en cours (étape 0 : besoins) */}
+            <div
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border-subtle)',
+                borderRadius: 'var(--radius-lg)',
+                padding: 'var(--space-lg)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--space-lg)',
+              }}
+            >
+              {/* deux RadioGroups */}
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                  <Skeleton height={14} width={160} radius="var(--radius-md)" />
+                  <Skeleton height={20} width={200} radius="var(--radius-pill)" />
+                  <Skeleton height={20} width={180} radius="var(--radius-pill)" />
+                </div>
+              ))}
+              {/* fieldset des unités (5 cases à cocher) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                <Skeleton height={14} width={220} radius="var(--radius-md)" />
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} height={20} width="50%" radius="var(--radius-pill)" />
+                ))}
+              </div>
+            </div>
+
+            {/* Pied de page — boutons Retour / Suivant */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
+              <Skeleton height={40} width={96} radius="var(--radius-md)" />
+              <Skeleton height={40} width={120} radius="var(--radius-md)" />
+            </div>
+          </div>
         </SkeletonGroup>
       </>
     );
@@ -555,7 +610,7 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
     <>
       <h3 className={styles.summaryTitle}>{fr.contracts.wizard.summary.title}</h3>
       <p className={styles.muted}>{fr.contracts.wizard.summary.intro}</p>
-      {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
+      {failed && <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />}
       <dl className={styles.summaryList}>
         {summaryRows.map((row) => (
           <div key={row.label}>

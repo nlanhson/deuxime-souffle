@@ -4,11 +4,12 @@ import { useStrings } from '@/i18n';
 import * as api from '@/data/api';
 import { useAsync } from '@/hooks/useAsync';
 import { downloadStub } from '@/lib/pdf';
-import { formatDate, formatEuro } from '@/lib/format';
+import { capitalize, formatDate, formatEuro, formatMonthYear, parseDate } from '@/lib/format';
 import { invoiceStatusChip } from '@/lib/status';
 import {
   Button,
   ButtonLink,
+  Card,
   CardSection,
   EmptyState,
   LoadError,
@@ -29,9 +30,35 @@ export default function InvoiceDetailScreen() {
   if (state.loading) {
     return (
       <>
-        <PageHeader title={fr.invoices.title} crumbs={[{ label: fr.invoices.detail.breadcrumb, to: '/factures' }]} />
+        <PageHeader
+          title={fr.invoices.title}
+          crumbs={[{ label: fr.invoices.detail.breadcrumb, to: '/factures' }]}
+          intro={fr.invoices.htNote}
+          actions={<Skeleton height={28} width={120} radius="var(--radius-pill)" />}
+        />
         <SkeletonGroup>
-          <Skeleton height={280} radius="var(--radius-lg)" />
+          <Card>
+            <div style={{ marginBottom: 'var(--space-md)' }}>
+              <Skeleton height={20} width={180} radius="var(--radius-md)" />
+            </div>
+            <dl className={styles.detailGrid}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+                <Skeleton height={12} width="55%" radius="var(--radius-pill)" />
+                <Skeleton height={32} width="70%" radius="var(--radius-md)" />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+                <Skeleton height={12} width="55%" radius="var(--radius-pill)" />
+                <Skeleton height={18} width="65%" radius="var(--radius-md)" />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+                <Skeleton height={12} width="55%" radius="var(--radius-pill)" />
+                <Skeleton height={18} width="65%" radius="var(--radius-md)" />
+              </div>
+            </dl>
+            <div className={styles.cardActions}>
+              <Skeleton height={40} width={150} radius="var(--radius-md)" />
+            </div>
+          </Card>
         </SkeletonGroup>
       </>
     );
@@ -64,7 +91,7 @@ export default function InvoiceDetailScreen() {
   const downloadPdf = () => {
     // STUB: PDF une page généré côté client
     downloadStub(fr.invoices.detail.pdfName(invoice.number), title, [
-      `${fr.invoices.table.period} : ${invoice.period}`,
+      `${fr.invoices.table.period} : ${capitalize(formatMonthYear(parseDate(invoice.period)))}`,
       `${fr.invoices.table.sessions} : ${invoice.sessionCount}`,
       `${fr.invoices.table.amount} : ${formatEuro(invoice.amountHT)}`,
       `${fr.invoices.table.status} : ${invoiceStatusChip(invoice.status).label}`,
@@ -84,7 +111,7 @@ export default function InvoiceDetailScreen() {
         actions={<StatusChip spec={invoiceStatusChip(invoice.status)} />}
       />
 
-      <CardSection title={invoice.period}>
+      <CardSection title={capitalize(formatMonthYear(parseDate(invoice.period)))}>
         <dl className={styles.detailGrid}>
           <div>
             <dt className={styles.detailLabel}>{fr.invoices.table.amount}</dt>

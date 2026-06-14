@@ -1,10 +1,131 @@
-/* Carte plate de la liste — blanche, bord fin, sans ombre (règle maison :
-   l'ombre est réservée aux surfaces flottantes). */
-.listCard {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  padding: var(--space-sm) var(--space-lg);
+/* ---- Liste « à évaluer » ----
+   On réutilise telle quelle la carte d'entrée des séances (SESS-11) : même liseré
+   d'unité à gauche, même survol/chevron « la carte s'ouvre », mêmes méta à icônes.
+   `composes … from` garde les deux écrans strictement synchronisés (pas de copie). */
+/* Panneau d'onglet : rythme vertical standard sous la barre d'onglets. */
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.entryList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.entryCard {
+  composes: sessionCard from '../sessions/sessions.module.css';
+}
+
+/* Toute la carte est cliquable : un calque transparent sur le lien recouvre le
+   contenant entier (puce « À évaluer » + chevron compris, tous deux non interactifs),
+   pour tenir la promesse « la carte entière ouvre l'évaluation ». z-index au-dessus
+   des éléments positionnés voisins ; le calque appartient au lien, donc un clic
+   n'importe où déclenche la navigation. */
+.entryMain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+/* Trois zones en colonnes (≠ séances, en ligne) : « quoi+quand » | coach | statut.
+   Toutes les cartes ayant la même largeur, les colonnes tombent au même x d'une carte
+   à l'autre → l'avatar du coach s'aligne en colonne nette, et la carte n'est plus lourde
+   à gauche / vide à droite. Bord uniforme : le liseré d'unité hérité de .sessionCard est
+   neutralisé (couleur d'unité réservée au calendrier, qui a une légende — exigence WBS) ;
+   le survol passe les quatre côtés à l'accent. */
+.entryList .entryCard {
+  display: grid;
+  /* Colonne gauche à largeur FIXE (≈ juste après la date) plutôt que proportionnelle :
+     le coach se cale juste après « quoi+quand » et n'est plus repoussé vers le centre
+     sur les écrans larges. Largeur identique sur chaque carte → colonne alignée. */
+  grid-template-columns: 16rem minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-md);
+  border-left: 1px solid var(--color-border-subtle);
+}
+.entryList .entryCard:hover,
+.entryList .entryCard:has(.entryMain:focus-visible) {
+  border-left-color: var(--color-accent);
+}
+
+/* Pas de soulignement du titre au survol : la carte est déjà clairement cliquable
+   (élévation + bordure accent + chevron). On retire l'affordance redondante héritée
+   de la carte de séance. */
+.entryList .entryMain:hover .entryTitle {
+  text-decoration: none;
+}
+
+/* Zone centrale « qui » : avatar + nom du coach, sur une ligne, tronqué si trop long.
+   Encre secondaire (la séance reste le héros) ; aligné en colonne par la grille. */
+.entryCoach {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
+}
+.entryCoachName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Étroit (tablette portrait / mobile) : « quoi+quand » sur toute la 1re ligne, puis
+   coach (gauche) + pastille (droite) sur la 2e. L'ordre visuel suit l'ordre du DOM
+   (lien → coach → pastille) → pas de rupture de séquence pour les lecteurs d'écran
+   (WCAG 1.3.2), et on évite trois colonnes trop tassées. */
+@media (max-width: 600px) {
+  .entryList .entryCard {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .entryList .entryMain {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .entryList .entryCoach {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .entryList .entryAside {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+.entryMain {
+  composes: cardMain from '../sessions/sessions.module.css';
+  /* .cardMain est devenu un <button> côté séances (ouvre la modale peek) et ne porte
+     plus `text-decoration: none`. Ici la carte reste un lien <a>, que le navigateur
+     soulignerait par défaut — on rétablit donc explicitement la suppression. */
+  text-decoration: none;
+}
+.entryTitle {
+  composes: cardTitle from '../sessions/sessions.module.css';
+}
+.entryMeta {
+  composes: cardMeta from '../sessions/sessions.module.css';
+  /* Date·heure : encre grise + petite taille (jadis portées par .cardMetaRow, retiré
+     avec le passage en grille). La séance reste le héros ; la date est de la méta. */
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
+}
+.entryMetaIcon {
+  composes: cardMetaIcon from '../sessions/sessions.module.css';
+}
+.entryCoachIcon {
+  composes: cardCoachIcon from '../sessions/sessions.module.css';
+}
+.entryAside {
+  composes: cardAside from '../sessions/sessions.module.css';
+}
+.entryChevron {
+  composes: cardChevron from '../sessions/sessions.module.css';
 }
 
 /* ---- flux d'évaluation ---- */

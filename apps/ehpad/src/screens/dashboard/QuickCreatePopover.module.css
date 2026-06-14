@@ -1,0 +1,55 @@
+/* Pop-up de création rapide ancrée à côté du créneau (vue Semaine). Superposition
+   flottante → l'ombre est permise (règle maison : ombres réservées aux overlays). */
+.popover {
+  position: fixed;
+  z-index: 80;
+  width: 304px;
+  max-width: calc(100vw - 2 * var(--space-md));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-3);
+  animation: quick-pop var(--duration-fast) var(--ease-decelerate);
+}
+
+@keyframes quick-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-body);
+  color: var(--color-text-primary);
+}
+
+.when {
+  margin-top: -4px;
+  font-size: var(--text-body-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+
+.empty {
+  font-size: var(--text-body-sm);
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}

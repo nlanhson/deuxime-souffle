@@ -111,7 +111,7 @@ export function PostponeModal({ open, onClose, session }: PostponeModalProps) {
       }
     >
       <p>{fr.sessions.postpone.intro}</p>
-      {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
+      {failed && <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />}
 
       {options.loading && (
         <SkeletonGroup>

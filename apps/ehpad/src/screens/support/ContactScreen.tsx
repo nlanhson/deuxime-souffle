@@ -6,13 +6,13 @@ import * as api from '@/data/api';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { formatPhone } from '@/lib/format';
-import { Button, InlineAlert, PageHeader, Textarea, TextField } from '@/components';
+import { Button, InlineAlert, PageHeader, Select, Textarea, TextField } from '@/components';
 import styles from './ContactScreen.module.css';
 
-/** Nous contacter — en-tête de page standard puis panneau à deux colonnes
- *  (coordonnées DS à gauche, formulaire à droite), habillé aux jetons DS.
- *  Le sujet est préremplissable depuis les factures en retard, l'annulation
- *  SESS-12 et le rappel CON-16 ; l'identité vient de la session authentifiée. */
+/** Nous contacter — coordonnées DS + formulaire posés à plat (plus de cadre).
+ *  Type de demande, objet et canal de réponse se préremplissent depuis les factures
+ *  en retard (BILL-01), le report de séance (SESS-12) et la non-reconduction (CON-16) ;
+ *  l'identité vient de la session authentifiée. */
 export default function ContactScreen() {
   const fr = useStrings();
   const { user } = useAuth();
@@ -21,6 +21,7 @@ export default function ContactScreen() {
 
   const prefillKey = params.get('sujet');
   const contractRef = params.get('contrat');
+
   const prefillSubject =
     prefillKey === 'annulation'
       ? fr.support.prefills.cancellation
@@ -28,12 +29,24 @@ export default function ContactScreen() {
         ? fr.support.prefills.overdue
         : prefillKey === 'rappel'
           ? fr.support.prefills.callback
-          : prefillKey === 'invitation'
-            ? fr.support.prefills.invitation
-            : '';
+          : '';
+  const prefillType =
+    prefillKey === 'annulation'
+      ? 'planning'
+      : prefillKey === 'facture'
+        ? 'facturation'
+        : prefillKey === 'rappel'
+          ? 'contrat'
+          : '';
+  // « Demande de rappel » (CON-16) → canal téléphone présélectionné.
+  const prefillReply = prefillKey === 'rappel' ? 'telephone' : 'email';
 
+  const [requestType, setRequestType] = useState(prefillType);
   const [subject, setSubject] = useState(prefillSubject);
-  const [message, setMessage] = useState(contractRef ? `${fr.contracts.detail.title(contractRef)} — ` : '');
+  const [message, setMessage] = useState(
+    contractRef ? `${fr.contracts.detail.title(contractRef)} — ` : '',
+  );
+  const [replyPreference, setReplyPreference] = useState(prefillReply);
   const [subjectError, setSubjectError] = useState<string | null>(null);
   const [messageError, setMessageError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -49,14 +62,17 @@ export default function ContactScreen() {
     setBusy(true);
     setFailed(false);
     try {
-      await api.sendSupportMessage(
-        subject.trim(),
-        message.trim(),
-        user ? `${user.firstName} ${user.lastName}` : '',
-      );
+      await api.sendSupportMessage({
+        subject: subject.trim(),
+        message: message.trim(),
+        by: user ? `${user.firstName} ${user.lastName}` : '',
+        requestType: requestType || undefined,
+        replyPreference,
+      });
       showToast({ message: fr.support.success });
       setSubject('');
       setMessage('');
+      setRequestType('');
     } catch {
       setFailed(true);
     } finally {
@@ -68,70 +84,94 @@ export default function ContactScreen() {
     <>
       <PageHeader title={fr.support.title} intro={fr.support.intro} />
       <div className={styles.panel}>
-        <div className={styles.grid}>
-          {/* Colonne info — coordonnées DS */}
-          <div className={styles.info}>
-            <ul className={styles.methods}>
-              <li className={styles.method}>
-                <span className={styles.badge} aria-hidden>
-                  <Mail />
-                </span>
-                <span className={styles.methodText}>
-                  <span className={styles.methodLabel}>{fr.support.email}</span>
-                  <a className={styles.methodValue} href={`mailto:${fr.support.dsEmail}`}>
-                    {fr.support.dsEmail}
-                  </a>
-                </span>
-              </li>
-              <li className={styles.method}>
-                <span className={styles.badge} aria-hidden>
-                  <Phone />
-                </span>
-                <span className={styles.methodText}>
-                  <span className={styles.methodLabel}>{fr.support.phone}</span>
-                  <a className={styles.methodValue} href={`tel:${fr.support.dsPhone.replace(/\s/g, '')}`}>
-                    {formatPhone(fr.support.dsPhone)}
-                  </a>
-                </span>
-              </li>
-            </ul>
-          </div>
+        {/* Coordonnées DS — email + téléphone sur une seule ligne */}
+        <ul className={styles.methods}>
+          <li className={styles.method}>
+            <span className={styles.badge} aria-hidden>
+              <Mail />
+            </span>
+            <span className={styles.methodText}>
+              <span className={styles.methodLabel}>{fr.support.email}</span>
+              <a className={styles.methodValue} href={`mailto:${fr.support.dsEmail}`}>
+                {fr.support.dsEmail}
+              </a>
+            </span>
+          </li>
+          <li className={styles.method}>
+            <span className={styles.badge} aria-hidden>
+              <Phone />
+            </span>
+            <span className={styles.methodText}>
+              <span className={styles.methodLabel}>{fr.support.phone}</span>
+              <a
+                className={styles.methodValue}
+                href={`tel:${fr.support.dsPhone.replace(/\s/g, '')}`}
+              >
+                {formatPhone(fr.support.dsPhone)}
+              </a>
+            </span>
+          </li>
+        </ul>
 
-          {/* Colonne formulaire — écrivez-nous */}
-          <div className={styles.formCol}>
-            {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
-            <form onSubmit={submit} noValidate className={styles.form}>
-              <TextField
-                label={fr.support.subject}
-                value={subject}
-                onChange={(value) => {
-                  setSubject(value);
-                  if (subjectError) setSubjectError(null);
-                }}
-                onBlur={() => setSubjectError(subject.trim() ? null : fr.support.subjectRequired)}
-                error={subjectError}
-                required
-              />
-              <Textarea
-                label={fr.support.message}
-                value={message}
-                onChange={(value) => {
-                  setMessage(value);
-                  if (messageError) setMessageError(null);
-                }}
-                onBlur={() => setMessageError(message.trim() ? null : fr.support.messageRequired)}
-                error={messageError}
-                required
-                rows={5}
-              />
-              <div className={styles.submit}>
-                <Button type="submit" variant="primary" icon={Send} loading={busy}>
-                  {fr.support.submit}
-                </Button>
-              </div>
-            </form>
+        {/* Formulaire — écrivez-nous */}
+        {failed && <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />}
+        <form onSubmit={submit} noValidate className={styles.form}>
+          {user && (
+            <p className={styles.sendingAs}>
+              {fr.support.sendingAs(`${user.firstName} ${user.lastName}`, user.email)}
+            </p>
+          )}
+          <Select
+            label={fr.support.requestType}
+            value={requestType}
+            onChange={setRequestType}
+            placeholder={fr.support.requestTypePlaceholder}
+            options={[
+              { value: 'facturation', label: fr.support.requestTypes.facturation },
+              { value: 'planning', label: fr.support.requestTypes.planning },
+              { value: 'contrat', label: fr.support.requestTypes.contrat },
+              { value: 'compte', label: fr.support.requestTypes.compte },
+              { value: 'autre', label: fr.support.requestTypes.autre },
+            ]}
+          />
+          <TextField
+            label={fr.support.subject}
+            value={subject}
+            onChange={(value) => {
+              setSubject(value);
+              if (subjectError) setSubjectError(null);
+            }}
+            onBlur={() => setSubjectError(subject.trim() ? null : fr.support.subjectRequired)}
+            error={subjectError}
+            required
+          />
+          <Textarea
+            label={fr.support.message}
+            value={message}
+            onChange={(value) => {
+              setMessage(value);
+              if (messageError) setMessageError(null);
+            }}
+            onBlur={() => setMessageError(message.trim() ? null : fr.support.messageRequired)}
+            error={messageError}
+            required
+            rows={5}
+          />
+          <Select
+            label={fr.support.replyPreference}
+            value={replyPreference}
+            onChange={setReplyPreference}
+            options={[
+              { value: 'email', label: fr.support.replyPreferences.email },
+              { value: 'telephone', label: fr.support.replyPreferences.telephone },
+            ]}
+          />
+          <div className={styles.submit}>
+            <Button type="submit" variant="primary" icon={Send} loading={busy}>
+              {fr.support.submit}
+            </Button>
           </div>
-        </div>
+        </form>
       </div>
     </>
   );

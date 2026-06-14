@@ -347,6 +347,15 @@ export async function listPendingEvaluations(): Promise<Session[]> {
     .sort((a, b) => b.date.localeCompare(a.date));
 }
 
+/** SESS-13 — séances déjà évaluées (« Voir mon évaluation »), la plus récemment
+ *  évaluée en tête. Alimente l'onglet Historique de la page Évaluations. */
+export async function listSubmittedEvaluations(): Promise<Session[]> {
+  await wait();
+  return getDb()
+    .sessions.filter((s) => s.evaluation)
+    .sort((a, b) => (b.evaluation?.submittedAt ?? '').localeCompare(a.evaluation?.submittedAt ?? ''));
+}
+
 const blend = (current: number | undefined, stars: number): number =>
   current === undefined ? stars : Math.round(((current * 12 + stars) / 13) * 10) / 10;
 
@@ -643,12 +652,23 @@ export async function confirmNonRenewal(
 
 /* ============================ CONTACTS ============================ */
 
+/** Toucher aux contacts (ajout, modification, suppression) ou confirmer « tout est
+ *  à jour » remet la pendule de fraîcheur à zéro et solde le rappel : on a forcément
+ *  revu la liste en y intervenant — pas besoin d'un second clic de confirmation. */
+function markContactsReviewed(db: ReturnType<typeof getDb>): void {
+  db.contactsLastConfirmedAt = nowIso();
+  db.notifications.forEach((n) => {
+    if (n.type === 'contacts') n.read = true;
+  });
+}
+
 export async function upsertContact(contact: Contact): Promise<void> {
   await wait();
   const db = getDb();
   const index = db.contacts.findIndex((c) => c.id === contact.id);
   if (index >= 0) db.contacts[index] = contact;
   else db.contacts.push(contact);
+  markContactsReviewed(db);
   commit();
 }
 
@@ -656,16 +676,13 @@ export async function deleteContact(id: string): Promise<void> {
   await wait();
   const db = getDb();
   db.contacts = db.contacts.filter((c) => c.id !== id);
+  markContactsReviewed(db);
   commit();
 }
 
 export async function confirmContactsFresh(): Promise<void> {
   await wait();
-  const db = getDb();
-  db.contactsLastConfirmedAt = nowIso();
-  db.notifications.forEach((n) => {
-    if (n.type === 'contacts') n.read = true;
-  });
+  markContactsReviewed(getDb());
   commit();
 }
 
@@ -723,7 +740,16 @@ export async function markAllNotificationsRead(): Promise<void> {
   commit();
 }
 
-export async function sendSupportMessage(subject: string, message: string, by: string): Promise<void> {
+export interface SupportMessage {
+  subject: string;
+  message: string;
+  by: string;
+  /** Type de demande (triage) et canal de réponse souhaité — facultatifs. */
+  requestType?: string | undefined;
+  replyPreference?: string | undefined;
+}
+
+export async function sendSupportMessage(payload: SupportMessage): Promise<void> {
   await wait();
-  console.info('// STUB: message envoyé à l’équipe DS (aucun email réel)', { subject, message, by });
+  console.info('// STUB: message envoyé à l’équipe DS (aucun email réel)', payload);
 }

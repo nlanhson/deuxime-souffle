@@ -102,7 +102,7 @@ export default function ResetPasswordScreen() {
 
   return (
     <AuthLayout title={fr.auth.reset.title}>
-      {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
+      {failed && <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />}
       <form className={styles.form} onSubmit={submit} noValidate>
         <TextField
           label={fr.auth.reset.newPassword}

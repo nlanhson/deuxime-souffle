@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarClock, CalendarPlus, ChevronRight, FileSpreadsheet } from 'lucide-react';
 import { useStrings } from '@/i18n';
@@ -21,22 +21,32 @@ import {
 import { unitLabel } from '@/lib/status';
 import {
   Button,
-  ButtonLink,
   Calendar,
   EmptyState,
-  KpiCard,
   LoadError,
   RatingDisplay,
   Skeleton,
-  SkeletonCards,
   SkeletonGroup,
 } from '@/components';
 import type { CalendarView } from '@/components';
+import type { Session } from '@/types/models';
 import { PageHeader } from '@/components/PageHeader';
+import { CoachReportModal } from '@/screens/sessions/CoachReportModal';
+import { PostponeModal } from '@/screens/sessions/PostponeModal';
+import { SessionPeekModal } from '@/screens/sessions/SessionPeekModal';
 import { PlanSessionModal } from './PlanSessionModal';
+import { QuickCreatePopover } from './QuickCreatePopover';
+import type { SlotAnchor } from './QuickCreatePopover';
 import styles from './Dashboard.module.css';
 
-const VIEW_KEY = 'ds-ehpad.calendarView';
+// v2 : la vue par défaut passe à « Semaine » — on repart d'une clé neuve pour
+// qu'une préférence « Mois » mémorisée n'écrase pas le nouveau défaut à l'entrée.
+const VIEW_KEY = 'ds-ehpad.calendarView.v2';
+
+// Drapeau remis à zéro à chaque chargement de page : il distingue la 1re arrivée
+// sur le site (→ vue primaire « Semaine », toujours) d'une navigation interne
+// (→ on respecte le choix fait pendant la session).
+let viewSessionStarted = false;
 
 /** SESS-08 — Accueil : « est-ce que quelque chose m'attend ? » en 5 secondes. */
 export default function DashboardScreen() {
@@ -47,17 +57,45 @@ export default function DashboardScreen() {
   const isMobile = useIsMobile();
   const [planOpen, setPlanOpen] = useState(false);
   const [planDate, setPlanDate] = useState<string | undefined>(undefined);
+  const [planTime, setPlanTime] = useState<string | undefined>(undefined);
+  // Création rapide « à la Google Agenda » : clic sur un créneau vide de la
+  // vue Semaine → pop-up ancrée au créneau.
+  const [quickCreate, setQuickCreate] = useState<{ iso: string; time: string; anchor: SlotAnchor } | null>(
+    null,
+  );
+  // Aperçu de séance (type Google Agenda) ouvert depuis le calendrier. Une seule
+  // modale à la fois (peek → rapport / report) — le verrou de défilement de
+  // Modal reste sain (deux modales ouvertes le casseraient).
+  const [sessionModal, setSessionModal] = useState<
+    { session: Session; mode: 'peek' | 'report' | 'postpone' } | null
+  >(null);
 
-  const openPlan = (date?: string) => {
+  const openPlan = (date?: string, time?: string) => {
     setPlanDate(date);
+    setPlanTime(time);
     setPlanOpen(true);
   };
 
+  // Vue principale : « Semaine » (sur mobile « Liste » — la grille semaine défile
+  // horizontalement, peu lisible sur téléphone).
+  const primaryView: CalendarView = isMobile ? 'list' : 'week';
   const [view, setView] = useState<CalendarView>(() => {
+    // 1re arrivée sur le site → toujours la vue primaire, quelle que soit la
+    // préférence mémorisée. En navigation interne, on respecte le choix de session.
+    if (!viewSessionStarted) return primaryView;
     const stored = localStorage.getItem(VIEW_KEY);
     if (stored === 'month' || stored === 'week' || stored === 'list') return stored;
-    return isMobile ? 'list' : 'month';
+    return primaryView;
   });
+
+  // À la 1re arrivée : on ancre la vue primaire (efface une préférence « Mois »
+  // mémorisée) pour qu'un aller-retour entre écrans reste cohérent.
+  useEffect(() => {
+    if (!viewSessionStarted) {
+      viewSessionStarted = true;
+      localStorage.setItem(VIEW_KEY, primaryView);
+    }
+  }, [primaryView]);
 
   const changeView = (next: CalendarView) => {
     setView(next);
@@ -122,7 +160,8 @@ export default function DashboardScreen() {
         ? rated.reduce((sum, s) => sum + (s.evaluation?.stars ?? 0), 0) / rated.length
         : null;
     return { inMonth, done, upcoming, actives, activeUnits, pending, avg };
-  }, [state.data]);
+    // `fr` : `unitLabel` lit la langue active — recalculer au basculement FR ⇄ EN.
+  }, [state.data, fr]);
 
   const exportExcel = () => {
     const data = state.data;
@@ -144,6 +183,16 @@ export default function DashboardScreen() {
     showToast({ message: fr.dashboard.exportDone });
   };
 
+  const modalSession = sessionModal?.session ?? null;
+  const modalCoach =
+    modalSession && state.data
+      ? state.data.coaches.find((c) => c.id === modalSession.coachId) ?? null
+      : null;
+  const modalContract =
+    modalSession && state.data
+      ? state.data.contracts.find((c) => c.id === modalSession.contractId) ?? null
+      : null;
+
   return (
     <>
       <PageHeader
@@ -162,9 +211,45 @@ export default function DashboardScreen() {
 
       {state.loading && (
         <SkeletonGroup>
-          <SkeletonCards count={4} height={132} />
-          <div style={{ height: 'var(--space-lg)' }} />
-          <Skeleton height={420} radius="var(--radius-xl)" />
+          {/* 1 · Bandeau « prochaine séance » — on réserve sa place (88px) */}
+          <div className={styles.hero} style={{ cursor: 'default' }}>
+            <Skeleton width={48} height={48} radius="var(--radius-md)" />
+            <span className={styles.heroBody}>
+              <Skeleton width={120} height={14} radius="var(--radius-pill)" />
+              <Skeleton width="60%" height={20} radius="var(--radius-md)" />
+              <Skeleton width={160} height={14} radius="var(--radius-pill)" />
+            </span>
+            <Skeleton width={22} height={22} radius="var(--radius-pill)" />
+          </div>
+
+          {/* 2 · Bande de stats — UNE feuille bordée (réutilise statBand : grille
+              4 colonnes, filets internes, repli 4→2 à 719px) */}
+          <div className={styles.statBand}>
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className={styles.stat}>
+                <Skeleton width={80} height={14} radius="var(--radius-pill)" />
+                <Skeleton width={56} height={32} radius="var(--radius-md)" />
+                <Skeleton width={100} height={12} radius="var(--radius-pill)" />
+              </div>
+            ))}
+          </div>
+
+          {/* 3 · Calendrier — barre d'outils puis la grille (radius-lg) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 'var(--space-md)',
+                flexWrap: 'wrap',
+              }}
+            >
+              <Skeleton width={180} height={36} radius="var(--radius-pill)" />
+              <Skeleton width={220} height={36} radius="var(--radius-pill)" />
+            </div>
+            <Skeleton height={520} radius="var(--radius-lg)" />
+          </div>
         </SkeletonGroup>
       )}
 
@@ -174,7 +259,11 @@ export default function DashboardScreen() {
         <>
           {/* 1 · Le point focal : la prochaine séance, en toutes lettres */}
           {nextSession && (
-            <Link to={`/sessions/${nextSession.id}`} className={styles.hero}>
+            <button
+              type="button"
+              className={styles.hero}
+              onClick={() => setSessionModal({ session: nextSession, mode: 'peek' })}
+            >
               <span className={styles.heroChip} aria-hidden>
                 <CalendarClock />
               </span>
@@ -188,54 +277,63 @@ export default function DashboardScreen() {
                 <span className={styles.heroSub}>{nextSub}</span>
               </span>
               <ChevronRight className={styles.heroChevron} aria-hidden />
-            </Link>
+            </button>
           )}
 
-          {/* 2 · Vue d'ensemble — cartes d'info neutres (non cliquables, sans couleur) */}
-          <div className={styles.statRow}>
-            <KpiCard
-              eyebrow={fr.dashboard.kpi.sessionsMonth}
-              value={kpis.inMonth.length}
-              detail={fr.dashboard.kpi.sessionsMonthDetail(kpis.done, kpis.upcoming)}
-            />
-            <KpiCard
-              eyebrow={fr.dashboard.kpi.activeContracts}
-              value={kpis.actives.length}
-              detail={kpis.activeUnits.length > 0 ? kpis.activeUnits.join(' · ') : undefined}
-            />
-            {/* Évaluations en attente + action directe « Évaluer » (maquette v2 + WBS).
-                La couleur d'accent ne sort que s'il reste des évals à faire ; à zéro,
-                carte neutre « Tout est à jour ✓ » sans action. */}
-            <KpiCard
-              eyebrow={fr.dashboard.kpi.pendingEvaluations}
-              value={kpis.pending}
-              tone={kpis.pending > 0 ? 'accent' : 'neutral'}
-              detail={kpis.pending === 0 ? fr.dashboard.kpi.allUpToDate : undefined}
-              action={
-                kpis.pending > 0 ? (
-                  <ButtonLink to="/evaluations" variant="ghost" size="md">
-                    {fr.dashboard.kpi.evaluate}
-                    <span aria-hidden> →</span>
-                  </ButtonLink>
-                ) : undefined
-              }
-            />
-            <KpiCard
-              eyebrow={fr.dashboard.kpi.avgRating}
-              value={
-                kpis.avg !== null
-                  ? kpis.avg.toLocaleString('fr-FR', { maximumFractionDigits: 1 })
-                  : '—'
-              }
-              unit={kpis.avg !== null ? fr.dashboard.kpi.outOfFive : undefined}
-              detail={
-                kpis.avg !== null ? (
-                  <RatingDisplay value={kpis.avg} showText={false} size="sm" />
-                ) : (
-                  fr.dashboard.kpi.avgRatingEmpty
-                )
-              }
-            />
+          {/* 2 · Vue d'ensemble — bandeau éditorial (un objet, filets internes) */}
+          <div className={styles.statBand}>
+            <div className={styles.stat}>
+              <p className={styles.statEyebrow}>{fr.dashboard.kpi.sessionsMonth}</p>
+              <p className={styles.statNumber}>{kpis.inMonth.length}</p>
+              <p className={styles.statDetail}>
+                <span className={styles.statDone}>{fr.dashboard.kpi.sessionsDone(kpis.done)}</span>
+                {' · '}
+                {fr.dashboard.kpi.sessionsUpcoming(kpis.upcoming)}
+              </p>
+            </div>
+
+            <div className={styles.stat}>
+              <p className={styles.statEyebrow}>{fr.dashboard.kpi.activeContracts}</p>
+              <p className={styles.statNumber}>{kpis.actives.length}</p>
+              {kpis.activeUnits.length > 0 && (
+                <p className={styles.statDetail}>{kpis.activeUnits.join(' · ')}</p>
+              )}
+            </div>
+
+            {/* Évaluations en attente : la seule cellule actionnable. Voile bleu +
+                lien « Évaluer » uniquement s'il reste des évals ; sinon « à jour ». */}
+            <div className={styles.stat} data-action={kpis.pending > 0 || undefined}>
+              <p className={styles.statEyebrow}>{fr.dashboard.kpi.pendingEvaluations}</p>
+              <p className={styles.statNumber}>{kpis.pending}</p>
+              {kpis.pending > 0 ? (
+                <Link to="/evaluations" className={styles.statLink}>
+                  {fr.dashboard.kpi.evaluate}
+                  <span aria-hidden> →</span>
+                </Link>
+              ) : (
+                <p className={styles.statDetail}>{fr.dashboard.kpi.allUpToDate}</p>
+              )}
+            </div>
+
+            <div className={styles.stat}>
+              <p className={styles.statEyebrow}>{fr.dashboard.kpi.avgRating}</p>
+              {kpis.avg !== null ? (
+                <>
+                  <p className={styles.statNumber}>
+                    {kpis.avg.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}
+                    <span className={styles.statUnit}>{fr.dashboard.kpi.outOfFive}</span>
+                  </p>
+                  <div className={`${styles.statDetail} ${styles.statRating}`}>
+                    <RatingDisplay value={kpis.avg} showText={false} size="sm" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className={styles.statNumber}>—</p>
+                  <p className={styles.statDetail}>{fr.dashboard.kpi.avgRatingEmpty}</p>
+                </>
+              )}
+            </div>
           </div>
 
           {/* 3 · Calendrier */}
@@ -245,6 +343,9 @@ export default function DashboardScreen() {
             view={view}
             onViewChange={changeView}
             onAddSession={openPlan}
+            onSlotClick={(iso, time, anchor) => setQuickCreate({ iso, time, anchor })}
+            activeSlot={quickCreate ? { iso: quickCreate.iso, time: quickCreate.time } : undefined}
+            onSessionSelect={(s) => setSessionModal({ session: s, mode: 'peek' })}
             emptyState={
               <EmptyState
                 title={fr.dashboard.emptyCalendar}
@@ -260,13 +361,52 @@ export default function DashboardScreen() {
         </>
       )}
 
+      {quickCreate && (
+        <QuickCreatePopover
+          anchor={quickCreate.anchor}
+          date={quickCreate.iso}
+          time={quickCreate.time}
+          contracts={state.data?.contracts ?? []}
+          onClose={() => setQuickCreate(null)}
+          onMore={() => {
+            openPlan(quickCreate.iso, quickCreate.time);
+            setQuickCreate(null);
+          }}
+        />
+      )}
+
       <PlanSessionModal
         open={planOpen}
         onClose={() => setPlanOpen(false)}
         contracts={state.data?.contracts ?? []}
         userName={user ? `${user.firstName} ${user.lastName}` : ''}
         initialDate={planDate}
+        initialTime={planTime}
       />
+
+      {/* Aperçu de séance type Google Agenda + ses bascules (rapport / report). */}
+      <SessionPeekModal
+        open={sessionModal?.mode === 'peek'}
+        session={modalSession}
+        coach={modalCoach}
+        onClose={() => setSessionModal(null)}
+        onSeeReport={() => setSessionModal((m) => (m ? { ...m, mode: 'report' } : null))}
+        onPostpone={() => setSessionModal((m) => (m ? { ...m, mode: 'postpone' } : null))}
+      />
+      <CoachReportModal
+        open={sessionModal?.mode === 'report'}
+        onClose={() => setSessionModal(null)}
+        session={modalSession}
+        coach={modalCoach}
+        sessionTypeLabel={modalContract ? fr.sessionTypes[modalContract.sessionType] : ''}
+      />
+      {modalSession && (
+        <PostponeModal
+          open={sessionModal?.mode === 'postpone'}
+          onClose={() => setSessionModal(null)}
+          session={modalSession}
+        />
+      )}
     </>
   );
 }

@@ -132,21 +132,77 @@ export default function AccountScreen() {
   return (
     <>
       <PageHeader title={fr.account.title} intro={fr.account.intro} />
-      {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
+      {failed && <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />}
       {deleteSent && <InlineAlert variant="success" title={fr.account.deleteSuccess} />}
 
       {state.loading && (
         <SkeletonGroup>
-          <Skeleton height={360} radius="var(--radius-lg)" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+            {/* Carte 1 — Mes informations (en-tête + grille de champs + rôles + bouton) */}
+            <div
+              style={{
+                border: '1px solid var(--color-border-subtle)',
+                borderRadius: 'var(--radius-lg)',
+                padding: 'var(--space-lg)',
+                background: 'var(--color-surface)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 'var(--space-md)',
+                  flexWrap: 'wrap',
+                  marginBottom: 'var(--space-md)',
+                }}
+              >
+                <Skeleton height={20} width="40%" radius="var(--radius-sm)" />
+                <Skeleton height={28} width={90} radius="var(--radius-pill)" />
+              </div>
+              <div className={styles.fieldGrid}>
+                {Array.from({ length: 4 }, (_, i) => (
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+                    <Skeleton height={14} width="55%" radius="var(--radius-sm)" />
+                    <Skeleton height={44} radius="var(--radius-md)" />
+                  </div>
+                ))}
+              </div>
+              <div className={styles.rolesBlock} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+                <Skeleton height={14} width="40%" radius="var(--radius-sm)" />
+                <Skeleton height={44} radius="var(--radius-md)" />
+              </div>
+              <div className={styles.formActions}>
+                <Skeleton height={40} width={140} radius="var(--radius-md)" />
+              </div>
+            </div>
+
+            {/* Carte 2 — Suppression (en-tête + intro + bouton danger) */}
+            <div
+              style={{
+                border: '1px solid var(--color-border-subtle)',
+                borderRadius: 'var(--radius-lg)',
+                padding: 'var(--space-lg)',
+                background: 'var(--color-surface)',
+              }}
+            >
+              <Skeleton height={20} width="30%" radius="var(--radius-sm)" />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)', margin: 'var(--space-md) 0' }}>
+                <Skeleton height={14} width="80%" radius="var(--radius-sm)" />
+                <Skeleton height={14} width="60%" radius="var(--radius-sm)" />
+              </div>
+              <Skeleton height={40} width={200} radius="var(--radius-md)" />
+            </div>
+          </div>
         </SkeletonGroup>
       )}
       {state.error && <LoadError onRetry={state.retry} />}
 
       {me && user && (
         <>
-          {/* « Informations générales » : le h1 dit déjà « Mon compte » — pas de titre dupliqué. */}
+          {/* Le h1 dit déjà « Mon compte » — la section porte un titre propre, pas un doublon. */}
           <CardSection
-            title={fr.facility.general}
+            title={fr.account.infoTitle}
             actions={<Chip label={fr.roles[user.role]} variant="info" />}
           >
             <div className={styles.fieldGrid}>
@@ -215,7 +271,7 @@ export default function AccountScreen() {
         }
       >
         <p>{fr.account.deleteIntro}</p>
-        {deleteFailed && <InlineAlert variant="danger" title={fr.account.deleteError} />}
+        {deleteFailed && <InlineAlert variant="danger" title={fr.account.deleteError} autoFocus />}
         <Textarea label={fr.account.deleteReason} value={deleteReason} onChange={setDeleteReason} />
         <Checkbox label={fr.account.deleteUnderstand} checked={deleteConfirmed} onChange={setDeleteConfirmed} />
       </Modal>

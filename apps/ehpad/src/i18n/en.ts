@@ -39,6 +39,7 @@ export const en: Copy = {
     delete: 'Delete',
     search: 'Search',
     clearFilters: 'Clear filters',
+    noResults: 'No results',
     notFound: 'Page not found',
     notFoundBody: 'The page you requested does not exist or is no longer available.',
     backHome: 'Back to home',
@@ -50,6 +51,13 @@ export const en: Copy = {
     no: 'No',
     at: 'at',
     stub: 'Demonstration document',
+  },
+
+  pagination: {
+    label: 'Pagination',
+    previous: 'Previous page',
+    next: 'Next page',
+    status: (page: number, total: number) => `Page ${page} of ${total}`,
   },
 
   nav: {
@@ -128,10 +136,10 @@ export const en: Copy = {
     contract: {
       active: 'Active',
       a_renouveler: 'To renew',
-      en_attente_validation: 'Awaiting validation',
+      en_attente_validation: 'Pending',
       expire: 'Expired',
       rejete: 'Rejected',
-      modification_en_attente: 'Change pending',
+      modification_en_attente: 'Under review',
       non_renouvele: 'Not renewed',
     },
     invoice: {
@@ -180,6 +188,7 @@ export const en: Copy = {
       lastName: 'Last name',
       phone: 'Phone',
       rolesLabel: 'Roles',
+      rolesHelper: 'Set by your invitation. Contact the DS team to change it.',
       password: 'Password',
       passwordConfirm: 'Confirm password',
       submit: 'Activate my account',
@@ -232,8 +241,8 @@ export const en: Copy = {
     title: 'Home',
     kpi: {
       sessionsMonth: 'Sessions this month',
-      sessionsMonthDetail: (done: number, upcoming: number) =>
-        `${done} completed · ${upcoming} upcoming`,
+      sessionsDone: (done: number) => `${done} completed`,
+      sessionsUpcoming: (upcoming: number) => `${upcoming} upcoming`,
       activeContracts: 'Active contracts',
       pendingEvaluations: 'Pending evaluations',
       evaluate: 'Evaluate',
@@ -252,11 +261,7 @@ export const en: Copy = {
       inDays: (n: number) => `in ${n} days`,
     },
     widgets: {
-      completed: 'Completed sessions',
-      upcoming: 'Upcoming sessions',
-      awaitingEvaluation: 'Sessions awaiting evaluation',
       seeAll: 'View all sessions',
-      seeEvaluations: 'View evaluations',
     },
     plan: {
       title: 'Plan a session',
@@ -273,6 +278,12 @@ export const en: Copy = {
         'Planning is based on an active contract. Create your contract first.',
       goToContracts: 'View contracts',
     },
+    quickCreate: {
+      title: 'New session',
+      create: 'Create',
+      more: 'More options',
+      noContract: 'No active contract — create one first.',
+    },
     emptyCalendar: 'No sessions planned yet.',
     emptyCalendarAction: 'Plan a session',
   },
@@ -285,7 +296,7 @@ export const en: Copy = {
     today: 'Today',
     tomorrow: 'Tomorrow',
     legend: 'Unit legend',
-    nextBadge: 'Next',
+    nextBadge: 'Next session',
     nextSession: 'Next session',
     unassigned: 'Coach to be confirmed',
     moreEvents: (n: number) => `+ ${n} more ${plural(n, 'session', 'sessions')}`,
@@ -348,6 +359,8 @@ export const en: Copy = {
       postpone: 'Postpone the session',
       evaluate: 'Evaluate the session',
       duration: 'Duration',
+      openFull: 'View full details',
+      upcomingNote: 'The coach’s report and evaluation will appear here after the session.',
     },
 
     edit: {
@@ -409,10 +422,16 @@ export const en: Copy = {
     empty: 'No pending evaluations — all caught up!',
     emptyBody: 'Completed sessions to evaluate will appear here.',
     sessionOf: (date: string, time: string) => `Session on ${date} at ${time}`,
+    tabs: { pending: 'To evaluate', history: 'History' },
+    historyTitle: 'Past evaluations',
+    historyEmpty: 'No evaluations yet',
+    historyEmptyBody: 'Sessions you have evaluated will appear here.',
+    viewEvaluation: 'View my evaluation',
 
     form: {
       title: 'Evaluate the session',
       sessionInfo: 'Session concerned',
+      heading: 'Your evaluation',
       starsLabel: 'What rating do you give this session?',
       starsValue: (n: number) => `Rating: ${n} out of 5`,
       impressionLabel: 'What is your overall impression?',
@@ -431,13 +450,6 @@ export const en: Copy = {
       missingStars: 'Choose a rating to continue',
       missingImpression: 'Choose an overall impression to continue',
       submittedOn: (date: string, by: string) => `Submitted on ${date} by ${by}`,
-    },
-
-    impressionsShort: {
-      tres_bien: 'Very good',
-      bien: 'Good',
-      correct: 'Okay',
-      a_ameliorer: 'Room for improvement',
     },
   },
 
@@ -464,6 +476,18 @@ export const en: Copy = {
       rate: 'Rate per session',
     },
 
+    columns: {
+      reference: 'Contract',
+      units: 'Unit',
+      progress: 'Progress',
+      endDate: 'Ends',
+    },
+    tableCaption: 'List of contracts, sorted by priority',
+    progressLabel: (done: number, total: number) => `${done} / ${total} sessions`,
+    count: (n: number) => `${n} contract${n === 1 ? '' : 's'}`,
+    searchLabel: 'Search contracts',
+    searchPlaceholder: 'Reference, unit, date, status…',
+
     actions: {
       detail: 'View details',
       oneOff: 'Create a one-off session',
@@ -485,6 +509,8 @@ export const en: Copy = {
       historyTitle: 'Change history',
       historyEmpty: 'No changes yet.',
       modifiedBy: (name: string, date: string) => `Modified by ${name} on ${date}`,
+      sessionsProgress: (done: number, total: number) =>
+        `${done} of ${total} sessions completed`,
       rejectionTitle: 'Contract rejected',
       pendingInfo:
         'This contract is awaiting validation by the DS team. It cannot be used to plan sessions yet.',
@@ -708,7 +734,12 @@ export const en: Copy = {
   contactsPage: {
     title: 'Contacts',
     intro: 'The right information helps the DS team reach the right person.',
+    othersTitle: 'Other contacts',
+    noOthers: 'No other contacts yet.',
+    callLabel: (name: string) => `Call ${name}`,
+    emailLabel: (name: string) => `Email ${name}`,
     addContact: 'Add a contact',
+    editTitle: 'Edit the contact',
     empty: 'No contacts yet',
     emptyBody: 'Add the people to reach for sessions, billing or management.',
     upToDate: 'All contacts are up to date',
@@ -745,6 +776,8 @@ export const en: Copy = {
     overdueBanner: (n: number, amount: string) =>
       `${n} ${plural(n, 'overdue invoice', 'overdue invoices')} — ${amount} excl. VAT to pay`,
     overdueTitle: 'Overdue',
+    overdueMild: (n: number) => `including ${n} overdue ${plural(n, 'invoice', 'invoices')}`,
+    vatShort: 'excl. VAT',
     contactDs: 'Contact the DS team',
     kpi: {
       unpaid: 'Total unpaid amount (excl. VAT)',
@@ -758,12 +791,14 @@ export const en: Copy = {
       number: 'Number',
       period: 'Period',
       sessions: 'Number of sessions',
+      sessionsShort: 'Sessions',
       amount: 'Amount excl. VAT',
       status: 'Status',
       paymentDate: 'Payment date',
     },
-    searchLabel: 'Search by invoice number',
-    searchPlaceholder: 'E.g. F-2026-052',
+    searchLabel: 'Search invoices',
+    searchPlaceholder: 'Number, period, amount, status…',
+    count: (n: number) => `${n} invoice${n === 1 ? '' : 's'}`,
     noResults: 'No invoices match.',
     clearSearch: 'Clear search',
     empty: 'No invoices yet',
@@ -819,6 +854,17 @@ export const en: Copy = {
     contractsTitle: 'Contracts',
     seeContracts: 'View all contracts',
     lastModified: (name: string, date: string) => `Modified by ${name} on ${date}`,
+    legalTitle: 'Identity & registration',
+    contactDsLink: 'Contact us',
+    contractUntil: (date: string) => `until ${date}`,
+    contactModal: {
+      type: 'Type',
+      additional: 'Additional contact',
+      role: 'Role',
+      coordinator: 'Session coordinator',
+      email: 'Email',
+      phone: 'Phone',
+    },
 
     edit: {
       title: 'Edit my establishment',
@@ -844,6 +890,7 @@ export const en: Copy = {
     title: 'My account',
     intro:
       'This information concerns your personal access. The establishment’s data is in “My establishment”.',
+    infoTitle: 'My details',
     firstName: 'First name',
     lastName: 'Last name',
     phone: 'Phone',
@@ -875,6 +922,34 @@ export const en: Copy = {
     coachLate: (time: string) => `The coach is running late for the ${time} session`,
     welcomeToast: (n: number) => `You have ${n} unread ${n === 1 ? 'notification' : 'notifications'}`,
     welcomeToastAction: 'View',
+    types: {
+      coachLate: {
+        title: 'Coach running late',
+        body: (time: string) => `The coach is running late for the ${time} session`,
+      },
+      evalDue: {
+        title: 'Pending evaluations',
+        body: (n: number) =>
+          `${n} completed ${n === 1 ? 'session is' : 'sessions are'} waiting for your evaluation.`,
+      },
+      renewal: {
+        title: 'Contract to renew',
+        body: (ref: string, days: number) =>
+          `Contract ${ref} expires in ${days} days. Consider renewing it.`,
+      },
+      invoice: {
+        title: 'Overdue invoice',
+        body: (ref: string) => `Invoice ${ref} is awaiting your payment.`,
+      },
+      contacts: {
+        title: 'Are your contacts up to date?',
+        body: 'Last checked over 2 months ago. A quick review ensures the right people are notified.',
+      },
+      system: {
+        title: 'Welcome to your EHPAD space',
+        body: 'Track your sessions, contracts, evaluations and invoices from this interface.',
+      },
+    },
   },
 
   support: {
@@ -885,8 +960,23 @@ export const en: Copy = {
     dsEmail: 'bonjour@deuxiemesouffle.fr',
     dsPhone: '04 72 00 11 22',
     formTitle: 'Write to us',
+    sendingAs: (name: string, email: string) => `You're writing as ${name} (${email})`,
+    requestType: 'Request type',
+    requestTypePlaceholder: 'Choose a type',
+    requestTypes: {
+      facturation: 'Billing',
+      planning: 'Session schedule',
+      contrat: 'Contract',
+      compte: 'Account & access',
+      autre: 'Other',
+    },
     subject: 'Subject',
     message: 'Message',
+    replyPreference: 'Preferred reply',
+    replyPreferences: {
+      email: 'By email',
+      telephone: 'By phone',
+    },
     submit: 'Send the message',
     success: 'Your message has been sent.',
     subjectRequired: 'Enter a subject to send your message',
@@ -895,7 +985,6 @@ export const en: Copy = {
       cancellation: 'Request to permanently cancel a session',
       overdue: 'Question about an overdue invoice',
       callback: 'Request a call back before deciding on non-renewal',
-      invitation: 'Problem with an invitation link',
     },
   },
 
@@ -914,12 +1003,15 @@ export const en: Copy = {
   history: {
     creation: 'Contract request created',
     soumission: 'Contract submitted for validation',
+    validation: 'Contract approved by the DS team',
     modification_mineure: 'Minor adjustment applied',
     modification_majeure: 'Major change submitted for validation',
     rejet: 'Contract rejected by the DS team',
     resoumission: 'Contract corrected and resubmitted',
     renouvellement: 'Renewal requested',
     non_renouvellement: 'Non-renewal confirmed',
+    detailFreqDouble: '— Frequency: once a week → twice a week',
+    detailReasonBudget: '— reason: reduced budget',
   },
 
   a11y: {

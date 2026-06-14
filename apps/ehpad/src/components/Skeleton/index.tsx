@@ -4,7 +4,13 @@ import styles from './Skeleton.module.css';
 
 /** Région en chargement : annonce « Chargement… » aux lecteurs d'écran,
  *  les blocs squelettes apparaissent après ~300 ms (pas de flash). */
-export function SkeletonGroup({ children, className }: { children: ReactNode; className?: string }) {
+export function SkeletonGroup({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string | undefined;
+}) {
   const fr = useStrings();
   return (
     <div className={className} aria-busy="true">

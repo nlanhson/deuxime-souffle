@@ -23,13 +23,15 @@ const CARD_BORDER = 'rgba(255,255,255,0.07)';   // dim top-lit hairline
 /* ---------- shared building blocks ---------- */
 
 // App header — eyebrow + title left, bell + avatar right (Accueil / Séances / Disponibles).
-function HeaderSkeleton() {
+// `level` adds the gold coach-badge chip that only Accueil's header carries (PLA-01).
+function HeaderSkeleton({ level }: { level?: boolean }) {
   return (
     <View style={sk.appbar}>
       <View style={{ flex: 1 }}>
         <Skeleton w={84} h={12} r={4} />
         <Skeleton w={170} h={26} r={7} style={{ marginTop: 9 }} />
       </View>
+      {level ? <Skeleton w={58} h={32} r={r.pill} /> : null}
       <SkeletonCircle d={24} />
       <SkeletonCircle d={42} />
     </View>
@@ -121,7 +123,7 @@ function CardRowsSkeleton({ rows }: { rows: number }) {
 export function AccueilSkeleton() {
   return (
     <View style={sk.screen}>
-      <HeaderSkeleton />
+      <HeaderSkeleton level />
 
       {/* This month — earnings (two bare metric columns, no boxed background) */}
       <View style={sk.section}>
@@ -148,6 +150,8 @@ export function AccueilSkeleton() {
         <SkCard>
           <Skeleton w={'60%'} h={20} r={6} />
           <Skeleton w={'82%'} h={14} r={5} style={{ marginTop: 12 }} />
+          {/* unit row (PLA-01) */}
+          <Skeleton w={'66%'} h={14} r={5} style={{ marginTop: 8 }} />
           <Skeleton w={150} h={44} r={8} style={{ marginTop: sp.md }} />
           <View style={sk.ctaRow}>
             <Skeleton w={'40%'} h={44} r={r.pill} />
@@ -296,10 +300,104 @@ export function ProfileSkeleton() {
       <CardRowsSkeleton rows={6} />
       <Skeleton w={'100%'} h={48} r={r.pill} style={{ marginTop: sp.md }} />
 
-      {/* Goals & rate, Documents, Account */}
+      {/* Goals & rate (2), Progression & activity (3), Documents (4), Account (4 — incl. delete) */}
       <CardRowsSkeleton rows={2} />
-      <CardRowsSkeleton rows={4} />
       <CardRowsSkeleton rows={3} />
+      <CardRowsSkeleton rows={4} />
+      <CardRowsSkeleton rows={4} />
+    </View>
+  );
+}
+
+// One badge tile (Badges & level grid). `dated` adds the "earned on" line.
+function BadgeCardSkeleton({ dated }: { dated?: boolean }) {
+  return (
+    <View style={sk.badge}>
+      <SkeletonCircle d={40} />
+      <Skeleton w={'70%'} h={15} r={5} style={{ marginTop: sp.sm }} />
+      <Skeleton w={'92%'} h={12} r={4} style={{ marginTop: 7 }} />
+      <Skeleton w={'60%'} h={12} r={4} style={{ marginTop: 5 }} />
+      {dated ? <Skeleton w={70} h={12} r={4} style={{ marginTop: sp.sm }} /> : null}
+    </View>
+  );
+}
+
+export function BadgesSkeleton() {
+  return (
+    <View style={sk.sheetBody}>
+      {/* Level card — chip + title/sub, progress meter, next-level line */}
+      <SkCard>
+        <View style={sk.levelHead}>
+          <SkeletonCircle d={52} />
+          <View style={{ flex: 1, gap: 8 }}>
+            <Skeleton w={'40%'} h={26} r={7} />
+            <Skeleton w={'62%'} h={13} r={4} />
+          </View>
+        </View>
+        <Skeleton w={'100%'} h={8} r={r.pill} style={{ marginTop: sp.md }} />
+        <Skeleton w={'56%'} h={13} r={4} style={{ marginTop: sp.sm }} />
+      </SkCard>
+
+      {/* Earned grid (4) */}
+      <View style={sk.sectionHead}><Skeleton w={90} h={18} r={5} /></View>
+      <View style={sk.grid}>{[0, 1, 2, 3].map((i) => <BadgeCardSkeleton key={i} dated />)}</View>
+
+      {/* In-progress grid (3) */}
+      <View style={sk.sectionHead}><Skeleton w={110} h={18} r={5} /></View>
+      <View style={sk.grid}>{[0, 1, 2].map((i) => <BadgeCardSkeleton key={i} />)}</View>
+    </View>
+  );
+}
+
+export function ReportHistorySkeleton() {
+  return (
+    <View>
+      {/* facility filter chips */}
+      <View style={sk.chipsRow}>
+        {[64, 96, 84, 72].map((w, i) => <Skeleton key={i} w={w} h={36} r={r.pill} />)}
+      </View>
+      {/* count + report rows (each a flat card) */}
+      <View style={sk.sheetBody}>
+        <Skeleton w={80} h={12} r={4} style={{ marginBottom: sp.sm }} />
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <View key={i} style={sk.listCard}>
+            <SkeletonCircle d={36} />
+            <View style={{ flex: 1, gap: 7 }}>
+              <Skeleton w={'56%'} h={15} r={5} />
+              <Skeleton w={'38%'} h={12} r={4} />
+            </View>
+            <Skeleton w={86} h={24} r={r.pill} />
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+export function FeedbackSkeleton() {
+  return (
+    <View style={sk.sheetBody}>
+      {/* average-rating hero (centred) */}
+      <View style={sk.identity}>
+        <SkeletonCircle d={56} />
+        <Skeleton w={70} h={44} r={9} style={{ marginTop: sp.sm }} />
+        <Skeleton w={150} h={14} r={5} style={{ marginTop: 8 }} />
+      </View>
+      {/* feedback cards — header row + two comment lines */}
+      {[0, 1, 2, 3].map((i) => (
+        <View key={i} style={sk.fbCard}>
+          <View style={sk.fbHead}>
+            <SkeletonCircle d={36} />
+            <View style={{ flex: 1, gap: 7 }}>
+              <Skeleton w={'56%'} h={15} r={5} />
+              <Skeleton w={'30%'} h={12} r={4} />
+            </View>
+            <Skeleton w={56} h={24} r={r.pill} />
+          </View>
+          <Skeleton w={'100%'} h={13} r={4} style={{ marginTop: sp.sm }} />
+          <Skeleton w={'80%'} h={13} r={4} style={{ marginTop: 6 }} />
+        </View>
+      ))}
     </View>
   );
 }
@@ -375,6 +473,29 @@ const sk = StyleSheet.create({
   identity: { alignItems: 'center', paddingTop: sp.sm, paddingBottom: sp.sm },
   sectionHead: { marginTop: sp.xl, marginBottom: sp.sm },
   profileRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, minHeight: 56, paddingVertical: sp.sm },
+
+  /* badges & level */
+  levelHead: { flexDirection: 'row', alignItems: 'center', gap: sp.md },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: sp.sm },
+  badge: {
+    width: '48%', flexGrow: 1, borderRadius: r.lg, padding: sp.md,
+    backgroundColor: CARD_BG, borderWidth: 1, borderColor: CARD_BORDER,
+  },
+
+  /* report history — chips row + flat list cards */
+  chipsRow: { flexDirection: 'row', gap: sp.sm, paddingHorizontal: sp.lg, paddingBottom: sp.sm },
+  listCard: {
+    flexDirection: 'row', alignItems: 'center', gap: sp.md,
+    borderRadius: r.lg, padding: sp.md, marginBottom: sp.sm,
+    backgroundColor: CARD_BG, borderWidth: 1, borderColor: CARD_BORDER,
+  },
+
+  /* facility feedback */
+  fbCard: {
+    borderRadius: r.lg, padding: sp.md, marginBottom: sp.sm,
+    backgroundColor: CARD_BG, borderWidth: 1, borderColor: CARD_BORDER,
+  },
+  fbHead: { flexDirection: 'row', alignItems: 'center', gap: sp.md },
 
   /* notifications */
   notifSection: { marginTop: sp.md, paddingHorizontal: sp.lg },

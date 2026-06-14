@@ -25,6 +25,17 @@
   width: min(720px, 100%);
 }
 
+/* Grand dialogue (aperçu de séance) — large ET haut : un vrai panneau, pas une
+   petite boîte centrée. Le corps prend la hauteur, le pied reste ancré en bas. */
+.large {
+  width: min(960px, 100%);
+  min-height: min(640px, calc(100vh - 2 * var(--space-md)));
+}
+
+.large .body {
+  flex: 1;
+}
+
 @keyframes dialog-in {
   from {
     opacity: 0;
@@ -33,6 +44,14 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* Sécurité vestibulaire : on supprime franchement l'animation d'entrée plutôt
+   que de seulement réduire sa durée (sinon le scale/translate « flashe »). */
+@media (prefers-reduced-motion: reduce) {
+  .dialog {
+    animation: none;
   }
 }
 
@@ -46,6 +65,15 @@
 
 .title {
   font-size: var(--text-h3);
+}
+
+/* Titre en sourdine : eyebrow discret quand le corps porte déjà le gros en-tête.
+   Reste la cible d'aria-labelledby — seul le rendu change. */
+.titleQuiet {
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-muted);
+  letter-spacing: var(--ls-normal);
 }
 
 .close {

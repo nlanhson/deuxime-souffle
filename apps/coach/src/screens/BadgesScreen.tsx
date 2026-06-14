@@ -20,6 +20,9 @@ import {
 } from '../icons';
 import { palette, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
 import { copy } from '../copy';
+import { useFirstLoad } from '../lib/useFirstLoad';
+import { Reveal } from '../components/Reveal';
+import { BadgesSkeleton } from './skeletons';
 
 const S = surfaces.coach;
 const ON_CANVAS = S.textPrimary;
@@ -76,6 +79,7 @@ export function BadgesScreen({ visible, onClose }: { visible: boolean; onClose: 
   const pct = LEVEL.bandDone / LEVEL.bandSize;
   const earned = BADGES.filter((b) => b.earned);
   const locked = BADGES.filter((b) => !b.earned);
+  const loading = useFirstLoad('badges', { active: visible, ms: 550 });
 
   return (
     <Modal visible={visible} onRequestClose={onClose} animationType="slide" presentationStyle="pageSheet">
@@ -90,6 +94,7 @@ export function BadgesScreen({ visible, onClose }: { visible: boolean; onClose: 
           </Pressable>
         </View>
 
+        <Reveal loading={loading} skeleton={<BadgesSkeleton />}>
         <ScrollView contentContainerStyle={st.scroll} showsVerticalScrollIndicator={false}>
           {/* ===== Level card (GAME-02) — the medal meter wears the signature gradient ===== */}
           <View style={st.card}>
@@ -123,6 +128,7 @@ export function BadgesScreen({ visible, onClose }: { visible: boolean; onClose: 
           <View style={st.grid}>
             {earned.map((b) => (
               <View key={b.key} style={st.badge} accessible accessibilityLabel={`${c.badges[b.key].name}, ${c.earnedPrefix} ${b.earned}`}>
+                <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.lg }]} pointerEvents="none" />
                 <View style={st.badgeIcon}>
                   <b.icon size={22} color={GOLD} />
                 </View>
@@ -138,6 +144,7 @@ export function BadgesScreen({ visible, onClose }: { visible: boolean; onClose: 
           <View style={st.grid}>
             {locked.map((b) => (
               <View key={b.key} style={[st.badge, st.badgeLocked]} accessible accessibilityLabel={`${c.badges[b.key].name}, ${c.badges[b.key].desc}`}>
+                <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.lg }]} pointerEvents="none" />
                 <View style={[st.badgeIcon, st.badgeIconLocked]}>
                   <b.icon size={22} color={ON_CARD_3} />
                 </View>
@@ -149,6 +156,7 @@ export function BadgesScreen({ visible, onClose }: { visible: boolean; onClose: 
 
           <Text style={st.note}>{c.note}</Text>
         </ScrollView>
+        </Reveal>
       </View>
     </Modal>
   );

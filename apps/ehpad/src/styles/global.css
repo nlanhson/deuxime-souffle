@@ -59,7 +59,7 @@ h4 {
   line-height: var(--lh-heading);
 }
 
-/* Tout en Inter (décision EHPAD) : la hiérarchie tient au poids et à la taille.
+/* Tout en Inter : la hiérarchie tient au poids et à la taille.
    Grands titres (h1/h2 — page, section, modale) en 700 ; h3/h4 en 600. */
 h1,
 h2 {
@@ -137,11 +137,12 @@ a {
   --unit-aidants-bg: var(--lc-or-50);
   --unit-aidants-edge: var(--lc-or-600);
   --unit-aidants-text: var(--lc-or-800);
-  /* Soignants : écarté de l'UC (bleu-50/600) — fond plus saturé + liseré plus
-     sombre pour rester discernable par des yeux âgés ; le libellé reste le signal. */
-  --unit-soignants-bg: var(--lc-bleu-200);
-  --unit-soignants-edge: var(--lc-bleu-700);
-  --unit-soignants-text: var(--lc-bleu-900);
+  /* Soignants : rose clair (rampe --lc-rose dédiée), à la demande du client —
+     remplace le bleu (doublon avec l'UC) puis le saumon de la rampe rouge.
+     Fond rose-100 clair, liseré/texte rose foncé (contraste AA). Le libellé reste le signal. */
+  --unit-soignants-bg: var(--lc-rose-100);
+  --unit-soignants-edge: var(--lc-rose-600);
+  --unit-soignants-text: var(--lc-rose-800);
   --unit-autre-bg: var(--lc-neutral-100);
   --unit-autre-edge: var(--lc-neutral-500);
   --unit-autre-text: var(--lc-neutral-800);

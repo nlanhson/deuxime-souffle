@@ -12,6 +12,7 @@ import { contractStatusChip, unitLabel } from '@/lib/status';
 import {
   Button,
   ButtonLink,
+  Card,
   CardSection,
   Chip,
   EmptyState,
@@ -87,7 +88,55 @@ export default function RenewScreen() {
       <>
         <PageHeader title={copy.title} crumbs={[{ label: fr.contracts.title, to: '/contrats' }]} />
         <SkeletonGroup>
-          <Skeleton height={420} radius="var(--radius-lg)" />
+          <div className={styles.compareGrid}>
+            {[0, 1].map((card) => (
+              <Card key={card} variant="static">
+                <header style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
+                  <Skeleton height={20} width="45%" radius="var(--radius-md)" />
+                  {card === 1 && <Skeleton height={24} width={120} radius="var(--radius-pill)" />}
+                </header>
+                <dl className={styles.fieldGrid}>
+                  {Array.from({ length: 6 }, (_, i) => (
+                    <div key={i} className={styles.skeletonField}>
+                      <Skeleton height={12} width="60%" radius="var(--radius-md)" />
+                      <Skeleton height={16} width="80%" radius="var(--radius-md)" />
+                    </div>
+                  ))}
+                </dl>
+                {card === 1 && (
+                  <div className={styles.subBlock}>
+                    <Skeleton height={12} width="40%" radius="var(--radius-md)" />
+                    <div className={styles.skeletonStack} style={{ marginTop: 'var(--space-sm)' }}>
+                      {Array.from({ length: 7 }, (_, i) => (
+                        <Skeleton key={i} height={14} width="70%" radius="var(--radius-md)" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
+
+          <div style={{ marginTop: 'var(--space-md)' }}>
+            <Card variant="static">
+              <Skeleton height={20} width="30%" radius="var(--radius-md)" />
+              <div className={styles.skeletonStack} style={{ marginTop: 'var(--space-md)' }}>
+                {Array.from({ length: 4 }, (_, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                    <Skeleton height={24} width={90} radius="var(--radius-pill)" />
+                    <Skeleton height={14} width="55%" radius="var(--radius-md)" />
+                  </div>
+                ))}
+                <Skeleton height={12} width="45%" radius="var(--radius-md)" />
+              </div>
+            </Card>
+          </div>
+
+          <div className={styles.actionRow} style={{ marginTop: 'var(--space-md)' }}>
+            {Array.from({ length: 3 }, (_, i) => (
+              <Skeleton key={i} height={40} width={150} radius="var(--radius-md)" />
+            ))}
+          </div>
         </SkeletonGroup>
       </>
     );
@@ -182,7 +231,7 @@ export default function RenewScreen() {
           { label: copy.title },
         ]}
       />
-      {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
+      {failed && <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />}
 
       <div className={styles.compareGrid}>
         <CardSection title={copy.current} actions={<StatusChip spec={contractStatusChip(contract.status)} />}>

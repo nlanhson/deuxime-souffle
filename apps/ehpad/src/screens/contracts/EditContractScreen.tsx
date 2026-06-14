@@ -74,9 +74,88 @@ export default function EditContractScreen() {
   if (state.loading) {
     return (
       <>
-        <PageHeader title={copy.title} crumbs={[{ label: fr.contracts.title, to: '/contrats' }]} />
+        <PageHeader
+          title={copy.title}
+          crumbs={[{ label: fr.contracts.title, to: '/contrats' }]}
+          intro={copy.intro}
+        />
         <SkeletonGroup>
-          <Skeleton height={420} radius="var(--radius-lg)" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+            {/* Bande de progression — directement sur le canevas (sans carte). */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+              <Skeleton height={20} width={220} radius="var(--radius-pill)" />
+              <div style={{ display: 'flex', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
+                {[0, 1].map((i) => (
+                  <div
+                    key={i}
+                    style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}
+                  >
+                    <Skeleton height={28} width={28} radius="var(--radius-pill)" />
+                    <Skeleton height={14} width={90} radius="var(--radius-pill)" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Carte de contenu — calquée sur .content du Wizard (étape 0). */}
+            <div
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border-subtle)',
+                borderRadius: 'var(--radius-lg)',
+                padding: 'var(--space-lg)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--space-lg)',
+              }}
+            >
+              {/* Section « ajustements mineurs ». */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                <div className={styles.titleRow}>
+                  <Skeleton height={20} width={180} />
+                  <Skeleton height={22} width={90} radius="var(--radius-pill)" />
+                </div>
+                <Skeleton height={14} width="70%" radius="var(--radius-pill)" />
+                <Skeleton height={96} radius="var(--radius-md)" />
+              </div>
+
+              {/* Section « modifications majeures ». */}
+              <div
+                className={styles.majorSection}
+                style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}
+              >
+                <div className={styles.titleRow}>
+                  <Skeleton height={20} width={180} />
+                  <Skeleton height={22} width={90} radius="var(--radius-pill)" />
+                </div>
+                <Skeleton height={14} width="70%" radius="var(--radius-pill)" />
+                <div className={styles.formStack}>
+                  <Skeleton height={44} radius="var(--radius-md)" />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                    <Skeleton height={20} width={160} radius="var(--radius-pill)" />
+                    <Skeleton height={20} width={160} radius="var(--radius-pill)" />
+                  </div>
+                  <div className={styles.dateGrid}>
+                    <Skeleton height={44} radius="var(--radius-md)" />
+                    <Skeleton height={44} radius="var(--radius-md)" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pied — barre Retour / Suivant. */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 'var(--space-md)',
+                flexWrap: 'wrap',
+              }}
+            >
+              <Skeleton height={40} width={90} radius="var(--radius-md)" />
+              <Skeleton height={40} width={120} radius="var(--radius-md)" />
+            </div>
+          </div>
         </SkeletonGroup>
       </>
     );
@@ -220,7 +299,7 @@ export default function EditContractScreen() {
   const stepRecap = (
     <>
       <h3 className={styles.summaryTitle}>{copy.recapTitle}</h3>
-      {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
+      {failed && <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />}
       {!hasChanges && <InlineAlert variant="info" title={copy.noChanges} />}
       {minorChanged && (
         <div>

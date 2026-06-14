@@ -12,6 +12,7 @@ import { isDayFullyExcluded } from '@/lib/exclusions';
 import {
   Button,
   ButtonLink,
+  Card,
   CardSection,
   DatePicker,
   EmptyState,
@@ -60,9 +61,30 @@ export default function EditSessionScreen() {
   if (state.loading) {
     return (
       <>
-        <PageHeader title={fr.sessions.edit.title} crumbs={crumbs()} />
+        <PageHeader title={fr.sessions.edit.title} crumbs={crumbs()} intro={fr.sessions.edit.intro} />
         <SkeletonGroup>
-          <Skeleton height={280} radius="var(--radius-lg)" />
+          <Card>
+            <div style={{ marginBottom: 'var(--space-md)' }}>
+              <Skeleton height={20} width={180} radius="var(--radius-pill)" />
+            </div>
+            <div className={styles.editForm}>
+              {/* Date field: label + helper line + 52px control */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+                <Skeleton height={16} width={120} radius="var(--radius-pill)" />
+                <Skeleton height={12} width={220} radius="var(--radius-pill)" />
+                <Skeleton height={52} radius="var(--radius-md)" />
+              </div>
+              {/* Time field: label + 52px control */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+                <Skeleton height={16} width={120} radius="var(--radius-pill)" />
+                <Skeleton height={52} radius="var(--radius-md)" />
+              </div>
+              <div className={styles.actionsRow}>
+                <Skeleton height={44} width={120} radius="var(--radius-md)" />
+                <Skeleton height={44} width={120} radius="var(--radius-md)" />
+              </div>
+            </div>
+          </Card>
         </SkeletonGroup>
       </>
     );
@@ -143,7 +165,7 @@ export default function EditSessionScreen() {
         intro={fr.sessions.edit.intro}
       />
       {conflict && <InlineAlert variant="warning" title={fr.sessions.edit.conflict} />}
-      {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
+      {failed && <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />}
 
       <CardSection title={fr.sessions.detail.title(formatDate(session.date))}>
         <div className={styles.editForm}>

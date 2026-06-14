@@ -6,6 +6,7 @@ import * as api from '@/data/api';
 import { useDataVersion } from '@/context/DataContext';
 import { useAsync } from '@/hooks/useAsync';
 import { formatSince } from '@/lib/format';
+import { notificationContent } from '@/lib/labels';
 import {
   Button,
   Chip,
@@ -14,8 +15,8 @@ import {
   ListItem,
   LoadError,
   PageHeader,
+  Skeleton,
   SkeletonGroup,
-  SkeletonRows,
 } from '@/components';
 import type { AppNotification } from '@/types/models';
 import styles from './notifications.module.css';
@@ -60,8 +61,35 @@ export default function NotificationsScreen() {
       />
 
       {state.loading && (
-        <SkeletonGroup>
-          <SkeletonRows rows={5} height={72} />
+        <SkeletonGroup className={styles.listCard}>
+          {Array.from({ length: 5 }, (_, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-md)',
+                minHeight: 64,
+                padding: 'var(--space-sm) var(--space-xs)',
+                borderTop: i === 0 ? undefined : '1px solid var(--color-border-subtle)',
+              }}
+            >
+              <Skeleton width={44} height={44} radius="var(--radius-pill)" />
+              <div
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 6,
+                }}
+              >
+                <Skeleton height={16} width="40%" radius="var(--radius-sm)" />
+                <Skeleton height={14} width="70%" radius="var(--radius-sm)" />
+              </div>
+              <Skeleton width={56} height={20} radius="var(--radius-pill)" />
+            </div>
+          ))}
         </SkeletonGroup>
       )}
       {state.error && <LoadError onRetry={state.retry} />}
@@ -75,6 +103,7 @@ export default function NotificationsScreen() {
           <List label={fr.notifications.title}>
             {state.data.map((notification) => {
               const Icon = TYPE_ICONS[notification.type];
+              const { title, body } = notificationContent(fr, notification);
               return (
                 <ListItem
                   key={notification.id}
@@ -89,8 +118,8 @@ export default function NotificationsScreen() {
                       <Icon size={20} aria-hidden />
                     </span>
                   }
-                  primary={notification.title}
-                  secondary={`${notification.body} — ${formatSince(notification.createdAt)}`}
+                  primary={title}
+                  secondary={`${body} — ${formatSince(notification.createdAt)}`}
                   trailing={
                     !notification.read ? (
                       <Chip label={fr.notifications.unreadDot} variant="info" />

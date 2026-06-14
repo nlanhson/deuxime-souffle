@@ -69,7 +69,9 @@ export interface ContractHistoryEntry {
     | 'resoumission'
     | 'renouvellement'
     | 'non_renouvellement';
-  label: string;
+  /** Détail traduisible optionnel, accolé au libellé de base (rendu via `historyText()`). */
+  detailKey?: 'detailFreqDouble' | 'detailReasonBudget';
+  label?: string; // ancien rendu FR — repli uniquement
 }
 
 export interface Facility {
@@ -156,7 +158,21 @@ export interface SessionEvent {
   id: string;
   at: string; // ISO datetime
   kind: 'retard' | 'report' | 'modification' | 'annulation' | 'rapport_remis' | 'evaluation';
-  label: string; // plain-French line
+  /** Clé i18n explicite quand le message diffère du `kind` (report→reportUndone,
+   *  modification→planned, annulation→retardCancelled). Par défaut = `kind`.
+   *  Le texte est rendu via `eventText()` dans la langue active. */
+  messageKey?:
+    | 'retard'
+    | 'report'
+    | 'modification'
+    | 'annulation'
+    | 'rapport_remis'
+    | 'evaluation'
+    | 'retardCancelled'
+    | 'reportUndone'
+    | 'planned';
+  params?: { minutes?: number; date?: string; time?: string };
+  label?: string; // ancien rendu FR — repli uniquement
 }
 
 export interface SessionReport {
@@ -181,7 +197,7 @@ export interface Invoice {
   // BILL-01 — all amounts HT (hors taxes)
   id: string;
   number: string;
-  period: string; // "Mai 2026"
+  period: string; // ISO month anchor "YYYY-MM-01" — rendered via formatMonthYear (locale-aware)
   sessionCount: number;
   amountHT: number;
   status: InvoiceStatus;
@@ -190,11 +206,10 @@ export interface Invoice {
 }
 
 export interface AppNotification {
-  // NOTI-03/04
+  // NOTI-03/04 — titre + corps rendus via `notificationContent()` dans la langue active
   id: string;
   type: 'coach_retard' | 'eval_due' | 'contrat_renouvellement' | 'facture' | 'contacts' | 'systeme';
-  title: string;
-  body: string;
+  params?: { time?: string; count?: number; contractRef?: string; days?: number; invoiceRef?: string };
   createdAt: string;
   read: boolean;
   link?: string;

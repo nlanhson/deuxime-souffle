@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { CalendarRange, ChevronRight, Clock3, FileText, Star, User, Users } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { CalendarRange, ChevronRight, Clock3, User, Users } from 'lucide-react';
 import { useStrings } from '@/i18n';
 import * as api from '@/data/api';
 import { useDataVersion } from '@/context/DataContext';
@@ -9,8 +9,9 @@ import { addDays } from '@/lib/calendar';
 import {
   capitalize,
   formatDate,
-  formatDuration,
+  formatShortDate,
   formatTime,
+  formatTimeRange,
   formatWeekday,
   formatWeekdayDate,
   toIso,
@@ -19,12 +20,12 @@ import { sessionStatusChip, unitLabel, unitTone } from '@/lib/status';
 import {
   Avatar,
   Button,
-  ButtonLink,
   EmptyState,
   LoadError,
   PageHeader,
+  Pagination,
   Select,
-  SkeletonCards,
+  Skeleton,
   SkeletonGroup,
   StatusChip,
   Tabs,
@@ -33,10 +34,16 @@ import {
 } from '@/components';
 import type { Session } from '@/types/models';
 import { CoachReportModal } from './CoachReportModal';
+import { PostponeModal } from './PostponeModal';
+import { SessionPeekModal } from './SessionPeekModal';
 import styles from './sessions.module.css';
 
 type TabKey = 'a_venir' | 'passees';
 type PeriodKey = 'all' | 'next7' | 'next30' | 'thisMonth' | 'last30' | 'lastMonth';
+
+/** Pagination : nombre de jours (groupes) par page. On pagine par JOUR entier
+ *  pour ne jamais couper une journée entre deux pages. Réglable d'un seul endroit. */
+const DAYS_PER_PAGE = 6;
 
 /** SESS-11 — liste des séances : onglets À venir / Passées, filtres période + coach,
  *  séances regroupées par jour en cartes (liseré coloré par unité). */
@@ -47,7 +54,14 @@ export default function SessionsScreen() {
   const tab: TabKey = params.get('onglet') === 'passees' ? 'passees' : 'a_venir';
   const [period, setPeriod] = useState<PeriodKey>('all');
   const [coachId, setCoachId] = useState('all');
-  const [reportSession, setReportSession] = useState<Session | null>(null);
+  const [page, setPage] = useState(1);
+  // Aperçu de séance (modale type Google Agenda, comme sur le tableau de bord) :
+  // un clic sur une carte ouvre la fiche sans changer de page. Une seule modale à
+  // la fois — l'aperçu bascule vers le rapport / le report sans s'empiler.
+  // « Voir la fiche complète » reste l'échappatoire vers /sessions/:id.
+  const [sessionModal, setSessionModal] = useState<
+    { session: Session; mode: 'peek' | 'report' | 'postpone' } | null
+  >(null);
 
   const state = useAsync(
     () =>
@@ -105,6 +119,26 @@ export default function SessionsScreen() {
     return [...byDate.entries()].map(([date, items]) => ({ date, items }));
   }, [filtered]);
 
+  // Pagination par jour : on découpe les groupes en pages de DAYS_PER_PAGE jours.
+  // `currentPage` est borné au cas où les filtres réduisent le nombre de pages
+  // avant que l'effet de réinitialisation ne s'applique.
+  const pageCount = Math.max(1, Math.ceil(groups.length / DAYS_PER_PAGE));
+  const currentPage = Math.min(page, pageCount);
+  const pagedGroups = groups.slice((currentPage - 1) * DAYS_PER_PAGE, currentPage * DAYS_PER_PAGE);
+
+  // Onglet / filtres changent → on repart de la page 1.
+  useEffect(() => {
+    setPage(1);
+  }, [tab, period, coachId]);
+
+  // Changement de page : on remonte tout en haut de la zone de contenu (#contenu
+  // est le conteneur défilant) — titre « Séances » + onglets + filtres réapparaissent.
+  // Saut instantané : aucune animation à neutraliser pour prefers-reduced-motion.
+  const goToPage = (next: number) => {
+    setPage(next);
+    document.getElementById('contenu')?.scrollTo({ top: 0 });
+  };
+
   const coach = (id: string | null) =>
     id ? (state.data?.coaches.find((c) => c.id === id) ?? null) : null;
 
@@ -112,6 +146,14 @@ export default function SessionsScreen() {
     const c = coach(id);
     return c ? `${c.firstName} ${c.lastName}` : fr.calendar.unassigned;
   };
+
+  // Données dérivées pour les modales d'aperçu (séance / coach / contrat courants).
+  const modalSession = sessionModal?.session ?? null;
+  const modalCoach = coach(modalSession?.coachId ?? null);
+  const modalContract =
+    modalSession && state.data
+      ? state.data.contracts.find((c) => c.id === modalSession.contractId) ?? null
+      : null;
 
   const changeTab = (next: string) => {
     setPeriod('all');
@@ -126,11 +168,14 @@ export default function SessionsScreen() {
 
   const hasFilters = period !== 'all' || coachId !== 'all';
 
-  // En-tête de jour : « Aujourd'hui » / « Demain » / jour de la semaine, + la date complète en sourdine.
+  // En-tête de jour (calé sur la réf Time2book) : le terme à mettre en avant — « Aujourd'hui »,
+  // « Demain », sinon le jour de la semaine — porte le gros caractère gras ; la date complète
+  // l'accompagne en plus petit et plus discret. Today/Demain gardent le jour dans la date
+  // (« Samedi 13 juin ») ; au-delà le jour est déjà le titre, la date se réduit à « 15 juin ».
   const dayHeader = (iso: string): { lead: string; sub: string } => {
     if (iso === todayIso) return { lead: fr.calendar.today, sub: capitalize(formatWeekdayDate(iso)) };
     if (iso === tomorrowIso) return { lead: fr.calendar.tomorrow, sub: capitalize(formatWeekdayDate(iso)) };
-    return { lead: capitalize(formatWeekday(iso)), sub: formatDate(iso) };
+    return { lead: capitalize(formatWeekday(iso)), sub: formatShortDate(iso) };
   };
 
   const periodOptions =
@@ -154,63 +199,42 @@ export default function SessionsScreen() {
       s.status === 'annulee'
         ? <StatusChip spec={{ ...sessionStatusChip('annulee'), label: fr.sessions.cancelled }} />
         : <StatusChip spec={sessionStatusChip(s.status)} />;
-    const canEvaluate = tab === 'passees' && s.status !== 'annulee';
 
     return (
       <article key={s.id} className={styles.sessionCard} data-tone={unitTone(s.unitType)}>
-        <Link
-          to={`/sessions/${s.id}`}
+        <button
+          type="button"
           className={styles.cardMain}
+          onClick={() => setSessionModal({ session: s, mode: 'peek' })}
           aria-label={fr.calendar.sessionLink(formatDate(s.date), formatTime(s.time))}
         >
-          <span className={styles.cardCoach}>
-            {c ? (
-              <Avatar firstName={c.firstName} lastName={c.lastName} size="sm" decorative />
-            ) : (
-              <span className={styles.cardCoachIcon}>
-                <User aria-hidden />
-              </span>
-            )}
-            <span className={c ? styles.cardCoachName : styles.cardCoachMuted}>{coachName(s.coachId)}</span>
-          </span>
-          <span className={styles.cardMeta}>
-            <Clock3 className={styles.cardMetaIcon} aria-hidden />
-            <span className={styles.cardTime}>{formatTime(s.time)}</span>
-            <span className={styles.cardDuration}>· {formatDuration(s.durationMin)}</span>
-          </span>
-          <span className={styles.cardUnit}>{unitLabel(s.unitType)}</span>
-        </Link>
-
-        <div className={styles.cardAside}>
-          {statusChip}
-          <div className={styles.cardActions}>
-            <Button size="md" variant="ghost" icon={FileText} onClick={() => setReportSession(s)}>
-              {fr.sessions.table.report}
-            </Button>
-            {canEvaluate &&
-              (s.evaluation ? (
-                <ButtonLink size="md" variant="ghost" icon={Star} to={`/evaluations/${s.id}`}>
-                  {fr.sessions.seeEvaluation}
-                </ButtonLink>
+          {/* Titre = la séance (l'unité), comme le nom de cours dans la réf. */}
+          <span className={styles.cardTitle}>{unitLabel(s.unitType)}</span>
+          {/* Une seule ligne de méta à icônes : plage horaire · coach. */}
+          <span className={styles.cardMetaRow}>
+            <span className={styles.cardMeta}>
+              <Clock3 className={styles.cardMetaIcon} aria-hidden />
+              {formatTimeRange(s.time, s.durationMin)}
+            </span>
+            <span className={styles.cardMeta}>
+              {c ? (
+                <Avatar firstName={c.firstName} lastName={c.lastName} size="sm" decorative />
               ) : (
-                <ButtonLink size="md" variant="accent" icon={Star} to={`/evaluations/${s.id}`}>
-                  {fr.sessions.evaluateAction}
-                </ButtonLink>
-              ))}
-          </div>
-        </div>
+                <span className={styles.cardCoachIcon}>
+                  <User aria-hidden />
+                </span>
+              )}
+              {coachName(s.coachId)}
+            </span>
+          </span>
+        </button>
+
+        <div className={styles.cardAside}>{statusChip}</div>
 
         <ChevronRight className={styles.cardChevron} aria-hidden />
       </article>
     );
   };
-
-  const reportContract = reportSession
-    ? (state.data?.contracts.find((c) => c.id === reportSession.contractId) ?? null)
-    : null;
-  const reportCoach = reportSession
-    ? (state.data?.coaches.find((c) => c.id === reportSession.coachId) ?? null)
-    : null;
 
   return (
     <>
@@ -258,7 +282,21 @@ export default function SessionsScreen() {
 
         {state.loading && (
           <SkeletonGroup>
-            <SkeletonCards count={5} height={104} />
+            <div className={styles.groupedList}>
+              {[0, 1].map((g) => (
+                <div key={g} className={styles.dayGroup}>
+                  <div className={styles.dayHeader}>
+                    <Skeleton height={24} width={120} radius="var(--radius-md)" />
+                    <Skeleton height={12} width={70} radius="var(--radius-pill)" />
+                  </div>
+                  <div className={styles.sessionList}>
+                    {Array.from({ length: g === 0 ? 3 : 2 }).map((_, i) => (
+                      <Skeleton key={i} height={104} radius="var(--radius-lg)" />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </SkeletonGroup>
         )}
         {state.error && <LoadError onRetry={state.retry} />}
@@ -276,30 +314,50 @@ export default function SessionsScreen() {
           />
         )}
         {state.data && filtered.length > 0 && (
-          <div className={styles.groupedList}>
-            {groups.map((g) => {
-              const h = dayHeader(g.date);
-              return (
-                <section key={g.date} className={styles.dayGroup} aria-label={`${h.lead} ${h.sub}`}>
-                  <header className={styles.dayHeader}>
-                    <span className={styles.dayLead}>{h.lead}</span>
-                    <span className={styles.daySub}>{h.sub}</span>
-                  </header>
-                  <div className={styles.sessionList}>{g.items.map(renderCard)}</div>
-                </section>
-              );
-            })}
-          </div>
+          <>
+            <div className={styles.groupedList}>
+              {pagedGroups.map((g) => {
+                const h = dayHeader(g.date);
+                return (
+                  <section key={g.date} className={styles.dayGroup} aria-label={`${h.lead} ${h.sub}`.trim()}>
+                    <header className={styles.dayHeader}>
+                      <span className={styles.dayLead}>{h.lead}</span>
+                      {h.sub && <span className={styles.daySub}>{h.sub}</span>}
+                    </header>
+                    <div className={styles.sessionList}>{g.items.map(renderCard)}</div>
+                  </section>
+                );
+              })}
+            </div>
+            <Pagination page={currentPage} pageCount={pageCount} onChange={goToPage} variant="plain" />
+          </>
         )}
       </div>
 
-      <CoachReportModal
-        open={reportSession !== null}
-        onClose={() => setReportSession(null)}
-        session={reportSession}
-        coach={reportCoach}
-        sessionTypeLabel={reportContract ? fr.sessionTypes[reportContract.sessionType] : ''}
+      {/* Aperçu de séance type Google Agenda + ses bascules (rapport / report),
+          identique au tableau de bord — une seule modale ouverte à la fois. */}
+      <SessionPeekModal
+        open={sessionModal?.mode === 'peek'}
+        session={modalSession}
+        coach={modalCoach}
+        onClose={() => setSessionModal(null)}
+        onSeeReport={() => setSessionModal((m) => (m ? { ...m, mode: 'report' } : null))}
+        onPostpone={() => setSessionModal((m) => (m ? { ...m, mode: 'postpone' } : null))}
       />
+      <CoachReportModal
+        open={sessionModal?.mode === 'report'}
+        onClose={() => setSessionModal(null)}
+        session={modalSession}
+        coach={modalCoach}
+        sessionTypeLabel={modalContract ? fr.sessionTypes[modalContract.sessionType] : ''}
+      />
+      {modalSession && (
+        <PostponeModal
+          open={sessionModal?.mode === 'postpone'}
+          onClose={() => setSessionModal(null)}
+          session={modalSession}
+        />
+      )}
     </>
   );
 }

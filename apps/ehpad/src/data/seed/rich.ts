@@ -249,7 +249,7 @@ export function buildRichSeed(): DB {
           at: at(d(-2), '10:45'),
           by: SOPHIE,
           kind: 'modification_majeure',
-          label: `${getStrings().history.modification_majeure} — Fréquence : une fois par semaine → deux fois par semaine`,
+          detailKey: 'detailFreqDouble',
         },
       ],
     },
@@ -276,7 +276,7 @@ export function buildRichSeed(): DB {
           at: at(d(-15), '17:20'),
           by: SOPHIE,
           kind: 'non_renouvellement',
-          label: `${getStrings().history.non_renouvellement} — motif : budget réduit`,
+          detailKey: 'detailReasonBudget',
         },
       ],
     },
@@ -286,11 +286,16 @@ export function buildRichSeed(): DB {
 
   const sessions: Session[] = [];
   let evtSeq = 0;
-  const evt = (kind: SessionEvent['kind'], atIso: string, label: string): SessionEvent => ({
+  const evt = (
+    kind: SessionEvent['kind'],
+    atIso: string,
+    extra?: { messageKey?: SessionEvent['messageKey']; params?: SessionEvent['params'] },
+  ): SessionEvent => ({
     id: `ev-${(evtSeq += 1)}`,
     at: atIso,
     kind,
-    label,
+    ...(extra?.messageKey ? { messageKey: extra.messageKey } : {}),
+    ...(extra?.params ? { params: extra.params } : {}),
   });
 
   interface PastSpec {
@@ -333,7 +338,7 @@ export function buildRichSeed(): DB {
         ...(s.report.difficulties ? { difficultiesNote: s.report.difficulties } : {}),
         evaluationSummary: s.report.summary,
       };
-      events.push(evt('rapport_remis', at(iso, '18:00'), getStrings().events.rapport_remis));
+      events.push(evt('rapport_remis', at(iso, '18:00')));
     }
     if (s.evaluation) {
       const submittedAt = at(toIso(addDays(lastWeekday(today, s.weekday, s.weeksBack), 1)), '09:30');
@@ -344,7 +349,7 @@ export function buildRichSeed(): DB {
         submittedAt,
         submittedBy: s.evaluation.by,
       };
-      events.push(evt('evaluation', submittedAt, getStrings().events.evaluation));
+      events.push(evt('evaluation', submittedAt));
     }
     sessions.push(session);
   };
@@ -399,8 +404,8 @@ export function buildRichSeed(): DB {
       status: 'annulee',
       modificationHistory: [],
       events: [
-        evt('retard', at(iso, '11:00'), getStrings().events.retard(30)),
-        evt('annulation', at(iso, '11:05'), getStrings().events.retardCancelled),
+        evt('retard', at(iso, '11:00'), { params: { minutes: 30 } }),
+        evt('annulation', at(iso, '11:05'), { messageKey: 'retardCancelled' }),
       ],
     });
   }
@@ -428,7 +433,7 @@ export function buildRichSeed(): DB {
       unitType: 'UP_UHR',
       status: 'reportee',
       modificationHistory: [{ at: at(d(-2), '11:20'), by: SOPHIE, change: label }],
-      events: [evt('report', at(d(-2), '11:20'), label)],
+      events: [evt('report', at(d(-2), '11:20'), { params: { date: newIso, time: '15:00' } })],
     });
   }
 
@@ -452,7 +457,7 @@ export function buildRichSeed(): DB {
       unitType: 'SOIGNANTS',
       status: 'a_venir',
       modificationHistory: [],
-      events: [evt('retard', at(iso, '14:10'), getStrings().events.retard(10))],
+      events: [evt('retard', at(iso, '14:10'), { params: { minutes: 10 } })],
     });
   }
 
@@ -465,10 +470,11 @@ export function buildRichSeed(): DB {
 
   /* ---------- Factures (6, montants HT) ---------- */
 
+  // Ancre de mois au format ISO (YYYY-MM-01) — la période de facture est rendue
+  // dans la langue active via formatMonthYear (plus de libellé FR figé au seed).
   const monthLabel = (offset: number) => {
     const dt = new Date(today.getFullYear(), today.getMonth() + offset, 1);
-    const label = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(dt);
-    return label.charAt(0).toUpperCase() + label.slice(1);
+    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-01`;
   };
 
   const invoices: Invoice[] = [
@@ -478,6 +484,15 @@ export function buildRichSeed(): DB {
     { id: 'f-2026-027', number: 'F-2026-027', period: monthLabel(-4), sessionCount: 8, amountHT: 520, status: 'payee', dueDate: d(-75), paymentDate: d(-71) },
     { id: 'f-2026-018', number: 'F-2026-018', period: monthLabel(-5), sessionCount: 9, amountHT: 585, status: 'payee', dueDate: d(-105), paymentDate: d(-107) },
     { id: 'f-2025-104', number: 'F-2025-104', period: monthLabel(-6), sessionCount: 7, amountHT: 455, status: 'payee', dueDate: d(-135), paymentDate: d(-133) },
+    // Historique payé (mois -7 à -12) : assez de lignes pour que la pagination
+    // de la table ait du sens. Toutes « payée » → KPIs (impayé/retard/échéance)
+    // inchangés ; seul le délai moyen s'appuie sur un échantillon plus large.
+    { id: 'f-2025-093', number: 'F-2025-093', period: monthLabel(-7), sessionCount: 8, amountHT: 520, status: 'payee', dueDate: d(-165), paymentDate: d(-168) },
+    { id: 'f-2025-081', number: 'F-2025-081', period: monthLabel(-8), sessionCount: 9, amountHT: 585, status: 'payee', dueDate: d(-195), paymentDate: d(-191) },
+    { id: 'f-2025-072', number: 'F-2025-072', period: monthLabel(-9), sessionCount: 10, amountHT: 650, status: 'payee', dueDate: d(-225), paymentDate: d(-228) },
+    { id: 'f-2025-064', number: 'F-2025-064', period: monthLabel(-10), sessionCount: 7, amountHT: 455, status: 'payee', dueDate: d(-255), paymentDate: d(-252) },
+    { id: 'f-2025-055', number: 'F-2025-055', period: monthLabel(-11), sessionCount: 8, amountHT: 520, status: 'payee', dueDate: d(-285), paymentDate: d(-288) },
+    { id: 'f-2025-043', number: 'F-2025-043', period: monthLabel(-12), sessionCount: 9, amountHT: 585, status: 'payee', dueDate: d(-315), paymentDate: d(-312) },
   ];
 
   /* ---------- Notifications ---------- */
@@ -486,8 +501,7 @@ export function buildRichSeed(): DB {
     {
       id: 'n-retard',
       type: 'coach_retard',
-      title: 'Coach en retard',
-      body: getStrings().notifications.coachLate(formatTime('14:00')),
+      params: { time: '14:00' },
       createdAt: at(d(0), '14:10'),
       read: false,
       link: '/sessions/s-jour',
@@ -495,8 +509,7 @@ export function buildRichSeed(): DB {
     {
       id: 'n-evals',
       type: 'eval_due',
-      title: 'Évaluations en attente',
-      body: '4 séances terminées attendent votre évaluation.',
+      params: { count: 4 },
       createdAt: at(d(-1), '08:00'),
       read: false,
       link: '/evaluations',
@@ -504,8 +517,7 @@ export function buildRichSeed(): DB {
     {
       id: 'n-renouv',
       type: 'contrat_renouvellement',
-      title: 'Contrat à renouveler',
-      body: 'Le contrat CT-2026-009 arrive à échéance dans 45 jours. Pensez au renouvellement.',
+      params: { contractRef: 'CT-2026-009', days: 45 },
       createdAt: at(d(-2), '09:00'),
       read: false,
       link: '/contrats/ct-2026-009',
@@ -513,8 +525,7 @@ export function buildRichSeed(): DB {
     {
       id: 'n-facture',
       type: 'facture',
-      title: 'Facture en retard',
-      body: 'La facture F-2026-041 attend votre règlement.',
+      params: { invoiceRef: 'F-2026-041' },
       createdAt: at(d(-10), '10:00'),
       read: true,
       link: '/factures/f-2026-041',
@@ -522,8 +533,6 @@ export function buildRichSeed(): DB {
     {
       id: 'n-contacts',
       type: 'contacts',
-      title: 'Vos contacts sont-ils à jour ?',
-      body: 'Dernière vérification il y a plus de 2 mois. Une vérification rapide garantit que les bonnes personnes sont prévenues.',
       createdAt: at(d(-4), '09:30'),
       read: false,
       link: '/contacts',
@@ -531,8 +540,6 @@ export function buildRichSeed(): DB {
     {
       id: 'n-bienvenue',
       type: 'systeme',
-      title: 'Bienvenue sur votre espace EHPAD',
-      body: 'Suivez vos séances, contrats, évaluations et factures depuis cette interface.',
       createdAt: at(d(-60), '12:00'),
       read: true,
     },

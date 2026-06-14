@@ -7,6 +7,16 @@
   border: 1px solid transparent;
 }
 
+/* Quand l'alerte reçoit le focus programmatique (autoFocus, ex. erreur de
+   soumission), l'anneau doit être visible — WCAG 2.4.7. On cible :focus (et pas
+   seulement :focus-visible) car ce dernier ne s'active pas sur un .focus() appelé
+   en JS dans la plupart des navigateurs. L'alerte n'est focusable que via tabIndex
+   -1, donc l'anneau n'apparaît que sur ce déplacement de focus voulu. */
+.alert:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 .banner {
   border-radius: var(--radius-lg);
   padding: var(--space-md) var(--space-lg);

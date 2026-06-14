@@ -28,6 +28,15 @@ export function AppShell() {
     setDrawerOpen(false); // fermer le tiroir à chaque navigation
   }, [location.pathname]);
 
+  // Accueil (calendrier : vues Mois et Liste) + page Séances : on masque
+  // visuellement la barre de défilement de la zone de contenu (le défilement
+  // reste fonctionnel à la molette / au clavier). La vue Semaine garde sa propre
+  // barre, contenue dans la fenêtre du calendrier. Les autres pages la gardent.
+  const hideScrollbar =
+    location.pathname === '/' ||
+    location.pathname === '/sessions' ||
+    location.pathname.startsWith('/sessions/');
+
   // À l'entrée sur le site : une seule pop-up si des notifications attendent.
   useEffect(() => {
     if (welcomeToastShown) return;
@@ -60,8 +69,14 @@ export function AppShell() {
       {!isNarrow && <Sidebar />}
       <div className={styles.main}>
         <TopBar showMenuButton={isNarrow} onOpenMenu={() => setDrawerOpen(true)} />
-        <main id="contenu" className={styles.content} tabIndex={-1}>
-          <Outlet />
+        <main
+          id="contenu"
+          className={`${styles.content}${hideScrollbar ? ` ${styles.hideScrollbar}` : ''}`}
+          tabIndex={-1}
+        >
+          <div className={styles.contentInner}>
+            <Outlet />
+          </div>
         </main>
       </div>
 

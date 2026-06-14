@@ -62,7 +62,7 @@ export default function ForgotPasswordScreen() {
 
   return (
     <AuthLayout title={fr.auth.forgot.title} subtitle={fr.auth.forgot.subtitle}>
-      {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
+      {failed && <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />}
       <form className={styles.form} onSubmit={submit} noValidate>
         <TextField
           label={fr.auth.forgot.email}

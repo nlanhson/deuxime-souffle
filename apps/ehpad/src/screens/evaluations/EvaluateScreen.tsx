@@ -96,7 +96,10 @@ export default function EvaluateScreen() {
 
   // Rappel compact (une ligne) : la carte d'évaluation reste le héros de l'écran.
   const sessionInfo = (
-    <section className={styles.recap} aria-label={fr.evaluations.form.sessionInfo}>
+    <section className={styles.recap} aria-labelledby="eval-recap-heading">
+      <h2 id="eval-recap-heading" className="sr-only">
+        {fr.evaluations.form.sessionInfo}
+      </h2>
       <div className={styles.recapRow}>
         {coach && <Avatar firstName={coach.firstName} lastName={coach.lastName} size="sm" decorative />}
         <p className={styles.recapDate}>
@@ -184,45 +187,58 @@ export default function EvaluateScreen() {
     <>
       <PageHeader title={fr.evaluations.form.title} crumbs={crumbs} />
       {sessionInfo}
-      {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
+      {failed && <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />}
 
-      {/* Une seule carte : le flux « 3 gestes » se termine dans son contenant. */}
-      <Card className={styles.formCard}>
-        <RatingInput legend={fr.evaluations.form.starsLabel} value={stars} onChange={setStars} />
-        <RadioGroup<Impression>
-          legend={fr.evaluations.form.impressionLabel}
-          value={impression}
-          onChange={setImpression}
-          appearance="card"
-          options={[
-            { value: 'tres_bien', label: fr.evaluations.form.impressions.tres_bien },
-            { value: 'bien', label: fr.evaluations.form.impressions.bien },
-            { value: 'correct', label: fr.evaluations.form.impressions.correct },
-            { value: 'a_ameliorer', label: fr.evaluations.form.impressions.a_ameliorer },
-          ]}
-        />
-        <Textarea
-          label={fr.evaluations.form.commentLabel}
-          value={comment}
-          onChange={setComment}
-          helper={fr.evaluations.form.commentHelper}
-        />
-        <div className={styles.submitRow}>
-          <Button
-            variant="primary"
-            onClick={submit}
-            loading={busy}
-            disabled={missingReason !== null}
-            disabledReason={missingReason ?? undefined}
-          >
-            {fr.evaluations.form.submit}
-          </Button>
-          {missingReason && (
-            <p className={styles.submitHint} aria-live="polite">
-              {missingReason}
-            </p>
-          )}
-        </div>
+      {/* Titre de section (lecteurs d'écran) : rétablit la hiérarchie h1 → h2 entre
+          le titre de page et les légendes de champ. */}
+      <h2 className="sr-only">{fr.evaluations.form.heading}</h2>
+      {/* Une seule carte : le flux « 3 gestes » se termine dans son contenant.
+          Vrai <form> : structure sémantique (WCAG 1.3.1) + un seul chemin de soumission. */}
+      <Card>
+        <form
+          className={styles.formCard}
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit();
+          }}
+          noValidate
+        >
+          <RatingInput legend={fr.evaluations.form.starsLabel} value={stars} onChange={setStars} />
+          <RadioGroup<Impression>
+            legend={fr.evaluations.form.impressionLabel}
+            value={impression}
+            onChange={setImpression}
+            appearance="card"
+            options={[
+              { value: 'tres_bien', label: fr.evaluations.form.impressions.tres_bien },
+              { value: 'bien', label: fr.evaluations.form.impressions.bien },
+              { value: 'correct', label: fr.evaluations.form.impressions.correct },
+              { value: 'a_ameliorer', label: fr.evaluations.form.impressions.a_ameliorer },
+            ]}
+          />
+          <Textarea
+            label={fr.evaluations.form.commentLabel}
+            value={comment}
+            onChange={setComment}
+            helper={fr.evaluations.form.commentHelper}
+          />
+          <div className={styles.submitRow}>
+            <Button
+              type="submit"
+              variant="primary"
+              loading={busy}
+              disabled={missingReason !== null}
+              disabledReason={missingReason ?? undefined}
+            >
+              {fr.evaluations.form.submit}
+            </Button>
+            {missingReason && (
+              <p className={styles.submitHint} aria-live="polite">
+                {missingReason}
+              </p>
+            )}
+          </div>
+        </form>
       </Card>
     </>
   );

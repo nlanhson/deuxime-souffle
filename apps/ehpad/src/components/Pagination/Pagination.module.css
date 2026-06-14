@@ -1,0 +1,66 @@
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+/* Flèche : bouton carré ≥ 44px, plat et bordé (style maison), accent au survol. */
+.pageBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.pageBtn:hover:not([aria-disabled='true']) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.pageBtn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Extrémité atteinte : grisé, mais reste focusable (aria-disabled, pas disabled). */
+.pageBtn[aria-disabled='true'] {
+  color: var(--color-text-muted);
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Variante allégée (pied de table) : flèches sans bordure ni fond au repos —
+   le repère au survol passe par un fond doux, pas un cadre. L'anneau de focus
+   reste intact (accessibilité clavier). */
+.plain .pageBtn {
+  border-color: transparent;
+  background: none;
+}
+
+.plain .pageBtn:hover:not([aria-disabled='true']) {
+  border-color: transparent;
+  background: var(--color-surface-hover);
+  color: var(--color-accent);
+}
+
+.pageBtn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.status {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}

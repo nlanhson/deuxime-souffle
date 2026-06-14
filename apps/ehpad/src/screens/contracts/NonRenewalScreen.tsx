@@ -10,6 +10,7 @@ import { toIso } from '@/lib/format';
 import {
   Button,
   ButtonLink,
+  Card,
   CardSection,
   Checkbox,
   EmptyState,
@@ -68,9 +69,21 @@ export default function NonRenewalScreen() {
     return (
       <>
         <PageHeader title={copy.title} crumbs={[{ label: fr.contracts.title, to: '/contrats' }]} />
-        <SkeletonGroup>
-          <Skeleton height={360} radius="var(--radius-lg)" />
-        </SkeletonGroup>
+        <div className={styles.nrWrap}>
+          <SkeletonGroup>
+            <Card variant="static">
+              <Skeleton height={20} width="55%" radius="var(--radius-md)" />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', marginTop: 'var(--space-md)' }}>
+                <Skeleton height={14} width="100%" radius="var(--radius-md)" />
+                <Skeleton height={14} width="85%" radius="var(--radius-md)" />
+              </div>
+              <div className={styles.nrActions}>
+                <Skeleton height={44} radius="var(--radius-pill)" />
+                <Skeleton height={44} radius="var(--radius-pill)" />
+              </div>
+            </Card>
+          </SkeletonGroup>
+        </div>
       </>
     );
   }
@@ -131,7 +144,7 @@ export default function NonRenewalScreen() {
   return (
     <>
       <PageHeader title={copy.title} crumbs={crumbs} />
-      {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
+      {failed && <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />}
 
       {/* La carte tient dans la largeur de lecture (720px) — voir .nrWrap. */}
       {step === 1 && (

@@ -1,71 +1,53 @@
-/* « Nous contacter » — en-tête de page standard (PageHeader), puis panneau
- * blanc à deux colonnes : coordonnées DS à gauche, formulaire à droite.
- * Carte plate posée sur le papier teinté, jetons sémantiques par défaut. */
+/* « Nous contacter » — un seul panneau centré et compact : coordonnées DS
+ * (email + téléphone) sur une ligne, puis le formulaire posé dessous. Les
+ * gouttières latérales (panneau étroit centré) resserrent la page. */
 
 .panel {
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-subtle);
-  background: var(--color-surface);
-  color: var(--color-text-primary);
-}
-
-.grid {
-  display: grid;
-  gap: var(--space-xl);
-  padding: var(--space-xl);
-}
-
-@media (min-width: 860px) {
-  .grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-    padding: var(--space-2xl);
-  }
-}
-
-/* ---- Colonne info (gauche) ---- */
-.info {
+  width: 100%;
+  max-width: 660px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  /* Séparation généreuse : la bande coordonnées respire nettement au-dessus du
+     formulaire (« section ouverte » juste sous l'info). */
+  gap: var(--space-2xl);
+  /* Section blanche sous le formulaire — la page ne se termine pas au ras du
+     bouton ; respiration franche en bas. */
+  padding-bottom: calc(var(--space-3xl) * 1.5);
 }
 
-@media (min-width: 860px) {
-  .info {
-    padding-right: var(--space-2xl);
-  }
-}
-
+/* ---- Coordonnées DS : email + téléphone côte à côte ---- */
 .methods {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 0 var(--space-lg);
+  border-bottom: 1px solid var(--color-border-subtle);
   display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
+  flex-wrap: wrap;
+  gap: var(--space-2xl);
 }
 
 .method {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-md);
 }
 
+/* Icône de canal : ni fond ni couleur — un simple glyphe en gris, calibré comme
+   celui de la page Contacts (18px). Hauteur = ligne du libellé (16px × 1.5) pour
+   que l'icône s'aligne sur le titre (« Email »/« Téléphone ») et non sur le
+   centre du bloc libellé + valeur. */
 .badge {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  background: var(--color-info-soft);
-  color: var(--color-accent);
+  height: calc(var(--text-body) * var(--lh-body));
+  color: var(--color-text-secondary);
 }
 
 .badge svg {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
 }
 
 .methodText {
@@ -78,20 +60,21 @@
 .methodLabel {
   font-weight: var(--weight-semibold);
   font-size: var(--text-body);
+  line-height: var(--lh-body);
   color: var(--color-text-primary);
 }
 
-/* Lien d'action : bleu = cliquable (règle maison) — l'info reste encre neutre. */
+/* Coordonnées en texte neutre (plus de bleu) ; le soulignement au survol porte
+   l'affordance de lien — même recette que la page Contacts. */
 .methodValue {
   font-size: var(--text-body);
-  color: var(--color-accent);
+  color: var(--color-text-primary);
   text-decoration: none;
   width: fit-content;
 }
 
 .methodValue:hover {
   text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
 .methodValue:focus-visible {
@@ -100,27 +83,21 @@
   border-radius: var(--radius-sm);
 }
 
-/* ---- Colonne formulaire (droite) ---- */
-.formCol {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-}
-
-@media (min-width: 860px) {
-  .formCol {
-    padding-left: var(--space-2xl);
-    border-left: 1px solid var(--color-border-subtle);
-  }
-}
-
+/* ---- Formulaire ---- */
 .form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-xl);
 }
 
-/* Bouton d'envoi : largeur naturelle, aligné à gauche comme les autres formulaires. */
+/* Ligne d'identité — qui envoie (DS pourra répondre). Discrète. */
+.sendingAs {
+  color: var(--color-text-muted);
+  font-size: var(--text-body-sm);
+}
+
 .submit {
   margin-top: var(--space-sm);
+  display: flex;
+  justify-content: flex-end;
 }

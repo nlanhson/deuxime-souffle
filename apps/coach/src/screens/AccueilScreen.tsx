@@ -10,7 +10,7 @@ import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Animated, Easing, AccessibilityInfo, LayoutChangeEvent, PanResponder, GestureResponderHandlers } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronLeft, ChevronRight, Wallet, TrendingUp, Bell, MapPin, CalendarDays, Check, CheckCircle2 } from '../icons';
+import { ChevronLeft, ChevronRight, Wallet, TrendingUp, Bell, MapPin, CalendarDays, Check, CheckCircle2, Trophy, Building2 } from '../icons';
 
 import { palette, color, spacing as sp, radius as r, surfaces, motion, cardGradient as RAISED_GRAD } from '../theme/theme';
 import { copy } from '../copy';
@@ -24,6 +24,7 @@ import { CheckInModal } from '../components/CheckInModal';
 import { Segmented } from '../components/segmented';
 import { ProfileScreen } from './ProfileScreen';
 import { RevenusScreen } from './RevenusScreen';
+import { BadgesScreen, CURRENT_LEVEL } from './BadgesScreen';
 import { useTabBarInset } from '../navigation/tabBarInsets';
 import { openDirections } from '../lib/openDirections';
 import { useFirstLoad } from '../lib/useFirstLoad';
@@ -466,6 +467,7 @@ function DaySessions({ date, onPressSession }: { date: number; onPressSession?: 
 export function AccueilScreen() {
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [profileOpen, setProfileOpen] = React.useState(false);
+  const [badgesOpen, setBadgesOpen] = React.useState(false);    // PLA-01 coach badge → Badges & level
   const [availDetail, setAvailDetail] = React.useState<AvailItem | null>(null);
   const [nextDetail, setNextDetail] = React.useState(false);
   const [checkInOpen, setCheckInOpen] = React.useState(false);   // C16 check-in flow (hero next session)
@@ -608,6 +610,11 @@ export function AccueilScreen() {
             <Eyebrow>{copy.header.date}</Eyebrow>
             <Text style={st.greet} numberOfLines={1}>{copy.header.greeting}</Text>
           </View>
+          {/* Coach badge / level (PLA-01) — opens Badges & level; gold to read as a reward. */}
+          <Pressable style={st.levelChip} hitSlop={6} onPress={() => setBadgesOpen(true)} accessibilityRole="button" accessibilityLabel={copy.header.levelA11y}>
+            <Trophy size={14} color={palette.or[300]} />
+            <Text style={st.levelTxt}>{`${copy.header.levelPrefix} ${CURRENT_LEVEL}`}</Text>
+          </Pressable>
           <Pressable style={st.iconBtn} hitSlop={6} onPress={() => setNotifOpen(true)} accessibilityLabel={copy.header.notificationsA11y}>
             <Bell size={22} color={S.textPrimary} fill={S.textPrimary} />
             <View style={st.badgeDot} />
@@ -690,6 +697,11 @@ export function AccueilScreen() {
               <View style={st.metaRow}>
                 <MapPin size={15} color={S.textSecondary} />
                 <Text style={st.metaLight}>{copy.nextSession.address}</Text>
+              </View>
+              {/* Unit type (PLA-01) — which care unit inside the EHPAD. */}
+              <View style={st.metaRow}>
+                <Building2 size={15} color={S.textSecondary} />
+                <Text style={st.metaLight}>{copy.nextSession.unit}</Text>
               </View>
 
               <View style={st.timeRow}>
@@ -832,6 +844,9 @@ export function AccueilScreen() {
       <NotificationCenter visible={notifOpen} onClose={() => setNotifOpen(false)} />
       <ProfileScreen visible={profileOpen} onClose={() => setProfileOpen(false)} />
 
+      {/* Coach badge / level (PLA-01) — opened from the header level chip. */}
+      <BadgesScreen visible={badgesOpen} onClose={() => setBadgesOpen(false)} />
+
       {/* Financial dashboard (C35) — opened from the "Earnings" button (no longer a tab). */}
       <RevenusScreen visible={revenusOpen} onClose={() => setRevenusOpen(false)} />
 
@@ -889,6 +904,12 @@ const st = StyleSheet.create({
   /* header */
   appbar: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, paddingTop: sp.sm, paddingBottom: sp.sm },
   greet: { fontFamily: F.oswS, fontSize: 28, lineHeight: 32, color: S.textPrimary, marginTop: 6 },
+  // Coach level chip — gold-tinted pill (reward), 44px tall touch target.
+  levelChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 32,
+    paddingHorizontal: 12, borderRadius: r.pill, backgroundColor: 'rgba(242,194,0,0.13)',
+  },
+  levelTxt: { fontFamily: F.bodyS, fontSize: 13, color: palette.or[300] },
   // No background — the bell sits directly on the canvas; keep 44×44 for the tap target.
   iconBtn: {
     width: 44, height: 44, alignItems: 'center', justifyContent: 'center',

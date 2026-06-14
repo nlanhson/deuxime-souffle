@@ -29,13 +29,14 @@
 }
 
 .chip[data-variant='info'] {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  background: var(--color-surface);
+  background: var(--color-info-soft);
+  color: var(--lc-bleu-800);
 }
 
+/* Vert clair (vert-50) plutôt que vert-100 : même niveau de saturation que les
+   autres puces (ambre-50, bleu-50…) — le fond ne « ressort » plus. */
 .chip[data-variant='progress'] {
-  background: var(--color-progress-soft);
+  background: var(--lc-vert-50);
   color: var(--lc-vert-700);
 }
 
@@ -44,10 +45,12 @@
   color: var(--lc-or-800);
 }
 
+/* « En attente » : remplissage doux sans bordure, comme les autres puces (fond
+   teinté clair + encre foncée assortie). Bleu très clair = « à venir / en file »,
+   cohérent avec le système (bleu = informatif, vert = actif, ambre = attention). */
 .chip[data-variant='pending'] {
-  background: var(--color-canvas);
-  border-color: var(--color-border-strong);
-  color: var(--color-text-secondary);
+  background: var(--lc-bleu-50);
+  color: var(--lc-bleu-700);
 }
 
 .chip[data-variant='neutral'] {

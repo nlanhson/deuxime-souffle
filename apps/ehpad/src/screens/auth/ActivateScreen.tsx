@@ -104,7 +104,7 @@ export default function ActivateScreen() {
 
   return (
     <AuthLayout title={fr.auth.activate.title} subtitle={fr.auth.activate.subtitle}>
-      {failed && <InlineAlert variant="danger" title={fr.common.genericError} />}
+      {failed && <InlineAlert variant="danger" title={fr.common.genericError} autoFocus />}
       <form className={`${styles.form} ${styles.formGrouped}`} onSubmit={submit} noValidate>
         {/* Groupe 1 — identité */}
         <div className={styles.fieldGroup}>
@@ -162,7 +162,7 @@ export default function ActivateScreen() {
             value={(check.data.roleLabels ?? []).join(', ')}
             onChange={() => undefined}
             readOnly
-            helper={fr.auth.activate.emailHelper}
+            helper={fr.auth.activate.rolesHelper}
           />
         </div>
         {/* Groupe 3 — mot de passe */}

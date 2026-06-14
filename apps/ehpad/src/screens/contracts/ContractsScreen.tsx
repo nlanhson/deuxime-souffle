@@ -1,28 +1,28 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CalendarPlus, FilePlus2, ListFilter, Pencil, RefreshCw, Send } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FilePlus2, ListFilter } from 'lucide-react';
 import { useStrings } from '@/i18n';
 import * as api from '@/data/api';
 import { useAuth } from '@/context/AuthContext';
 import { useDataVersion } from '@/context/DataContext';
 import { useAsync } from '@/hooks/useAsync';
-import { capitalize, formatDate } from '@/lib/format';
+import { formatDate, formatShortDateYear } from '@/lib/format';
 import { contractStatusChip, unitLabel } from '@/lib/status';
 import {
   Button,
-  ButtonLink,
-  Card,
+  type Column,
+  DataTable,
+  DataTableSkeleton,
   EmptyState,
   InlineAlert,
   LoadError,
   PageHeader,
+  SearchInput,
   Select,
-  SkeletonCards,
   SkeletonGroup,
   StatusChip,
 } from '@/components';
 import type { Contract, ContractStatus } from '@/types/models';
-import { PlanSessionModal } from '@/screens/dashboard/PlanSessionModal';
 import styles from './contracts.module.css';
 
 const ALL_STATUSES: ContractStatus[] = [
@@ -35,119 +35,152 @@ const ALL_STATUSES: ContractStatus[] = [
   'non_renouvele',
 ];
 
-/** CON-03 — liste des contrats (les 7 statuts, actions conditionnelles). */
+/** Ordre de triage par défaut : ce qui réclame une action d'abord, l'archive ensuite. */
+const STATUS_RANK: Record<ContractStatus, number> = {
+  a_renouveler: 0,
+  rejete: 1,
+  en_attente_validation: 2,
+  modification_en_attente: 3,
+  active: 4,
+  expire: 5,
+  non_renouvele: 6,
+};
+
+const completionRatio = (c: Contract) =>
+  c.generatedSessionCount > 0 ? c.completedSessionCount / c.generatedSessionCount : 0;
+
+/** Lignes par page — pagination « précédent / suivant » en pied de table. Bas
+ *  à dessein : on garde une liste dense scrutable d'un seul regard. Réglable ici. */
+const CONTRACTS_PER_PAGE = 6;
+
+/** Barre d'avancement compacte sur une seule ligne — pensée pour une cellule de
+ *  table (la version `ProgressBar` empilée vivrait sur la page de détail).
+ *  Sans séance générée (max = 0), il n'y a pas de plage déterminée : on n'émet
+ *  pas de `progressbar` dégénéré, juste un tiret comme les autres cellules vides. */
+function MiniProgress({ value, max, label }: { value: number; max: number; label: string }) {
+  if (max === 0) {
+    return <span className={styles.miniEmpty}>—</span>;
+  }
+  const pct = Math.min(100, Math.round((value / max) * 100));
+  return (
+    <div className={styles.miniProgress}>
+      <span
+        className={styles.miniTrack}
+        role="progressbar"
+        aria-valuenow={value}
+        aria-valuemin={0}
+        aria-valuemax={max}
+        aria-label={label}
+      >
+        <span className={styles.miniFill} style={{ width: `${pct}%` }} />
+      </span>
+      <span className={styles.miniCount}>
+        {value}/{max}
+      </span>
+    </div>
+  );
+}
+
+/** CON-03 — liste des contrats. Une table à scruter, pas une carte à lire :
+ *  chaque ligne tient sur une seule ligne (réf, unité, avancement, échéance,
+ *  statut), les colonnes s'alignent au pixel et le détail vit sur sa page. */
 export default function ContractsScreen() {
   const fr = useStrings();
   const version = useDataVersion();
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const [statusFilter, setStatusFilter] = useState('all');
-  const [planContract, setPlanContract] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
   const state = useAsync(() => api.listContracts(), [version]);
 
+  // Recherche libre : référence, unité(s), date d'échéance/début, libellé de statut.
   const filtered = useMemo(() => {
     if (!state.data) return [];
-    return statusFilter === 'all' ? state.data : state.data.filter((c) => c.status === statusFilter);
-  }, [state.data, statusFilter]);
+    const q = search.trim().toLowerCase();
+    return state.data.filter((c) => {
+      if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+      if (q === '') return true;
+      const haystack = [
+        c.reference,
+        ...c.units.map(unitLabel),
+        formatShortDateYear(c.endDate),
+        formatDate(c.endDate),
+        formatDate(c.startDate),
+        fr.status.contract[c.status],
+      ]
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [state.data, statusFilter, search, fr]);
 
   const gateReason = isAdmin ? undefined : fr.common.adminOnly;
 
-  const ContractCard = ({ contract }: { contract: Contract }) => (
-    // Une carte « à renouveler » appelle une action : elle porte l'accent bleu.
-    <Card className={styles.contractCard} accent={contract.status === 'a_renouveler'}>
-      <div className={styles.cardHead}>
-        <p className={styles.reference}>{contract.reference}</p>
-        <StatusChip spec={contractStatusChip(contract.status)} />
-      </div>
-
-      {contract.status === 'rejete' && contract.rejectionReason && (
-        <InlineAlert variant="warning" title={fr.contracts.detail.rejectionTitle}>
-          {contract.rejectionReason}
-        </InlineAlert>
-      )}
-
-      <dl className={styles.fieldGrid}>
-        <div>
-          <dt>{fr.contracts.card.units}</dt>
-          <dd>{contract.units.map(unitLabel).join(', ')}</dd>
-        </div>
-        <div>
-          <dt>{fr.contracts.card.frequency}</dt>
-          <dd>{fr.frequency[contract.frequency]}</dd>
-        </div>
-        <div>
-          <dt>{fr.contracts.card.start}</dt>
-          <dd>{capitalize(formatDate(contract.startDate))}</dd>
-        </div>
-        <div>
-          <dt>{fr.contracts.card.end}</dt>
-          <dd>{capitalize(formatDate(contract.endDate))}</dd>
-        </div>
-        <div>
-          <dt>{fr.contracts.card.generated}</dt>
-          <dd>{contract.generatedSessionCount}</dd>
-        </div>
-        <div>
-          <dt>{fr.contracts.card.completed}</dt>
-          <dd>{contract.completedSessionCount}</dd>
-        </div>
-        {contract.availabilityNotes && (
-          <div className={styles.fieldSpan}>
-            <dt>{fr.contracts.card.notes}</dt>
-            <dd>{contract.availabilityNotes}</dd>
-          </div>
-        )}
-      </dl>
-
-      <div className={styles.cardActions}>
-        <ButtonLink size="md" to={`/contrats/${contract.id}`}>
-          {fr.contracts.actions.detail}
-        </ButtonLink>
-        {contract.status === 'active' && (
-          <Button size="md" variant="ghost" icon={CalendarPlus} onClick={() => setPlanContract(contract.id)}>
-            {fr.contracts.actions.oneOff}
-          </Button>
-        )}
-        {contract.status === 'a_renouveler' && (
-          <Button
-            size="md"
-            variant="accent"
-            icon={RefreshCw}
-            disabled={!isAdmin}
-            disabledReason={gateReason}
-            onClick={() => navigate(`/contrats/${contract.id}/renouveler`)}
-          >
-            {fr.contracts.actions.renew}
-          </Button>
-        )}
-        {(contract.status === 'active' || contract.status === 'a_renouveler') && (
-          <Button
-            size="md"
-            variant="ghost"
-            icon={Pencil}
-            disabled={!isAdmin}
-            disabledReason={gateReason}
-            onClick={() => navigate(`/contrats/${contract.id}/modifier`)}
-          >
-            {fr.contracts.actions.edit}
-          </Button>
-        )}
-        {contract.status === 'rejete' && (
-          <Button
-            size="md"
-            variant="ghost"
-            icon={Send}
-            disabled={!isAdmin}
-            disabledReason={gateReason}
-            onClick={() => navigate(`/contrats/${contract.id}/resoumettre`)}
-          >
-            {fr.contracts.actions.resubmit}
-          </Button>
-        )}
-      </div>
-    </Card>
-  );
+  // Largeurs ≈ contenu + une part ÉGALE de marge. On dimensionne chaque colonne
+  // au plus juste de son contenu (réf. et échéance courtes ; unités, avancement et
+  // statut plus larges), si bien que l'espace vide en fin de colonne — l'écart
+  // jusqu'au début de la suivante — reste constant d'une colonne à l'autre. La
+  // table garde sa pleine largeur (statut calé à droite, puces de taille uniforme).
+  const columns: Column<Contract>[] = [
+    {
+      key: 'reference',
+      header: fr.contracts.columns.reference,
+      width: '16%',
+      sortValue: (c) => c.reference,
+      render: (c) => (
+        <Link className={styles.refLink} to={`/contrats/${c.id}`}>
+          {c.reference}
+        </Link>
+      ),
+    },
+    {
+      key: 'units',
+      header: fr.contracts.columns.units,
+      width: '22%',
+      sortValue: (c) => c.units.map(unitLabel).join(', '),
+      render: (c) => {
+        const label = c.units.map(unitLabel).join(', ');
+        return (
+          <span className={styles.truncate} title={label}>
+            {label}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'progress',
+      header: fr.contracts.columns.progress,
+      width: '23%',
+      sortValue: completionRatio,
+      render: (c) => (
+        <MiniProgress
+          value={c.completedSessionCount}
+          max={c.generatedSessionCount}
+          label={fr.contracts.progressLabel(c.completedSessionCount, c.generatedSessionCount)}
+        />
+      ),
+    },
+    {
+      key: 'endDate',
+      header: fr.contracts.columns.endDate,
+      width: '16%',
+      sortValue: (c) => c.endDate,
+      render: (c) => <span className={styles.truncate}>{formatShortDateYear(c.endDate)}</span>,
+    },
+    {
+      key: 'status',
+      header: fr.contracts.card.status,
+      width: '23%',
+      sortValue: (c) => STATUS_RANK[c.status],
+      // Largeur de puce uniforme : toutes les pastilles ont la même taille.
+      render: (c) => (
+        <span className={styles.statusCell}>
+          <StatusChip spec={contractStatusChip(c.status)} />
+        </span>
+      ),
+    },
+  ];
 
   return (
     <>
@@ -182,11 +215,31 @@ export default function ContractsScreen() {
             })),
           ]}
         />
+        <div className={styles.filterRight}>
+          {/* Recherche tertiaire discrète (cf. <SearchInput>) : elle aide sans
+              capter l'attention. Le compteur, lui, vit en pied de table. */}
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            ariaLabel={fr.contracts.searchLabel}
+            placeholder={fr.contracts.searchPlaceholder}
+          />
+          {/* Région vivante (toujours montée) : changer le filtre/la recherche annonce le résultat. */}
+          <span className="sr-only" role="status" aria-live="polite">
+            {state.data
+              ? filtered.length > 0
+                ? fr.contracts.count(filtered.length)
+                : fr.contracts.noResults
+              : ''}
+          </span>
+        </div>
       </div>
 
+      {/* Squelette à la forme de la table (panneau bordé, en-tête, lignes 52px) —
+          composant partagé, calé sur les vraies colonnes. */}
       {state.loading && (
         <SkeletonGroup>
-          <SkeletonCards count={4} height={260} />
+          <DataTableSkeleton columns={columns} rows={CONTRACTS_PER_PAGE} footer />
         </SkeletonGroup>
       )}
       {state.error && <LoadError onRetry={state.retry} />}
@@ -212,25 +265,32 @@ export default function ContractsScreen() {
         <EmptyState
           variant="no-results"
           title={fr.contracts.noResults}
-          action={<Button onClick={() => setStatusFilter('all')}>{fr.common.clearFilters}</Button>}
+          action={
+            <Button
+              onClick={() => {
+                setSearch('');
+                setStatusFilter('all');
+              }}
+            >
+              {fr.common.clearFilters}
+            </Button>
+          }
         />
       )}
 
       {filtered.length > 0 && (
-        <div className={styles.cardGrid}>
-          {filtered.map((contract) => (
-            <ContractCard key={contract.id} contract={contract} />
-          ))}
-        </div>
+        <DataTable
+          columns={columns}
+          rows={filtered}
+          rowKey={(c) => c.id}
+          caption={fr.contracts.tableCaption}
+          defaultSort="status"
+          onRowClick={(c) => navigate(`/contrats/${c.id}`)}
+          fillHeight
+          pageSize={CONTRACTS_PER_PAGE}
+          summary={fr.contracts.count(filtered.length)}
+        />
       )}
-
-      <PlanSessionModal
-        open={planContract !== null}
-        onClose={() => setPlanContract(null)}
-        contracts={state.data ?? []}
-        userName=""
-        initialContractId={planContract ?? undefined}
-      />
     </>
   );
 }

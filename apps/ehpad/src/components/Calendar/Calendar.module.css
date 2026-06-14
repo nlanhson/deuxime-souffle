@@ -2,6 +2,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+  /* occupe la hauteur restante : la grille remplit la page, la légende se cale
+     juste dessous (plus de vide blanc sous le calendrier). */
+  flex: 1;
+  min-height: 0;
+  /* respiration blanche sous la légende, en bas de la section Accueil */
+  margin-bottom: var(--space-2xl);
 }
 
 .toolbar {
@@ -15,7 +21,9 @@
 .nav {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  /* gap serré entre ‹ , le libellé et › ; le bouton « Aujourd'hui » est
+     éloigné via sa propre marge gauche (voir .todayBtn). */
+  gap: var(--space-xs);
   flex-wrap: wrap;
 }
 
@@ -43,8 +51,8 @@
    au-dessus des contrôles qui l'entourent, chiffres tabulaires pour la stabilité. */
 .periodLabel {
   font-family: var(--font-heading);
-  font-weight: var(--weight-bold);
-  font-size: var(--text-h3);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-body-lg);
   line-height: var(--lh-heading);
   font-variant-numeric: tabular-nums;
   min-width: 9ch;
@@ -53,6 +61,8 @@
 
 .todayBtn {
   min-height: var(--touch-target-min);
+  /* écart plus large avec le groupe de navigation à sa gauche */
+  margin-left: var(--space-md);
   padding: 0 var(--space-md);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-pill);
@@ -81,6 +91,9 @@
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  /* pleine hauteur naturelle = vue Mois grande (toutes les semaines, cases hautes) ;
+     si ça dépasse l'écran, c'est la page qui défile. */
+  flex-shrink: 0;
 }
 
 /* En-tête des jours sur papier bleuté (cran tonal) — poids moyen, pas 600 :
@@ -98,7 +111,9 @@
 
 .dayCell {
   background: var(--color-surface);
-  min-height: 124px;
+  /* Cases pleines (≈3 séances avant de replier). La grille garde cette hauteur ;
+     si le mois dépasse, c'est .monthTime qui défile (barre dans la fenêtre). */
+  min-height: 150px;
   padding: var(--space-xs);
   display: flex;
   flex-direction: column;
@@ -170,12 +185,8 @@
   outline-offset: 1px;
 }
 
-/* Prochaine : liseré rouge épaissi sans déplacer la mise en page
-   (≠ accent bleu, ≠ teintes d'unité — un seul sens pour le rouge dans la grille). */
-.mEvent[data-next] {
-  border-color: var(--color-action);
-  box-shadow: inset 0 0 0 1px var(--color-action);
-}
+/* Prochaine séance : signalée par le seul point rouge en fin de ligne (.nextDot),
+   sans liseré — on garde la grille calme. */
 
 /* Remplissage doux de l'unité + texte foncé accessible (paires bg/text). */
 .mEvent[data-tone='uc'] { background: var(--unit-uc-bg); color: var(--unit-uc-text); }
@@ -214,15 +225,6 @@
   color: inherit;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* Point « prochaine séance » en fin de ligne (rouge). */
-.nextDot {
-  flex: 0 0 auto;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-action);
 }
 
 /* « + » d'ajout par case (jour planifiable) — présent en filigrane (découvrable
@@ -267,63 +269,58 @@
 
 /* ---- vue Liste : couleurs par unité, identiques aux deux autres vues ---- */
 
-.listRow[data-tone='uc'] {
-  background: var(--unit-uc-bg);
-  border-color: var(--unit-uc-edge);
-  color: var(--unit-uc-text);
-}
-
-.listRow[data-tone='up'] {
-  background: var(--unit-up-bg);
-  border-color: var(--unit-up-edge);
-  color: var(--unit-up-text);
-}
-
-.listRow[data-tone='aidants'] {
-  background: var(--unit-aidants-bg);
-  border-color: var(--unit-aidants-edge);
-  color: var(--unit-aidants-text);
-}
-
-.listRow[data-tone='soignants'] {
-  background: var(--unit-soignants-bg);
-  border-color: var(--unit-soignants-edge);
-  color: var(--unit-soignants-text);
-}
-
-.listRow[data-tone='autre'] {
-  background: var(--unit-autre-bg);
-  border-color: var(--unit-autre-edge);
-  color: var(--unit-autre-text);
-}
+/* Couleur d'unité = pastille à droite, mêmes couleurs douces que les chips de la
+   vue Mois (cohérence inter-vues). Le sens reste doublé par la légende. */
+.listRow[data-tone='uc'] .listUnit { background: var(--unit-uc-bg); color: var(--unit-uc-text); }
+.listRow[data-tone='up'] .listUnit { background: var(--unit-up-bg); color: var(--unit-up-text); }
+.listRow[data-tone='aidants'] .listUnit { background: var(--unit-aidants-bg); color: var(--unit-aidants-text); }
+.listRow[data-tone='soignants'] .listUnit { background: var(--unit-soignants-bg); color: var(--unit-soignants-text); }
+.listRow[data-tone='autre'] .listUnit { background: var(--unit-autre-bg); color: var(--unit-autre-text); }
 
 .listRow:hover {
-  filter: brightness(0.97);
+  background: var(--color-surface-hover);
 }
 
-/* « Prochaine » — pastille rouge sombre (AA sur blanc), même sens que le liseré
-   rouge des vues Mois/Semaine : un seul marqueur pour un seul fait. */
-.nextBadge {
-  display: inline-block;
-  padding: 2px var(--space-sm);
-  border-radius: var(--radius-pill);
-  background: var(--lc-rouge-600);
-  color: var(--color-on-action);
+/* Prochaine séance : la LIGNE ENTIÈRE ressort (fond bleu doux) avec un sur-titre
+   « Prochaine séance » — repérable d'un coup d'œil, même en milieu de liste, là
+   où une simple pastille passait inaperçue. */
+.listRow[data-next] {
+  /* bleu très clair, un cran sous --lc-bleu-50 (pas de jeton aussi pâle) : assez
+     pour marquer la ligne sans concurrencer le sur-titre orange ni la pastille. */
+  background: #f2f5fc;
+}
+
+.listRow[data-next]:hover {
+  background: var(--lc-bleu-50);
+}
+
+/* Orange « braise » : couleur chaude qui tranche sur le texte noir/marine et
+   rappelle l'icône orange « Prochaine séance » de la carte d'en-tête → l'orange
+   = la prochaine séance, partout. (Contraste sous AA — voir note.) */
+.listNextTag {
   font-family: var(--font-heading);
-  font-weight: 600;
+  font-weight: 700;
   font-size: var(--text-caption);
   letter-spacing: var(--ls-normal);
+  color: var(--lc-cta-ember);
 }
 
 .eventCoach {
   font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
 }
 
-.eventUnit {
+/* Catégorie d'unité en pastille douce, calée à droite (remplace le liseré). */
+.listUnit {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-pill);
   font-family: var(--font-heading);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   font-size: var(--text-caption);
   letter-spacing: var(--ls-normal);
+  white-space: nowrap;
 }
 
 /* « N autres » — gris neutre souligné (affordance de lien, sans rivaliser
@@ -360,7 +357,11 @@
 /* ---- vue Semaine — grille horaire type planning ---- */
 
 .weekTime {
-  overflow-x: auto;
+  /* Fenêtre interne défilante, hauteur fixe ~650px : la barre de défilement reste
+     DANS la fenêtre du calendrier ; la grille 24h (plus haute) défile à l'intérieur. */
+  height: 650px;
+  flex-shrink: 0;
+  overflow: auto;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
@@ -369,10 +370,17 @@
 .wtInner {
   --wt-gutter: 56px;
   min-width: 700px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-/* En-tête des jours (aligné colonne par colonne avec le corps) — papier bleuté. */
+/* En-tête des jours (aligné colonne par colonne avec le corps) — papier bleuté.
+   Épinglé en haut pendant le défilement de la grille (façon Google Agenda). */
 .wtHeadRow {
+  position: sticky;
+  top: 0;
+  z-index: 3;
   display: grid;
   grid-template-columns: var(--wt-gutter) repeat(7, minmax(0, 1fr));
   background: var(--color-canvas);
@@ -428,19 +436,26 @@
   color: var(--color-text-secondary);
 }
 
-/* Corps : gouttière des heures + 7 colonnes-jour (hauteur fixée en ligne). */
+/* Corps : gouttière des heures + 7 colonnes-jour. Journée complète (24h) à
+   ≈48px/heure → plus haut que l'écran, donc défilable comme Google Agenda.
+   flex:1 lui laisse remplir les très grands écrans sans vide en dessous. */
 .wtBody {
+  flex: 1;
+  min-height: calc(24 * 48px);
   display: grid;
   grid-template-columns: var(--wt-gutter) repeat(7, minmax(0, 1fr));
   position: relative;
 }
 
 .wtGutter {
+  display: flex;
+  flex-direction: column;
   background: var(--color-surface);
   border-right: 1px solid var(--color-border-subtle);
 }
 
 .wtHour {
+  flex: 1;
   position: relative;
 }
 
@@ -474,11 +489,34 @@
   background-color: var(--lc-bleu-25);
 }
 
+/* Créneaux cliquables (création rapide façon Google Agenda). */
+.wtCol[data-clickable] {
+  cursor: pointer;
+}
+
+/* Bloc fantôme « créer ici » suivant le curseur (calé sur 30 min). */
+.wtGhost {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  border-radius: var(--radius-sm);
+  background: var(--color-info-soft);
+  border: 1px dashed var(--color-accent);
+  pointer-events: none;
+}
+
+/* Créneau épinglé (pop-up ouverte) : liseré plein → « voici où ça se pose ». */
+.wtGhost[data-pinned] {
+  border-style: solid;
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
 /* Bloc de séance positionné par l'heure (haut) et la durée (hauteur). */
 .wtEvent {
   position: absolute;
   left: 3px;
   right: 3px;
+  min-height: 24px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -566,6 +604,7 @@
   height: 0;
   border-top: 2px solid var(--color-action);
   z-index: 2;
+  pointer-events: none; /* laisse passer le clic « créer » vers la colonne */
 }
 
 .wtNowDot {
@@ -580,13 +619,16 @@
 
 /* ---- vue Liste ---- */
 
+/* Liste divisée : UN seul cadre, lignes séparées par des filets fins (pas N cartes
+   bordées empilées). Plus calme et plus aéré pour parcourir des séances. */
 .list {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .listRow {
@@ -595,16 +637,35 @@
   gap: var(--space-md);
   flex-wrap: wrap;
   min-height: 56px;
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-md);
-  border-left: 4px solid;
+  padding: var(--space-md);
+  /* la couleur d'unité passe désormais par la pastille à droite (.listUnit) */
+  color: var(--color-text-primary);
   text-decoration: none;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+/* Filet de séparation entre lignes (pas avant la première).
+   Chaque .listRow vit dans un <li> : on cible donc li + li, sinon le
+   sélecteur frère .listRow + .listRow ne matche jamais. */
+.list li + li .listRow {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+/* Date et nom partagent taille + graisse : seule la couleur les distingue
+   (date en primaire, nom en gris). min-width élargi pour décaler la colonne
+   du nom vers la droite et aérer l'espace entre les deux. */
+/* Colonne « quand » : sur-titre éventuel (« Prochaine séance ») au-dessus de la
+   date. Porte la largeur mini de colonne (décale le nom vers la droite). */
+.listWhen {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 270px;
 }
 
 .listDate {
-  font-weight: 600;
+  font-size: var(--text-body-sm);
   font-variant-numeric: tabular-nums;
-  min-width: 220px;
 }
 
 .listTrailing {
@@ -638,67 +699,29 @@
   font-size: var(--text-body-sm);
 }
 
+/* Chaque entrée = un petit chip carré arrondi portant la couleur ET le libellé
+   (et non plus une pastille + point, qui ressemblait à un interrupteur). Coins
+   carrés (radius-sm) pour bien la distinguer des pastilles cliquables. */
 .legendItem {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-xs);
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-caption);
+  letter-spacing: var(--ls-normal);
 }
 
-/* Réplique miniature de la pastille réelle (fond doux + point saturé) :
-   la correspondance légende → agenda est littérale, pas approximative. */
-.legendDot {
-  position: relative;
-  width: 26px;
-  height: 16px;
-  border-radius: var(--radius-pill);
-  border: 1px solid;
-}
-
-.legendDot::before {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: currentcolor;
-}
-
-.legendItem[data-tone='uc'] .legendDot {
-  background: var(--unit-uc-bg);
-  border-color: var(--unit-uc-edge);
-  color: var(--unit-uc-edge);
-}
-
-.legendItem[data-tone='up'] .legendDot {
-  background: var(--unit-up-bg);
-  border-color: var(--unit-up-edge);
-  color: var(--unit-up-edge);
-}
-
-.legendItem[data-tone='aidants'] .legendDot {
-  background: var(--unit-aidants-bg);
-  border-color: var(--unit-aidants-edge);
-  color: var(--unit-aidants-edge);
-}
-
-.legendItem[data-tone='soignants'] .legendDot {
-  background: var(--unit-soignants-bg);
-  border-color: var(--unit-soignants-edge);
-  color: var(--unit-soignants-edge);
-}
-
-.legendItem[data-tone='autre'] .legendDot {
-  background: var(--unit-autre-bg);
-  border-color: var(--unit-autre-edge);
-  color: var(--unit-autre-edge);
-}
+.legendItem[data-tone='uc'] { background: var(--unit-uc-bg); color: var(--unit-uc-text); }
+.legendItem[data-tone='up'] { background: var(--unit-up-bg); color: var(--unit-up-text); }
+.legendItem[data-tone='aidants'] { background: var(--unit-aidants-bg); color: var(--unit-aidants-text); }
+.legendItem[data-tone='soignants'] { background: var(--unit-soignants-bg); color: var(--unit-soignants-text); }
+.legendItem[data-tone='autre'] { background: var(--unit-autre-bg); color: var(--unit-autre-text); }
 
 @media (max-width: 719px) {
   .dayCell {
-    min-height: 72px;
+    min-height: 92px;
     padding: 2px;
   }
 
@@ -713,7 +736,7 @@
     font-size: var(--text-caption);
   }
 
-  .listDate {
+  .listWhen {
     min-width: 0;
     width: 100%;
   }

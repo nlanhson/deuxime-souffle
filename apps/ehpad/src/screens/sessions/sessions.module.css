@@ -29,27 +29,38 @@
 
 /* ---- détail de séance ---- */
 
-/* Carte d'identité de la page : surface blanche plate, liseré discret,
-   jamais d'ombre au repos (style maison « Papier calme »). */
-.headerCard {
+/* Zone 1 — en-tête SANS cadre (le dialogue / la page est déjà la surface). Date·heure
+   à gauche, coach à droite sur large écran, close par un filet qui la sépare des faits.
+   Le coach s'empile dessous quand la largeur min de .headerMain force le retour ligne. */
+.detailHeader {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: var(--space-md) var(--space-xl);
-  padding: var(--space-lg);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .headerMain {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
   min-width: 220px;
 }
 
-/* Date + heure = identité de la page : doit dominer les titres de section (20px). */
+/* Méta sur une seule ligne sous la date : durée + pastilles (statut, unité). */
+.headerMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  color: var(--color-text-secondary);
+  font-size: var(--text-body);
+}
+
+/* Date + heure = identité de la séance : doit dominer les intertitres de section
+   (désormais des étiquettes discrètes en 14px). */
 .headerDate {
   font-family: var(--font-heading);
   font-weight: var(--weight-display);
@@ -58,26 +69,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Texte secondaire (durée, états vides) — encre neutre, jamais d'accent. */
-.mutedText {
-  color: var(--color-text-secondary);
-}
-
 /* Pile verticale standard pour le contenu des sections. */
 .stack {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-}
-
-.stackStart {
-  align-items: flex-start;
-}
-
-.headerChips {
-  display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
 }
 
 .coachBlock {
@@ -92,19 +88,108 @@
   display: block;
 }
 
-/* Deux colonnes explicites : l'ordre des sections reste stable quelle que soit
-   la largeur (auto-fit remaniait l'ordre perçu) ; une colonne sous 720px. */
-.detailGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-lg);
-  align-items: start;
+/* Zone 2 — les faits en une seule colonne de lecture : sections séparées par un
+   filet + rythme vertical, jamais de cartes. La 1re section n'a pas de filet
+   (l'en-tête en porte déjà un en bas). */
+.sections {
+  display: flex;
+  flex-direction: column;
 }
 
-@media (max-width: 719px) {
-  .detailGrid {
-    grid-template-columns: minmax(0, 1fr);
+.section + .section {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+/* Intertitre de section discret : une étiquette, pas un titre de carte (même
+   gabarit que .reportLabel). Reste un vrai <h2> pour l'arborescence lecteur. */
+.sectionLabel {
+  font-family: var(--font-heading);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+  letter-spacing: var(--ls-normal);
+  margin-bottom: var(--space-sm);
+}
+
+/* Faits courts en liste de définition (étiquette / valeur) — scannable. */
+.factList {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-xs) var(--space-md);
+  margin: 0;
+}
+
+.factList dt {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+
+.factList dd {
+  margin: 0;
+  font-size: var(--text-body);
+  color: var(--color-text-primary);
+}
+
+/* Étiquettes longues (français) : on empile valeur sous étiquette en portrait étroit. */
+@media (max-width: 479px) {
+  .factList {
+    grid-template-columns: 1fr;
+    gap: var(--space-xs);
   }
+}
+
+/* État vide calme — une phrase en sourdine, jamais une carte. */
+.emptyLine {
+  font-size: var(--text-body-sm);
+  color: var(--color-text-muted);
+}
+
+/* Séance à venir : phrase tournée vers l'avenir, lisible (16px) et calme. */
+.upcomingNote {
+  font-size: var(--text-body);
+  color: var(--color-text-secondary);
+}
+
+/* Lien « Voir la fiche complète » du pied d'aperçu : un simple lien texte +
+   flèche (pas de fond/pastille). Pas de soulignement au repos ; au survol, on
+   souligne uniquement le texte (la flèche reste nette). Padding vertical = zone
+   tactile élargie, neutralisée par une marge négative pour ne pas grossir le pied. */
+.fullLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding-block: var(--space-sm);
+  margin-block: calc(-1 * var(--space-sm));
+  color: var(--color-accent);
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+
+.fullLinkText {
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.fullLink:hover .fullLinkText {
+  text-decoration: underline;
+}
+
+.fullLink:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.fullLinkIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .actionsRow {
@@ -225,7 +310,9 @@
 .groupedList {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  /* Gros intervalle entre les jours : la liste respire, chaque jour se lit comme
+     un bloc distinct (demande « plus aéré »). */
+  gap: var(--space-2xl);
 }
 
 .dayGroup {
@@ -241,15 +328,20 @@
   flex-wrap: wrap;
 }
 
+/* Le terme du jour domine la liste : gros et gras (réf Time2book). */
 .dayLead {
   font-family: var(--font-heading);
-  font-weight: var(--weight-semibold);
-  font-size: var(--text-subheading);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-h3);
+  line-height: 1.2;
+  color: var(--color-text-primary);
 }
 
+/* La date accompagne en retrait : plus petite et moins contrastée. */
 .daySub {
-  color: var(--color-text-secondary);
+  font-weight: var(--weight-regular);
   font-size: var(--text-body-sm);
+  color: var(--color-text-muted);
 }
 
 .sessionList {
@@ -298,7 +390,8 @@
   }
 }
 
-/* Chevron persistant : affordance « cette carte s'ouvre », visible sans survol. */
+/* Chevron persistant : affordance « cette carte s'ouvre », visible sans survol.
+   Décoratif → ne capte pas le clic (laisse passer vers la cible plein-carte). */
 .cardChevron {
   position: absolute;
   right: var(--space-md);
@@ -307,6 +400,7 @@
   width: 20px;
   height: 20px;
   color: var(--color-text-muted);
+  pointer-events: none;
   transition: color var(--duration-fast) var(--ease-standard);
 }
 
@@ -322,15 +416,32 @@
 .sessionCard[data-tone='soignants'] { border-left-color: var(--unit-soignants-edge); }
 .sessionCard[data-tone='autre'] { border-left-color: var(--unit-autre-edge); }
 
+/* Zone principale = bouton qui ouvre l'aperçu. Rendu neutralisé (ni fond ni
+   bordure de bouton) pour rester une carte ; la cible déborde sur toute la
+   carte via ::after (la pastille et le chevron ne sont pas interactifs). */
 .cardMain {
   flex: 1 1 240px;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
-  text-decoration: none;
+  gap: 6px;
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  text-align: left;
   color: inherit;
+  cursor: pointer;
   border-radius: var(--radius-sm);
+}
+
+/* La cible cliquable couvre la carte entière — plus grande zone de tap (tablette). */
+.cardMain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
 }
 
 .cardMain:focus-visible {
@@ -338,50 +449,33 @@
   outline-offset: 3px;
 }
 
-.cardCoach {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.cardCoachName {
+/* Titre de la séance (= unité) — comme le nom de cours dans la réf Time2book. */
+.cardTitle {
   font-family: var(--font-heading);
   font-weight: var(--weight-semibold);
   font-size: var(--text-body-lg);
+  color: var(--color-text-primary);
 }
 
-.cardMain:hover .cardCoachName {
+.cardMain:hover .cardTitle {
   text-decoration: underline;
 }
 
-.cardCoachMuted {
-  color: var(--color-text-secondary);
-  font-size: var(--text-body-lg);
-}
-
-.cardCoachIcon {
-  display: inline-flex;
+/* Méta sur une seule ligne (icône + valeur) : plage horaire · coach. Replie au besoin. */
+.cardMetaRow {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-pill);
-  background: var(--lc-neutral-100);
-  color: var(--color-text-muted);
-  flex-shrink: 0;
-}
-
-.cardCoachIcon svg {
-  width: 18px;
-  height: 18px;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
 }
 
 .cardMeta {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--space-sm);
-  color: var(--color-text-secondary);
-  font-size: var(--text-body-sm);
+  min-width: 0;
 }
 
 .cardMetaIcon {
@@ -390,44 +484,35 @@
   flex-shrink: 0;
 }
 
-.cardTime {
-  font-weight: var(--weight-semibold);
-  color: var(--color-text-primary);
+/* Pastille « coach à confirmer » — même gabarit que l'avatar sm. */
+.cardCoachIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--lc-neutral-100);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
 }
 
-.cardDuration {
-  color: var(--color-text-secondary);
+.cardCoachIcon svg {
+  width: 16px;
+  height: 16px;
 }
 
-.cardUnit {
-  color: var(--color-text-secondary);
-  font-size: var(--text-body-sm);
-}
-
+/* Aside = pastille de statut, calée à droite (avant l'espace réservé au chevron). */
 .cardAside {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-sm);
+  align-items: center;
   margin-left: auto;
-}
-
-.cardActions {
-  display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-  justify-content: flex-end;
 }
 
 @media (max-width: 719px) {
   .cardAside {
     margin-left: 0;
-    align-items: flex-start;
     width: 100%;
-  }
-
-  .cardActions {
-    justify-content: flex-start;
   }
 }
 
@@ -435,7 +520,8 @@
 .tabPanel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  /* Un cran de plus entre les filtres et la liste — un peu plus d'air en tête. */
+  gap: var(--space-lg);
 }
 
 /* ---- modification de séance (SESS-10) ---- */

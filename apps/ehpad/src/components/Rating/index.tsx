@@ -52,13 +52,25 @@ interface RatingDisplayProps {
 /** Lecture seule — moyennes et évaluations envoyées. */
 export function RatingDisplay({ value, showText = true, size = 'md' }: RatingDisplayProps) {
   const fr = useStrings();
-  const rounded = Math.round(value);
   return (
     <span className={styles.display} data-size={size}>
       <span aria-hidden className={styles.displayRow}>
-        {[1, 2, 3, 4, 5].map((n) => (
-          <Star key={n} className={styles.icon} data-filled={n <= rounded || undefined} />
-        ))}
+        {[1, 2, 3, 4, 5].map((n) => {
+          // Part remplie de cette étoile (0→1) : gère les demi-étoiles (ex. 4,5).
+          const fill = Math.max(0, Math.min(1, value - (n - 1)));
+          return (
+            <span key={n} className={styles.displayStar}>
+              <Star className={styles.icon} />
+              {fill > 0 && (
+                <Star
+                  className={`${styles.icon} ${styles.starFillIcon}`}
+                  data-filled
+                  style={{ clipPath: `inset(0 ${100 - fill * 100}% 0 0)` }}
+                />
+              )}
+            </span>
+          );
+        })}
       </span>
       {showText ? (
         <span className={styles.displayText}>

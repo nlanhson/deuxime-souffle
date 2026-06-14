@@ -38,9 +38,24 @@
   outline-offset: 2px;
 }
 
-.button:disabled {
+/* Désactivé (entrée manquante) : aplat gris franc plutôt qu'un voile d'opacité sur le
+   dégradé (qui donnait un rouge laiteux « calque blanc »). La spécificité (0,3,0) passe
+   au-dessus des variantes, donc neutralise leur fond / bordure / halo / filtre. Contraste
+   réduit admis sur un contrôle désactivé (WCAG 1.4.3 exempte les éléments désactivés). */
+.button:disabled:not([aria-busy='true']) {
   cursor: not-allowed;
-  opacity: 0.55;
+  background: var(--lc-neutral-200);
+  color: var(--color-text-muted);
+  border-color: transparent;
+  box-shadow: none;
+  filter: none;
+}
+
+/* En cours d'envoi : on garde la couleur de la variante (juste atténuée) + le spinner —
+   le CTA ne doit pas « s'éteindre » en gris pendant la soumission. */
+.button:disabled[aria-busy='true'] {
+  cursor: progress;
+  opacity: 0.85;
 }
 
 /* CTA primaire — dégradé rouge→braise + halo discret (dosage « apaisé » EHPAD),
@@ -81,18 +96,23 @@
   background: var(--color-surface-hover);
 }
 
-/* Fantôme : bleu + soulignement au repos — l'affordance de lien ne dépend
-   pas du survol (public peu à l'aise avec la souris). */
+/* Fantôme : texte bleu sans fond ni soulignement au repos — le bleu porte déjà
+   l'affordance « interactif » (convention de la surface). Le soulignement
+   n'apparaît qu'au survol / focus clavier. */
 .button[data-variant='ghost'] {
   background: none;
   color: var(--color-accent);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
+  text-decoration: none;
   text-underline-offset: 3px;
 }
 
-.button[data-variant='ghost']:hover:not(:disabled) {
-  background: var(--color-info-soft);
+/* Survol / focus clavier : le soulignement apparaît (et le texte fonce) — effet
+   « lien », sans aplat bleu qui jurerait avec les autres couleurs. */
+.button[data-variant='ghost']:hover:not(:disabled),
+.button[data-variant='ghost']:focus-visible:not(:disabled) {
+  color: var(--lc-bleu-700);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
 }
 
 /* Destructif : rouge sombre + verbe explicite (l'icône ⊗ vient de l'appelant). */

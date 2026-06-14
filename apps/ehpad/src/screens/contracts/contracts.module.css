@@ -1,28 +1,80 @@
-.cardGrid {
-  display: grid;
-  gap: var(--space-md);
-  grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
-}
+/* ---- liste : cellules de la table des contrats ----
+   Une règle d'or : chaque cellule tient sur UNE ligne, alignée verticalement.
+   C'est ce qui donne le rythme régulier d'une vraie console (réf. Intercom). */
 
-.contractCard {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.cardHead {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-}
-
-.reference {
+/* Référence = porte d'entrée du détail : bleu interactif (couleur = cliquable).
+   14px (texte de code dense) — libère de la largeur pour la colonne « unité ». */
+.refLink {
   font-family: var(--font-heading);
   font-weight: var(--weight-semibold);
-  font-size: var(--text-h3);
+  font-size: var(--text-body-sm);
+  color: var(--color-accent);
+  text-decoration: none;
+  white-space: nowrap;
 }
+
+.refLink:hover {
+  text-decoration: underline;
+}
+
+/* Texte qui se tronque proprement au lieu de pousser ses colonnes voisines. */
+.truncate {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Avancement compact, une seule ligne : piste souple + compteur fixe.
+   `max-width` : la barre reste courte même quand sa colonne s'élargit (remplissage
+   équilibré) — elle ne s'étire jamais sur toute la cellule. */
+.miniProgress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  max-width: 160px;
+}
+
+.miniTrack {
+  flex: 1;
+  min-width: 0;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-subtle);
+  overflow: hidden;
+}
+
+/* Remplissage : vert FONCÉ (progress-strong) — le vert clair n'atteint pas le
+   ratio 3:1 (WCAG 1.4.11) contre la piste gris clair. */
+.miniFill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-progress-strong);
+}
+
+.miniCount {
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Contrat sans séance générée : tiret neutre (pas de barre « 0/0 »). */
+.miniEmpty {
+  color: var(--color-text-muted);
+}
+
+/* Pastilles de statut toutes à la même taille (largeur minimale commune), mais
+   contenu aligné à GAUCHE : les icônes forment une colonne nette et les libellés
+   démarrent tous au même point — on scrute la colonne d'un seul trait vertical,
+   en cohérence avec les autres colonnes (toutes alignées à gauche). */
+.statusCell > span {
+  min-width: 150px;
+  justify-content: flex-start;
+  white-space: nowrap;
+}
+
 
 /* Recette unique de libellé de champ — 14px/600, encre secondaire, casse normale.
    (Remplace trois variantes 12px dupliquées.) */
@@ -46,7 +98,9 @@
 .fieldGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--space-sm) var(--space-md);
+  /* Interligne aéré entre les rangées de champs (unités → tarif → notes) ;
+     l'écart horizontal entre colonnes reste plus serré. */
+  gap: var(--space-md) var(--space-md);
   margin: 0;
 }
 
@@ -64,20 +118,31 @@
   grid-column: 1 / -1;
 }
 
-.cardActions {
+/* Paire libellé/valeur du squelette de détail — calquée sur dt + dd. */
+.skeletonField {
   display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-  margin-top: auto;
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .filterRow {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
   flex-wrap: wrap;
+  /* La respiration sous l'en-tête est désormais portée globalement par
+     PageHeader (margin-bottom) — plus de marge ad hoc ici. */
 }
+
+/* Groupe de droite, juste au-dessus de la table : compteur puis recherche. */
+.filterRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* La pilule de recherche tertiaire vit désormais dans <SearchInput> (partagée). */
 
 /* Rangée d'actions standard — boutons côte à côte, retour à la ligne permis. */
 .actionRow {
@@ -97,18 +162,37 @@
   margin-bottom: var(--space-md);
 }
 
-/* ---- détail ---- */
+/* ---- détail ----
+   Page « document » : plus de cartes encadrées empilées. Un seul flux à largeur
+   de lecture, les sections séparées par un filet fin et coiffées d'un titre —
+   on lit de haut en bas, sans boîtes qui se concurrencent. */
 
-.detailGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
-  gap: var(--space-lg);
-  align-items: start;
+.detailFlow {
+  display: flex;
+  flex-direction: column;
+  max-width: 860px;
 }
 
-/* Le résumé mène : pleine largeur au-dessus des autres sections. */
-.detailGrid > :first-child {
-  grid-column: 1 / -1;
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Filet de séparation entre sections (pas de bordure de carte). */
+.section + .section {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+/* Titre de section — 20px/600 : il organise, sans rivaliser avec le h1. */
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-subheading);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--ls-normal);
+  color: var(--color-text-primary);
 }
 
 .coachRow {
@@ -473,7 +557,5 @@
   gap: var(--space-sm);
 }
 
-/* Respiration entre deux squelettes. */
-.skeletonGap {
-  height: var(--space-md);
-}
+/* Le squelette de la table vit désormais dans le composant partagé
+   DataTableSkeleton (calé sur les vraies colonnes) — plus de styles ad hoc ici. */

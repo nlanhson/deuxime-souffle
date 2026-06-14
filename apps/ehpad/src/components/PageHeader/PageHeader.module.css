@@ -2,6 +2,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+  /* Respiration constante sous l'en-tête (titre + CTA) sur TOUTES les pages :
+     un même intervalle de 24px avant le contenu, en plus du rythme de base de la
+     zone de contenu. Évite les écarts ad hoc page par page. */
+  margin-bottom: var(--space-lg);
 }
 
 .crumbs ol {
@@ -48,7 +52,7 @@
 
 .title {
   font-size: clamp(var(--text-h2), 4vw, var(--text-h1));
-  letter-spacing: var(--ls-tight); /* Inter resserré aux grandes tailles */
+  letter-spacing: var(--ls-tight);
   color: var(--color-text-primary);
 }
 

@@ -224,8 +224,8 @@ const st = StyleSheet.create({
   note: { marginTop: sp.md },
   noteTxt: { fontFamily: F.bodyS, fontSize: 14, color: ON_CARD, letterSpacing: 0.2 },
 
-  // prototype-only outcome switcher
-  demoLabel: { fontFamily: F.body, fontSize: 11, letterSpacing: 0.4, color: ON_CARD_3, textTransform: 'uppercase', marginTop: sp.lg },
+  // prototype-only outcome switcher (sentence case — brand rule: no all-caps)
+  demoLabel: { fontFamily: F.body, fontSize: 11, letterSpacing: 0.4, color: ON_CARD_3, marginTop: sp.lg },
   demoRow: { flexDirection: 'row', flexWrap: 'wrap', gap: sp.xs, marginTop: sp.sm },
   demoChip: {
     paddingVertical: 6, paddingHorizontal: 12, borderRadius: r.pill,

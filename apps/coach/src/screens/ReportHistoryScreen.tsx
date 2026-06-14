@@ -18,6 +18,9 @@ import { Modal, View, Text, ScrollView, Pressable, StyleSheet } from 'react-nati
 import { X, FileText, Check, Hourglass, Edit3, Users, type LucideIcon } from '../icons';
 import { palette, spacing as sp, radius as r, surfaces } from '../theme/theme';
 import { copy } from '../copy';
+import { useFirstLoad } from '../lib/useFirstLoad';
+import { Reveal } from '../components/Reveal';
+import { ReportHistorySkeleton } from './skeletons';
 
 const S = surfaces.coach;
 const ON_CANVAS = S.textPrimary;
@@ -79,6 +82,7 @@ export function ReportHistoryScreen({ visible, onClose }: { visible: boolean; on
   const facilities = [...new Set(REPORTS.map((rep) => rep.place))];
   const filtered = facility ? REPORTS.filter((rep) => rep.place === facility) : REPORTS;
   const page = filtered.slice(0, shown);
+  const loading = useFirstLoad('reportHistory', { active: visible, ms: 550 });
 
   const STATUS_META: Record<ReviewStatus, { tone: keyof typeof INK; icon: LucideIcon; label: string }> = {
     validated: { tone: 'ok', icon: Check, label: statusCopy.validated },
@@ -99,6 +103,7 @@ export function ReportHistoryScreen({ visible, onClose }: { visible: boolean; on
           </Pressable>
         </View>
 
+        <Reveal loading={loading} skeleton={<ReportHistorySkeleton />}>
         {/* Facility filter — horizontal chips (the WBS's filter, in the mobile idiom). */}
         <ScrollView
           horizontal
@@ -170,6 +175,7 @@ export function ReportHistoryScreen({ visible, onClose }: { visible: boolean; on
             </Pressable>
           ) : null}
         </ScrollView>
+        </Reveal>
       </View>
     </Modal>
   );
