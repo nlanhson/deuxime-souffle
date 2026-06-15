@@ -167,7 +167,7 @@ export function TopBar({ onOpenMenu, showMenuButton }: TopBarProps) {
                               {title}
                             </span>
                             <span className={styles.notifBody}>
-                              {body} — {formatSince(notification.createdAt)}
+                              {body} · {formatSince(notification.createdAt)}
                             </span>
                           </span>
                         </button>
@@ -199,7 +199,7 @@ export function TopBar({ onOpenMenu, showMenuButton }: TopBarProps) {
             aria-label={fr.header.accountMenu}
             onClick={() => setOpenMenu((current) => (current === 'account' ? null : 'account'))}
           >
-            <Avatar firstName={user.firstName} lastName={user.lastName} size="sm" decorative />
+            <Avatar firstName={user.firstName} lastName={user.lastName} src={user.avatarUrl} size="sm" decorative />
           </button>
           {openMenu === 'account' && (
             <div className={styles.menu} role="menu" aria-label={fr.header.accountMenu}>

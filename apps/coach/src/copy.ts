@@ -30,9 +30,9 @@ export const copy = {
   // "3 weeks ago" is mock — real code shows the actual staleness / hides this when fresh.
   availabilityBanner: {
     title: 'Confirm your availability',
-    subtitle: 'Last updated 3 weeks ago — stay matchable',
+    subtitle: 'Last updated 3 weeks ago. Stay matchable.',
     action: 'Update',
-    a11y: 'Confirm your availability — last updated 3 weeks ago',
+    a11y: 'Confirm your availability. Last updated 3 weeks ago.',
   },
   // Report-due popup (C25). Steps are the WBS's verbatim 6-step post-session report.
   reportModal: {
@@ -153,7 +153,7 @@ export const copy = {
     // Client session-detail fields (WBS Coach Planning & Check-in): EHPAD name, time,
     // address, contact person. `contact` = the on-site person to ask for on arrival.
     contact: 'Ask for Marie Laurent · Coordinator',
-    checkin: "Check-in open — you're on site",
+    checkin: "Check-in open. You're on site.",
     // Primary action = geolocated check-in (C16) — the PRD's #1 field action, not a generic "Start".
     checkInCta: 'Check in',
     directions: 'Directions',
@@ -255,10 +255,10 @@ export const copy = {
       onFoot: 'on foot',        // "~24 min on foot"
       detailLabel: 'Travel',
       overLimit: 'Over your travel limit',
-      overLimitBody: 'About {mins} min {mode} — past your {max}-min limit. You can still raise your hand.',
+      overLimitBody: 'About {mins} min {mode}, past your {max}-min limit. You can still raise your hand.',
       overLimitTail: 'over your limit',
     },
-    appliedNote: "You're on the shortlist — DS assigns one coach.",
+    appliedNote: "You're on the shortlist. DS assigns one coach.",
     empty: 'No open sessions here right now.',
     emptyHint: 'New ones appear as EHPADs open them up near you.',
     // Filter sheet (List view). Distance maps to the coach's max-travel-time preference (WBS
@@ -377,7 +377,7 @@ export const copy = {
       sessionsNote: 'Revenue updates after each completed session',
       notRated: 'Not rated',
       historyTitle: 'Payment history',
-      historyNote: 'Activity report — not an invoice',
+      historyNote: 'Activity report, not an invoice',
       sessionsCountUnit: 'sessions',
       status: {
         paid: 'Paid',
@@ -433,14 +433,14 @@ export const copy = {
       eyebrow: 'On site',
       title: 'Confirm check-in',
       body: "We'll use your location to confirm you're at the care home, then notify the team you've arrived.",
-      note: 'Location is checked only at check-in — never tracked in the background.',
+      note: 'Location is checked only at check-in, never tracked in the background.',
       confirm: 'Check in now',
       cancel: 'Not yet',
       closeA11y: 'Close check-in',
       locating: "Checking you're on site…",
       result: {
-        success:  { title: 'Checked in', body: "You're on site. The care home has been notified you've arrived — have a great session." },
-        late:     { title: 'Checked in — running late', body: "You're checked in, but after the on-time window. The care home has been notified you're running late." },
+        success:  { title: 'Checked in', body: "You're on site. The care home has been notified you've arrived. Have a great session." },
+        late:     { title: 'Checked in, running late', body: "You're checked in, but after the on-time window. The care home has been notified you're running late." },
         tooFar:   { title: "You're not there yet", body: 'You\'re still too far from the care home. Head over and check in once you arrive.' },
         tooEarly: { title: 'Check-in not open yet', body: 'Check-in opens shortly before the session starts. Come back a little closer to the time.' },
         denied:   { title: 'Location needed', body: "We need your location to confirm you're on site. Turn on location access to check in." },
@@ -466,7 +466,7 @@ export const copy = {
     // rough delay, the care home is notified right away. Then a short acknowledgement.
     lateModal: {
       title: 'Running late?',
-      help: 'Pick roughly how late you’ll be — the care home is notified right away.',
+      help: 'Pick roughly how late you’ll be. The care home is notified right away.',
       options: {
         five: 'About 5 minutes',
         ten: 'About 10 minutes',
@@ -501,7 +501,7 @@ export const copy = {
       reasons: { illness: 'Illness', emergency: 'Personal emergency', transport: 'Transport problem', other: 'Other' },
       detailsLabel: 'Message to the care home',
       detailsOptional: 'optional',
-      detailsHelp: 'Anything useful for the coordinator — sent with the notification.',
+      detailsHelp: 'Anything useful for the coordinator, sent with the notification.',
       detailsPlaceholder: 'e.g. I could run the session on Thursday instead.',
       summaryReason: 'Reason',
       summaryMessage: 'Message',
@@ -518,7 +518,7 @@ export const copy = {
     notesModal: {
       title: 'Transmission notes',
       body: 'Notes are shared with whoever runs the next session here.',
-      empty: 'No notes yet — add the first one.',
+      empty: 'No notes yet. Add the first one.',
       placeholder: 'e.g. Mr Lambert prefers seated exercises (knee). The group responds well to music.',
       save: 'Save note',
       you: 'You',
@@ -533,7 +533,7 @@ export const copy = {
       submittedLabel: 'Submitted',
       reviewStatus: { pending: 'Awaiting validation', validated: 'Validated', changes: 'Needs changes' },
       reviewNote: {
-        pending: "Submitted — awaiting validation by the team. Billing starts once it's validated.",
+        pending: "Submitted. Awaiting validation by the team. Billing starts once it's validated.",
         validated: 'Validated. This session is confirmed and your billing is on its way.',
         changes: 'The team asked for a change before this report can be validated.',
       },
@@ -558,7 +558,7 @@ export const copy = {
       applied: 'Applied on',
       // A plain-language line explaining what the status means / what happens next.
       note: {
-        pending: "Awaiting the care home's decision — you'll be notified as soon as it's reviewed.",
+        pending: "Awaiting the care home's decision. You'll be notified as soon as it's reviewed.",
         accepted: "You're assigned. This session has been added to your schedule.",
         rejected: 'This session was assigned to another coach.',
       },
@@ -692,14 +692,14 @@ export const copy = {
       // Slider, 10–90 min (WBS PLA-08). The "≤ N min" readout is composed in-component.
       travel: {
         title: 'Max travel time',
-        help: 'How far you’ll travel — measured from your departure address.',
+        help: 'How far you’ll travel, measured from your departure address.',
         decA11y: 'Decrease max travel time',
         incA11y: 'Increase max travel time',
       },
       // Half-day grid, Mon→Sun (WBS PLA-09) — not whole weekdays.
       schedule: {
         title: 'Weekly schedule',
-        help: 'Activate the half-days you can work — weekends included.',
+        help: 'Activate the half-days you can work, weekends included.',
         weekdays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
         am: 'Morning',
         pm: 'Afternoon',
@@ -713,7 +713,7 @@ export const copy = {
         secondaryOptional: 'optional',
         help: 'Travel time to each session is measured from the closest of these.',
       },
-      areas: { title: 'Preferred areas', label: 'Areas', help: 'Sessions outside these still appear — they’re never hidden.' },
+      areas: { title: 'Preferred areas', label: 'Areas', help: 'Sessions outside these still appear. They’re never hidden.' },
       unavailability: { title: 'Unavailable periods', label: 'Period', help: 'Holidays or time off. Use “None upcoming” when you’re fully available.' },
       target: { title: 'Monthly target', label: 'Sessions per month', help: 'Used to share sessions fairly between coaches.', flexibilityLabel: 'Flexibility', strict: 'Strict', flexible: 'Flexible' },
       rate: { title: 'Default hourly rate', label: 'Rate (€ / hour)' },
@@ -747,22 +747,22 @@ export const copy = {
     documentSheet: {
       body: 'This document is on file and keeps your account active.',
       replace: 'Replace document',
-      pendingNote: 'New file uploaded — pending review by the DS team.',
+      pendingNote: 'New file uploaded. Pending review by the DS team.',
     },
     logoutConfirm: { title: 'Log out?', body: 'You’ll need to sign in again to see your sessions.' },
     // Delete account (AUTH-14) — a deletion REQUEST handled by the DS team, framed as such.
     deleteConfirm: {
       title: 'Delete your account?',
-      body: 'This sends a deletion request to the Deuxième Souffle team. Your account, sessions and documents are removed once it’s processed — this can’t be undone.',
+      body: 'This sends a deletion request to the Deuxième Souffle team. Your account, sessions and documents are removed once it’s processed, and this can’t be undone.',
       confirm: 'Request deletion',
       requestedTitle: 'Deletion requested',
       requestedBody: 'The team has received your request and will confirm by email. You can keep using the app until it’s processed.',
     },
-    about: { title: 'Deuxième Souffle · Coach', body: 'APA coaching coordination for care homes.\nVersion 0.1.0 — prototype.' },
+    about: { title: 'Deuxième Souffle · Coach', body: 'APA coaching coordination for care homes.\nVersion 0.1.0 (prototype).' },
     links: {
       helpUrl: 'https://deuxiemesouffle.fr/aide',
       contactEmail: 'support@deuxiemesouffle.fr',
-      contactSubject: 'Coach app — support request',
+      contactSubject: 'Coach app: support request',
     },
   },
   // Onboarding & auth (E01 — Auth & Account). The coach is a VETTED professional: accounts go
@@ -785,7 +785,7 @@ export const copy = {
       eyebrow: 'APA Coach',
       // Headline traces to the coach's real job (matching · on-site check-in · earnings).
       title: 'Your sessions,\nyour rhythm.',
-      body: 'Get matched to sessions in care homes near you, check in on site, and keep an eye on your earnings — all in one place.',
+      body: 'Get matched to sessions in care homes near you, check in on site, and keep an eye on your earnings, all in one place.',
       login: 'Log in',
       // Opens the self-registration flow (E01: "Coach self-registration … with admin validation").
       apply: 'New coach? Apply to join',
@@ -829,11 +829,11 @@ export const copy = {
     signup: {
       eyebrow: 'Join the club',
       title: 'Apply to coach',
-      subtitle: 'Create your coach account — the team reviews it before you go live.',
+      subtitle: 'Create your coach account. The team reviews it before you go live.',
       google: 'Continue with Google',
       orDivider: 'or',
       // Step header, verbatim from the back-office flow; documents follow on the pending screen.
-      step: 'Step 1 — Coach’s identity',
+      step: 'Step 1: Coach’s identity',
       optionalTag: 'optional',
       civility: {
         label: 'Civility',
@@ -898,8 +898,8 @@ export const copy = {
       // {name} is composed in-component from the registered first name. The indicative review
       // time moved out of the body into its own visible line (WBS AUTH-19).
       bodyPrefix: 'Thanks for applying, ',
-      bodySuffix: '. Our team is verifying your details — we’ll email you as soon as your account is approved.',
-      bodyNoName: 'Thanks for applying. Our team is verifying your details — we’ll email you as soon as your account is approved.',
+      bodySuffix: '. Our team is verifying your details, and we’ll email you as soon as your account is approved.',
+      bodyNoName: 'Thanks for applying. Our team is verifying your details, and we’ll email you as soon as your account is approved.',
       // Indicative processing time (WBS AUTH-19: "Indicative processing time displayed").
       processingTime: 'Typical review time: 2–3 working days',
       docsEyebrow: 'Required documents',
@@ -909,7 +909,7 @@ export const copy = {
       docStatusMissing: 'To add',
       docStatusReceived: 'Received',
       complete: 'Complete my application',
-      completeBody: 'Document upload is the next slice — your application is saved and the team can already see it.',
+      completeBody: 'Document upload is the next slice. Your application is saved and the team can already see it.',
       backA11y: 'Back',
     },
   },
@@ -927,7 +927,7 @@ export const copy = {
     earnedTitle: 'Earned',
     lockedTitle: 'In progress',
     earnedPrefix: 'Earned',
-    note: 'Badges and levels grow with completed sessions, punctual check-ins and facility feedback. The DS team sees them too — they never affect your pay.',
+    note: 'Badges and levels grow with completed sessions, punctual check-ins and facility feedback. The DS team sees them too, but they never affect your pay.',
     badges: {
       first: { name: 'First session', desc: 'Complete your first session' },
       ten: { name: '10 sessions', desc: 'Complete 10 sessions' },
@@ -960,7 +960,7 @@ export const copy = {
     averageLabel: 'Average rating',
     countSuffix: 'ratings',
     note: 'Facilities rate each session after it ends. New feedback lands here.',
-    empty: 'No feedback yet — it appears after your first rated session.',
+    empty: 'No feedback yet. It appears after your first rated session.',
   },
   tabs: {
     home: 'Home',

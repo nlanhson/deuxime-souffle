@@ -119,7 +119,7 @@ export default function NotificationsScreen() {
                     </span>
                   }
                   primary={title}
-                  secondary={`${body} — ${formatSince(notification.createdAt)}`}
+                  secondary={`${body} · ${formatSince(notification.createdAt)}`}
                   trailing={
                     !notification.read ? (
                       <Chip label={fr.notifications.unreadDot} variant="info" />

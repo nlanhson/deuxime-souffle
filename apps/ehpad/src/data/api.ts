@@ -65,6 +65,7 @@ export async function login(email: string, password: string): Promise<LoginResul
       contactId: contact.id,
       firstName: contact.firstName,
       lastName: contact.lastName,
+      ...(contact.avatarUrl ? { avatarUrl: contact.avatarUrl } : {}),
       email: contact.email,
       role: contact.account.role,
     },
@@ -468,11 +469,11 @@ const slotsFromWizard = (data: WizardData): Contract['excludedSlots'] => {
     const pm = data.weeklyExclusions.some((e) => e.weekday === weekday && e.part === 'apres_midi');
     const day = getStrings().weekdays[weekday] ?? '';
     if (am && pm) {
-      slots.push({ id: newId('ex'), kind: 'demi_journee', part: 'journee', weekday, label: `${day} — toute la journée` });
+      slots.push({ id: newId('ex'), kind: 'demi_journee', part: 'journee', weekday, label: `${day} : toute la journée` });
     } else if (am) {
-      slots.push({ id: newId('ex'), kind: 'demi_journee', part: 'matin', weekday, label: `${day} — matin` });
+      slots.push({ id: newId('ex'), kind: 'demi_journee', part: 'matin', weekday, label: `${day} : matin` });
     } else if (pm) {
-      slots.push({ id: newId('ex'), kind: 'demi_journee', part: 'apres_midi', weekday, label: `${day} — après-midi` });
+      slots.push({ id: newId('ex'), kind: 'demi_journee', part: 'apres_midi', weekday, label: `${day} : après-midi` });
     }
   }
   data.specialPeriods.forEach((p) => {
@@ -644,7 +645,7 @@ export async function confirmNonRenewal(
     historyEntry(
       'non_renouvellement',
       by,
-      `${getStrings().history.non_renouvellement} — motif : ${reasonLabel.toLowerCase()}${comment ? ` (${comment})` : ''}`,
+      `${getStrings().history.non_renouvellement}. Motif : ${reasonLabel.toLowerCase()}${comment ? ` (${comment})` : ''}`,
     ),
   );
   commit();

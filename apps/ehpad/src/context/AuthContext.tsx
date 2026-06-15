@@ -25,6 +25,7 @@ function autoRoleUser(role: Role): SessionUser | null {
     contactId: contact.id,
     firstName: contact.firstName,
     lastName: contact.lastName,
+    ...(contact.avatarUrl ? { avatarUrl: contact.avatarUrl } : {}),
     email: contact.email,
     role,
   };

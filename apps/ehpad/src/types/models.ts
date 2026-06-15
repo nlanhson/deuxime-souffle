@@ -98,6 +98,7 @@ export interface Contact {
   civility: 'M' | 'Mme' | 'Mlle';
   firstName: string;
   lastName: string;
+  avatarUrl?: string;
   email: string;
   phone: string;
   type: 'principal' | 'additionnel';
@@ -221,6 +222,7 @@ export interface SessionUser {
   contactId: string;
   firstName: string;
   lastName: string;
+  avatarUrl?: string;
   email: string;
   role: Role;
 }

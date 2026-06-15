@@ -89,7 +89,7 @@ export function AppShell() {
           <nav className={styles.drawer} aria-label={fr.nav.mainNav}>
             <div className={styles.drawerHeader}>
               <div className={styles.drawerBrand}>
-                <Logo size={32} />
+                <Logo size={40} />
                 <p className={styles.drawerTitle}>{fr.nav.menu}</p>
               </div>
               <button

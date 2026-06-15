@@ -218,7 +218,7 @@ export default function SessionsScreen() {
             </span>
             <span className={styles.cardMeta}>
               {c ? (
-                <Avatar firstName={c.firstName} lastName={c.lastName} size="sm" decorative />
+                <Avatar firstName={c.firstName} lastName={c.lastName} src={c.avatarUrl} size="sm" decorative />
               ) : (
                 <span className={styles.cardCoachIcon}>
                   <User aria-hidden />

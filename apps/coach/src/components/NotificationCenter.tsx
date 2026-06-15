@@ -67,7 +67,7 @@ const TYPE_ACTION: Record<NotifType, {
   resultChip?: string;  // short label left on the row after the task completes
 }> = {
   assigned:     { kind: 'task', doneTitle: 'Hand raised', doneBody: "You're on the shortlist for this session. We'll let you know as soon as the coordinator confirms.", resultChip: 'Applied' },
-  checkin:      { kind: 'task', doneTitle: 'Checked in', doneBody: 'Your geolocated check-in is confirmed — the session has started. Have a great session.', resultChip: 'Checked in' },
+  checkin:      { kind: 'task', doneTitle: 'Checked in', doneBody: 'Your geolocated check-in is confirmed. The session has started, so have a great session.', resultChip: 'Checked in' },
   reportDue:    { kind: 'report' },
   confirmed:    { kind: 'task', doneTitle: 'Added to your calendar', doneBody: 'This session is saved to your calendar. Directions open on the day from your schedule.', resultChip: 'In calendar' },
   payment:      { kind: 'revenus' },
@@ -92,8 +92,8 @@ const SEED: Notif[] = [
     action: 'Raise your hand',
   },
   {
-    id: 'n2', type: 'checkin', title: 'Check-in window open', body: 'The Lindens Care Home · 14:30 — you’re on site', time: '12m', unread: true,
-    detail: 'You’ve arrived at The Lindens Care Home. Your 14:30 group session check-in window is open — confirm your geolocated check-in to start the session.',
+    id: 'n2', type: 'checkin', title: 'Check-in window open', body: 'The Lindens Care Home · 14:30 · you’re on site', time: '12m', unread: true,
+    detail: 'You’ve arrived at The Lindens Care Home. Your 14:30 group session check-in window is open. Confirm your geolocated check-in to start the session.',
     action: 'Check in',
   },
   {
@@ -112,7 +112,7 @@ const SEED: Notif[] = [
     action: 'View earnings',
   },
   {
-    id: 'n6', type: 'availability', title: 'Update your availability', body: 'It’s 6 days old — keep getting matched to sessions', time: '2d', unread: false,
+    id: 'n6', type: 'availability', title: 'Update your availability', body: 'It’s 6 days old. Refresh it to keep getting matched to sessions', time: '2d', unread: false,
     detail: 'Your availability was last updated 6 days ago. Keep it fresh so the matching algorithm can offer you sessions that fit your schedule.',
     action: 'Update availability',
   },

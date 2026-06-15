@@ -44,7 +44,7 @@ type Feedback = { id: string; place: string; date: string; rating: number; comme
 const FEEDBACK: Feedback[] = [
   {
     id: 'f6', place: 'Bellevue Residence', date: 'Jun 7', rating: 4.8,
-    comment: 'Residents were delighted — Karim adapts every exercise to each person. The seated routine worked very well.',
+    comment: 'Residents were delighted. Karim adapts every exercise to each person, and the seated routine worked very well.',
   },
   {
     id: 'f5', place: 'Riverside Care Home', date: 'Jun 7', rating: 4.6,
@@ -64,7 +64,7 @@ const FEEDBACK: Feedback[] = [
   },
   {
     id: 'f1', place: 'The Cedars Residence', date: 'May 28', rating: 4.9,
-    comment: 'Excellent session — the music quiz combined with movement was a hit.',
+    comment: 'Excellent session. The music quiz combined with movement was a hit.',
   },
 ];
 

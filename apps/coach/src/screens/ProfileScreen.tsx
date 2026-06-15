@@ -47,6 +47,7 @@ import { palette, spacing as sp, radius as r, surfaces, cardGradient as RAISED_G
 import { copy } from '../copy';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ProfileAvatar } from '../components/ProfileAvatar';
+import { COACH_PHOTO } from '../lib/coachProfile';
 import { ActionModal } from '../components/ActionModal';
 import { OptionSheet, type SheetOption } from '../components/OptionSheet';
 import { FieldEditSheet, type EditField, type EditChoice } from '../components/FieldEditSheet';
@@ -83,9 +84,10 @@ const F = {
   bodyS: 'Inter_600SemiBold',
 };
 
-// No native image picker is wired in the prototype, so "Choose a photo" sets this demo portrait.
-// Real code replaces this with expo-image-picker → upload → the returned URL (PRD §5 "avatars").
-const DEMO_PHOTO = 'https://i.pravatar.cc/300?img=68';
+// No native image picker is wired in the prototype, so "Choose a photo" re-applies the coach's
+// real portrait. Real code replaces this with expo-image-picker → upload → the returned URL
+// (PRD §5 "avatars"). Shared with the header avatars via COACH_PHOTO.
+const DEMO_PHOTO = COACH_PHOTO;
 
 const STALE_AFTER_DAYS = 3;
 
@@ -138,7 +140,7 @@ const INITIAL: ProfileData = {
   name: 'Karim Benali',
   email: 'karim.benali@email.com',
   phone: '+33 6 12 34 56 78',
-  photoUrl: null,
+  photoUrl: COACH_PHOTO,
   gcalConnected: true,
   updatedDaysAgo: 6,
   deleteRequested: false,

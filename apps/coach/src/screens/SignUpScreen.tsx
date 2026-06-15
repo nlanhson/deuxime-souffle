@@ -161,7 +161,7 @@ export function SignUpScreen({
         <ScrollView contentContainerStyle={st.scroll} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator={false}>
           {/* Brand mark owns the top-left corner; the close control returns to Welcome. */}
           <View style={st.topbar}>
-            <Logo size={40} rounded={r.md} />
+            <Logo size={48} />
             <View style={st.flex} />
             <Pressable
               onPress={onBack}

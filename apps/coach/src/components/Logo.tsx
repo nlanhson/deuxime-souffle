@@ -1,37 +1,43 @@
 /**
- * Logo — the Deuxième Souffle brand mark (the white "raised hand" on the red→orange gradient).
+ * Logo — the real Deuxième Souffle brand mark (the "2ᵉᵐᵉ" picto tile, customer-supplied SVG).
  *
- * Single source for the app logo so the splash, the welcome lockup, and the login header all render
- * the same asset at different sizes. Sources the app icon (assets/icon.png), clipped to the design
- * system's radius so it reads as a rounded brand badge on the ink canvas. Decorative by default — it
- * sits next to the wordmark/title that already carry the brand name for screen readers; the glow is
- * the same rouge halo used on the primary CTA and the profile avatar.
+ * The artwork is a solid tile with the "2EME" mark knocked out, so the mark shows the background
+ * through it. The tile fill is the single controllable colour: white on dark surfaces (the default,
+ * since the coach app canvas is locked dark), brand orange on light surfaces. Single source for the
+ * app logo so the splash, the welcome lockup, and the login header all render the same asset at
+ * different sizes. Clipped to the design-system radius so it reads as a rounded brand badge.
+ * Decorative by default — it sits next to the wordmark/title that already carry the brand name.
+ *
+ * Source asset: assets/logo.svg
  */
 import React from 'react';
-import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
-import { palette, radius as r } from '../theme/theme';
+import { palette } from '../theme/theme';
 
-const SRC = require('../../assets/icon.png');
+// Tile + knocked-out "2EME" mark, single path (viewBox 0 0 188.99 188.99).
+const LOGO_PATH =
+  'm0,0v188.99h188.99V0H0Zm53.98,72.5c-.17-7.65.08-15.31,4.22-22.08,5.04-8.23,12.4-13.83,21.66-16.25,9.92-2.59,20.03-3.2,30.13-.25,6.56,1.92,11.78,5.64,16.39,10.55,3.58,3.82,6.3,8.15,7.37,13.2,1.99,9.41,1.74,18.78-2.69,27.57-3.75,7.44-8.7,14.12-14.43,20.14-5.84,6.13-11.87,12.07-17.94,17.96-.86.84-2.46,1.24-3.74,1.27-8.59.19-17.18.24-25.77.29-3.79.02-7.59-.08-11.85-.13,3.07-3.09,5.79-5.75,8.42-8.5,3.12-3.25,6.24-6.51,9.24-9.87,6.42-7.22,12.76-14.51,19.13-21.78,3.68-4.2,6.52-8.88,7.8-14.38.94-4.02-.46-7.83-3.36-9.54-4.78-2.83-11.14.41-11.6,5.95-.17,1.97-.25,3.94-.33,5.92-.1,2.41-.39,2.79-2.85,2.89-2.52.1-5.05.07-7.57.11-6.25.1-12.49.23-18.74.29-2.75.01-3.43-.61-3.49-3.36Zm24.91,71.67c0,.2-.06.35-.17.46-.12.11-.28.16-.48.16h-13.1c-.15,0-.22.07-.22.21v4.35c0,.14.07.21.22.21h13.08c.2,0,.36.06.48.17s.17.27.17.46v5.48c0,.2-.06.35-.17.46-.12.11-.28.17-.48.17h-20.86c-.2,0-.37-.06-.48-.17-.12-.11-.17-.26-.17-.46v-28.04c0-.19.06-.35.17-.46.12-.11.28-.17.48-.17h20.87c.2,0,.36.06.48.17s.17.27.17.46v5.48c0,.2-.06.35-.17.46-.12.11-.28.16-.48.16h-13.09c-.15,0-.22.07-.22.21v3.94c0,.14.07.21.22.21h13.1c.2,0,.36.06.48.16.12.11.17.27.17.46v5.46Zm30.57,11.51c0,.2-.06.35-.17.46-.12.11-.28.17-.48.17h-6.91c-.2,0-.37-.06-.48-.17-.12-.11-.17-.26-.17-.46v-15.19c0-.11-.03-.17-.09-.19s-.12.02-.17.1l-2.97,4.64c-.17.28-.44.42-.79.42h-3.33c-.35,0-.61-.14-.79-.42l-2.97-4.64c-.06-.08-.12-.12-.18-.1-.06,0-.09.08-.09.19v15.19c0,.2-.06.35-.17.46-.12.11-.28.17-.48.17h-6.91c-.2,0-.37-.06-.48-.17-.12-.11-.17-.26-.17-.46v-28.04c0-.19.06-.35.17-.46.12-.11.28-.17.48-.17h6.82c.35,0,.61.14.79.42l5.51,8.49c.09.17.17.17.26,0l5.51-8.49c.17-.28.44-.42.79-.42h6.82c.2,0,.36.06.48.17s.17.27.17.46c0,0,0,28.04,0,28.04Zm25.59-22.56c0,.2-.06.35-.17.46-.12.11-.28.16-.48.16h-13.08c-.15,0-.22.07-.22.21v3.94c0,.14.07.21.22.21h12.75c.2,0,.36.06.48.16.12.11.17.27.17.46v5.44c0,.2-.06.35-.17.46-.12.11-.28.16-.48.16h-12.75c-.15,0-.22.07-.22.21v4.35c0,.14.07.21.22.21h13.08c.2,0,.36.06.48.17s.17.27.17.46v5.48c0,.2-.06.35-.17.46-.12.11-.28.17-.48.17h-20.87c-.2,0-.37-.06-.48-.17-.12-.11-.17-.26-.17-.46v-28.04c0-.19.06-.35.17-.46s.28-.17.48-.17h20.87c.2,0,.36.06.48.17s.17.27.17.46v5.5Z';
 
 export function Logo({
   size = 44,
-  rounded = r.lg,
   glow = false,
+  /** Tile colour. White on dark surfaces (default), brand orange on light surfaces. */
+  color = '#FFFFFF',
   style,
 }: {
   size?: number;
-  rounded?: number;
   glow?: boolean;
+  color?: string;
   style?: StyleProp<ViewStyle>;
 }) {
+  // Square tile, no corner radius — the mark owns its sharp edges.
   return (
     <View style={[glow && st.glow, style]}>
-      <Image
-        source={SRC}
-        style={{ width: size, height: size, borderRadius: rounded }}
-        accessibilityIgnoresInvertColors
-      />
+      <Svg width={size} height={size} viewBox="0 0 188.99 188.99">
+        <Path d={LOGO_PATH} fill={color} />
+      </Svg>
     </View>
   );
 }

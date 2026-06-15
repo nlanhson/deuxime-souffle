@@ -82,7 +82,7 @@ export const fr = {
     notificationsMenu: 'Menu des notifications',
     unread: (n: number) =>
       `${n} ${plural(n, 'notification non lue', 'notifications non lues')}`,
-    noUnread: 'Notifications — aucune non lue',
+    noUnread: 'Notifications : aucune non lue',
     connectedAs: 'Connecté en tant que',
     groupNone: 'Non rattaché à un groupe',
   },
@@ -285,7 +285,7 @@ export const fr = {
       title: 'Nouvelle séance',
       create: 'Créer',
       more: 'Plus d’options',
-      noContract: 'Aucun contrat actif — créez-en un d’abord.',
+      noContract: 'Aucun contrat actif. Créez-en un d’abord.',
     },
     emptyCalendar: 'Aucune séance planifiée pour l’instant.',
     emptyCalendarAction: 'Planifier une séance',
@@ -392,7 +392,7 @@ export const fr = {
       undone: 'Le report a été annulé.',
       cancellationNote:
         'L’annulation définitive n’est pas disponible ici. Pour annuler une séance, contactez l’équipe DS par e-mail.',
-      empty: 'Aucune date disponible pour le moment — contactez l’équipe DS.',
+      empty: 'Aucune date disponible pour le moment. Contactez l’équipe DS.',
       contactDs: 'Contacter l’équipe DS',
       chooseSlot: 'Dates proposées',
     },
@@ -422,7 +422,7 @@ export const fr = {
     pendingTitle: 'Séances à évaluer',
     pendingIntro: 'Votre avis aide l’équipe DS à garantir la qualité des séances.',
     evaluate: 'Évaluer',
-    empty: 'Aucune évaluation en attente — tout est à jour !',
+    empty: 'Aucune évaluation en attente. Tout est à jour !',
     emptyBody: 'Les séances terminées à évaluer apparaîtront ici.',
     sessionOf: (date: string, time: string) => `Séance du ${date} à ${time}`,
     tabs: { pending: 'À évaluer', history: 'Historique' },
@@ -439,15 +439,15 @@ export const fr = {
       starsValue: (n: number) => `Note : ${n} sur 5`,
       impressionLabel: 'Quelle est votre impression générale ?',
       impressions: {
-        tres_bien: 'Cela s’est très bien passé — le coach a su impliquer les résidents',
-        bien: 'Cela s’est bien passé — la séance s’est déroulée sans encombre',
-        correct: 'Correct — sans plus',
+        tres_bien: 'Cela s’est très bien passé : le coach a su impliquer les résidents',
+        bien: 'Cela s’est bien passé : la séance s’est déroulée sans encombre',
+        correct: 'Correct, sans plus',
         a_ameliorer: 'Points à améliorer (coach ou organisation)',
       },
       commentLabel: 'Ajouter un commentaire (facultatif)',
       commentHelper: 'Votre commentaire est partagé avec l’équipe DS.',
       submit: 'Envoyer mon évaluation',
-      success: 'Évaluation envoyée — merci !',
+      success: 'Évaluation envoyée. Merci !',
       alreadyDone: 'Cette séance a déjà été évaluée.',
       notCompleted: 'Seules les séances terminées peuvent être évaluées.',
       missingStars: 'Choisissez une note pour continuer',
@@ -524,7 +524,7 @@ export const fr = {
       title: 'Demander un nouveau contrat',
       resubmitTitle: 'Corriger et resoumettre le contrat',
       renewTitle: 'Personnaliser le renouvellement',
-      stepLabel: (n: number, total: number, name: string) => `Étape ${n} sur ${total} — ${name}`,
+      stepLabel: (n: number, total: number, name: string) => `Étape ${n} sur ${total} : ${name}`,
       steps: {
         needs: 'Besoins',
         availability: 'Disponibilités',
@@ -595,7 +595,7 @@ export const fr = {
         notesLabel: 'Notes de planification (facultatif)',
         notesHelp: 'Précisions utiles pour l’équipe DS : horaires de repas, habitudes des résidents…',
         recap: 'Récapitulatif des exclusions',
-        recapEmpty: 'Aucune exclusion définie — toutes les demi-journées sont disponibles.',
+        recapEmpty: 'Aucune exclusion définie : toutes les demi-journées sont disponibles.',
         weeklyRecap: 'Demi-journées exclues',
         periodsRecap: 'Périodes spéciales',
         labelFor: (day: string, part: string) => `${day} ${part}`,
@@ -771,7 +771,7 @@ export const fr = {
     title: 'Factures',
     htNote: 'Tous les montants sont hors taxes (HT).',
     overdueBanner: (n: number, amount: string) =>
-      `${n} ${plural(n, 'facture en retard', 'factures en retard')} — ${amount} HT à régler`,
+      `${n} ${plural(n, 'facture en retard', 'factures en retard')} : ${amount} HT à régler`,
     overdueTitle: 'En retard',
     // Niveau discret (« dont … en retard ») : le séparateur « · » et le montant
     // (mis en valeur) suivent en JSX, collés par une espace insécable.
@@ -900,7 +900,7 @@ export const fr = {
     saved: 'Modifications enregistrées.',
     deleteTitle: 'Demander la suppression de mon compte',
     deleteIntro:
-      'Votre demande sera transmise à l’équipe DS pour examen. Votre compte reste actif jusqu’à leur décision — vous ne pouvez pas le supprimer directement.',
+      'Votre demande sera transmise à l’équipe DS pour examen. Votre compte reste actif jusqu’à leur décision : vous ne pouvez pas le supprimer directement.',
     deleteReason: 'Motif / commentaire (facultatif)',
     deleteUnderstand: 'Je confirme vouloir demander la suppression de mon compte',
     deleteSubmit: 'Envoyer la demande',
@@ -990,9 +990,9 @@ export const fr = {
 
   events: {
     retard: (minutes: number) => `Le coach a signalé un retard de ${minutes} min`,
-    retardCancelled: 'Retard de plus de 30 min — la séance est annulée',
+    retardCancelled: 'Retard de plus de 30 min : la séance est annulée',
     report: (date: string, time: string) => `Séance reportée au ${date} à ${time}`,
-    reportUndone: 'Report annulé — la séance reprend sa date initiale',
+    reportUndone: 'Report annulé. La séance reprend sa date initiale',
     modification: (date: string, time: string) => `Séance déplacée au ${date} à ${time}`,
     rapport_remis: 'Le coach a remis son rapport de séance',
     evaluation: 'Vous avez évalué cette séance',
@@ -1010,8 +1010,8 @@ export const fr = {
     resoumission: 'Contrat corrigé et resoumis',
     renouvellement: 'Renouvellement demandé',
     non_renouvellement: 'Non-reconduction confirmée',
-    detailFreqDouble: '— Fréquence : une fois par semaine → deux fois par semaine',
-    detailReasonBudget: '— motif : budget réduit',
+    detailFreqDouble: 'Fréquence : une fois par semaine → deux fois par semaine',
+    detailReasonBudget: 'Motif : budget réduit',
   },
 
   a11y: {
@@ -1023,7 +1023,7 @@ export const fr = {
     ratingInput: (n: number) => `${n} ${n > 1 ? 'étoiles' : 'étoile'} sur 5`,
     currentPage: 'page actuelle',
     closedDay: 'Établissement fermé',
-    pastDay: 'Date passée — non disponible',
+    pastDay: 'Date passée, non disponible',
     avatarOf: (name: string) => `Photo de ${name}`,
     loadingSection: 'Chargement de la section',
   },

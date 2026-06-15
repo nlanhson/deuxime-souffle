@@ -1,6 +1,5 @@
 .logo {
   display: block;
   flex-shrink: 0;
-  border-radius: var(--radius-md); /* badge arrondi — même lecture que l'app coach */
-  object-fit: cover;
+  /* Tuile carrée, sans arrondi — la marque garde ses angles vifs. */
 }

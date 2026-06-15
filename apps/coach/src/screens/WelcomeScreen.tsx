@@ -1,18 +1,27 @@
 /**
  * Coach · Welcome — first interactive onboarding screen (E01 — Auth & Account).
  *
- * Value proposition for the APA coach + the entry point to log in. Coaches are vetted (accounts
- * go Pending → Active after the DS team verifies documents), so account creation is NOT self-serve
- * here — "Apply to join" opens a short note explaining how onboarding actually works rather than a
- * (non-existent) sign-up form.
+ * "Club" hero composition: a muted, looping clip of the brand's seniors-boxing film fills a rounded
+ * card across the top; the value proposition + the single primary CTA sit below on the ink canvas.
+ * Contained (not full-bleed) on purpose — the source film is 16:9, so a card crops it cleanly and the
+ * white Anton headline keeps a dark, legible ink backdrop instead of fighting the bright footage.
  *
- * The COPY traces to the coach's real job (matching · on-site check-in · earnings); the LAYOUT is
- * a reasoned synthesis pending the coach video + approved Figma. Surface = coach (ink). Motion: one
- * ease-out rise, text → CTA staggered; reduced motion keeps opacity only (no translate, no stagger).
+ * Coaches are vetted (accounts go Pending → Active after the DS team verifies documents), so account
+ * creation is NOT self-serve — "Apply to join" opens the self-registration note, not a sign-up form.
+ *
+ * MEDIA:
+ *  - HERO_VIDEO: assets/hero/welcome.mp4 — the looping clip. Set to `null` to disable video entirely.
+ *  - HERO_IMAGE: assets/hero/welcome.jpg — doubles as the video POSTER (first paint) and the
+ *    reduced-motion fallback (no autoplay under prefers-reduced-motion — vestibular safety).
+ *
+ * Motion: hero clip loops; copy → CTA rise in on a staggered ease-out. Reduced motion: the still
+ * poster only, opacity fade, no translate, no stagger.
  */
 import React, { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { VideoView, useVideoPlayer } from 'expo-video';
 
 import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
 import { copy } from '../copy';
@@ -22,6 +31,7 @@ import { ease, dur } from '../lib/motion';
 
 const S = surfaces.coach;
 const ON_2 = palette.neutral[300];
+const INK = palette.neutral[900];
 const F = {
   display: 'Anton_400Regular',
   oswS: 'Oswald_600SemiBold',
@@ -29,8 +39,39 @@ const F = {
   bodyS: 'Inter_600SemiBold',
 };
 
+// The brand's seniors-boxing film (self-hosted on deuxieme-souffle.com), trimmed + compressed for
+// mobile (12s loop, 720×900, ~0.7 MB). Set to `null` to fall back to the still poster everywhere.
+const HERO_VIDEO: number | null = require('../../assets/hero/welcome.mp4');
+// Still: video poster + reduced-motion fallback. Pexels 6922177 swap-out lives here too.
+const HERO_IMAGE = require('../../assets/hero/welcome.jpg');
+
+// Top scrim seats the brand lockup + status bar; bottom scrim melts the card into the ink canvas.
+const TOP_SCRIM = ['rgba(23,23,23,0.6)', 'transparent'] as const;
+const BOTTOM_SCRIM = ['transparent', INK] as const;
+
+/** Video layer — only mounted when motion is allowed, so reduced-motion never spins up the decoder. */
+function HeroVideoLayer() {
+  const player = useVideoPlayer(HERO_VIDEO, (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.play();
+  });
+  return (
+    <VideoView
+      player={player}
+      contentFit="cover"
+      nativeControls={false}
+      pointerEvents="none"
+      style={StyleSheet.absoluteFill}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    />
+  );
+}
+
 export function WelcomeScreen({ onLogin, onApply, reduced }: { onLogin: () => void; onApply: () => void; reduced: boolean }) {
   const c = copy.auth.welcome;
+  const showVideo = !!HERO_VIDEO && !reduced;
 
   const a = useRef(new Animated.Value(0)).current; // text group
   const b = useRef(new Animated.Value(0)).current; // CTA group
@@ -54,65 +95,81 @@ export function WelcomeScreen({ onLogin, onApply, reduced }: { onLogin: () => vo
   });
 
   return (
-    <SafeAreaView style={st.safe} edges={['top', 'bottom']}>
-      <View style={st.body}>
-        {/* Brand lockup */}
-        <View style={st.brand}>
-          <Logo size={44} rounded={r.lg} />
-          <Text style={st.brandWord} numberOfLines={1}>{copy.auth.splash.wordmark}</Text>
-        </View>
+    <View style={st.root}>
+      {/* HERO CARD — fills the space above the copy, rounded at the bottom into the ink canvas. */}
+      <View style={st.hero}>
+        {/* Poster: instant first paint + the reduced-motion / no-video still. */}
+        <Image source={HERO_IMAGE} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors />
+        {showVideo && <HeroVideoLayer />}
 
-        <View style={{ flex: 1 }} />
+        <LinearGradient colors={TOP_SCRIM} style={st.topScrim} pointerEvents="none" />
+        <LinearGradient colors={BOTTOM_SCRIM} style={st.bottomScrim} pointerEvents="none" />
 
-        {/* Headline + body */}
-        <Animated.View style={rise(a)}>
-          <Text style={st.eyebrow}>{c.eyebrow}</Text>
-          <Text style={st.title}>{c.title}</Text>
-          <Text style={st.bodyTxt}>{c.body}</Text>
-        </Animated.View>
-
-        {/* CTAs */}
-        <Animated.View style={[rise(b), st.ctas]}>
-          <PrimaryButton label={c.login} onPress={onLogin} style={st.loginBtn} />
-          <Pressable
-            onPress={onApply}
-            hitSlop={10}
-            style={({ pressed }) => [
-              st.applyBtn,
-              pressed && !reduced && { transform: [{ scale: 0.98 }] },
-              pressed && { opacity: 0.75 },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={c.applyA11y}
-          >
-            <Text style={st.applyTxt}>{c.apply}</Text>
-          </Pressable>
-        </Animated.View>
+        {/* Brand lockup over the footage — logo only; the mark carries the brand. */}
+        <SafeAreaView edges={['top']} style={st.brandSafe}>
+          <View style={st.brand}>
+            <Logo size={48} glow />
+          </View>
+        </SafeAreaView>
       </View>
-    </SafeAreaView>
+
+      {/* COPY + CTAs on ink. */}
+      <SafeAreaView edges={['bottom']} style={st.copySafe}>
+        <View style={st.copy}>
+          <Animated.View style={rise(a)}>
+            <Text style={st.eyebrow}>{c.eyebrow}</Text>
+            <Text style={st.title}>{c.title}</Text>
+            <Text style={st.bodyTxt}>{c.body}</Text>
+          </Animated.View>
+
+          <Animated.View style={[rise(b), st.ctas]}>
+            <PrimaryButton label={c.login} onPress={onLogin} style={st.loginBtn} />
+            <Pressable
+              onPress={onApply}
+              hitSlop={10}
+              style={({ pressed }) => [
+                st.applyBtn,
+                pressed && !reduced && { transform: [{ scale: 0.98 }] },
+                pressed && { opacity: 0.75 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={c.applyA11y}
+            >
+              <Text style={st.applyTxt}>{c.apply}</Text>
+            </Pressable>
+          </Animated.View>
+        </View>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const st = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: S.canvas },
-  body: { flex: 1, paddingHorizontal: sp.lg, paddingTop: sp.lg, paddingBottom: sp.lg },
+  root: { flex: 1, backgroundColor: INK },
 
-  /* brand lockup */
-  brand: { flexDirection: 'row', alignItems: 'center', gap: sp.sm },
-  brandWord: { flex: 1, fontFamily: F.oswS, fontSize: 18, letterSpacing: 0.3, color: S.textPrimary },
-
-  /* headline + body */
-  // Sentence case (brand rule: no all-caps) — the red eyebrow reads as a kicker, not a shout.
-  eyebrow: {
-    fontFamily: F.oswS, fontSize: 13, letterSpacing: 0.5,
-    color: color.action, marginBottom: sp.sm,
+  /* hero card */
+  hero: {
+    flex: 1,
+    overflow: 'hidden',
+    backgroundColor: palette.neutral[800], // shows under the rounded corners before the poster paints
+    borderBottomLeftRadius: r['2xl'],
+    borderBottomRightRadius: r['2xl'],
   },
-  // Anton: lineHeight ≥1.2× the size keeps multi-line display type from clipping.
-  title: { fontFamily: F.display, fontSize: 44, lineHeight: 53, color: S.textPrimary, marginBottom: sp.md },
-  bodyTxt: { fontFamily: F.body, fontSize: 17, lineHeight: 26, color: ON_2, maxWidth: 340 },
+  topScrim: { position: 'absolute', top: 0, left: 0, right: 0, height: 140 },
+  bottomScrim: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '34%' },
+  brandSafe: { position: 'absolute', top: 0, left: 0, right: 0 },
+  brand: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: sp.lg, paddingTop: sp.md },
 
-  /* CTAs */
-  ctas: { marginTop: sp.xl, gap: sp.md },
+  /* copy block */
+  copySafe: { backgroundColor: INK },
+  copy: { paddingHorizontal: sp.lg, paddingTop: sp.lg, paddingBottom: sp.lg },
+  // Sentence case (brand rule: no all-caps) — the red eyebrow reads as a kicker, not a shout.
+  eyebrow: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 0.5, color: color.action, marginBottom: sp.sm },
+  // Anton: lineHeight ≥1.2× the size keeps multi-line display type from clipping.
+  title: { fontFamily: F.display, fontSize: 40, lineHeight: 48, color: S.textPrimary, marginBottom: sp.sm },
+  bodyTxt: { fontFamily: F.body, fontSize: 16, lineHeight: 24, color: ON_2, maxWidth: 340 },
+
+  ctas: { marginTop: sp.lg, gap: sp.md },
   loginBtn: { width: '100%' },
   applyBtn: { alignSelf: 'center', minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: sp.md },
   // Underlined so it reads as a link without relying on colour alone.

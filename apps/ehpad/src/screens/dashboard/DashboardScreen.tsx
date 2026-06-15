@@ -174,7 +174,7 @@ export default function DashboardScreen() {
     // STUB: export tableur de démonstration (pas de vrai moteur Excel côté client)
     downloadStub(
       `Calendrier_seances_${toIso(new Date()).slice(0, 7)}.xlsx`,
-      `${fr.app.name} — ${period}`,
+      `${fr.app.name} : ${period}`,
       kpis.inMonth.map(
         (s) =>
           `${formatDate(s.date)};${formatTime(s.time)};${coachName(s.coachId)};${unitLabel(s.unitType)}`,

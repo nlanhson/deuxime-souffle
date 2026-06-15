@@ -38,7 +38,7 @@ export function CoachReportModal({
     // STUB: PDF une page généré côté client
     downloadStub(
       fr.sessions.report.pdfName(coach?.lastName ?? 'coach', session.date),
-      `${fr.sessions.report.title} — ${coachName}`,
+      `${fr.sessions.report.title} : ${coachName}`,
       [
         `${fr.sessions.report.date} : ${formatDate(session.date)}`,
         `${fr.sessions.report.time} : ${formatTime(session.time)}`,
@@ -130,7 +130,7 @@ export function CoachReportModal({
             <p className={styles.reportLabel}>{fr.sessions.report.difficulties}</p>
             <p>
               {report.hadDifficulties ? fr.common.yes : fr.common.no}
-              {report.difficultiesNote ? ` — ${report.difficultiesNote}` : ''}
+              {report.difficultiesNote ? `. ${report.difficultiesNote}` : ''}
             </p>
           </div>
 

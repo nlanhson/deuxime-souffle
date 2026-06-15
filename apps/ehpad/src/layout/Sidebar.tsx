@@ -100,10 +100,9 @@ export function Sidebar() {
   return (
     <nav className={styles.sidebar} aria-label={fr.nav.mainNav}>
       <div className={styles.brandRow}>
-        <Logo size={40} />
+        <Logo size={48} />
         <p className={styles.brand}>
-          <span className={styles.brandName}>{fr.app.name}</span>
-          <span className={styles.brandSub}>{fr.app.space}</span>
+          <span className={styles.brandName}>{fr.app.space}</span>
         </p>
       </div>
       <NavList />

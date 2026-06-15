@@ -17,7 +17,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
-import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
+import { palette, color, spacing as sp, surfaces } from '../theme/theme';
 import { copy } from '../copy';
 import { Logo } from '../components/Logo';
 import { ease, dur } from '../lib/motion';
@@ -68,7 +68,7 @@ export function SplashScreen({ onDone, reduced }: { onDone: () => void; reduced:
       accessibilityHint={c.skipA11y}
     >
       <Animated.View style={[st.markWrap, { opacity: markOpacity, transform: [{ scale: markScale }] }]}>
-        <Logo size={104} rounded={r.xl} />
+        <Logo size={112} />
       </Animated.View>
 
       <View style={st.words}>
