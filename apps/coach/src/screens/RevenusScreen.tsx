@@ -82,34 +82,34 @@ type MonthData = {
 
 const MONTHS: MonthData[] = [
   {
-    key: '2026-04', label: 'April 2026', prevLabel: 'Mar',
+    key: '2026-04', label: 'avril 2026', prevLabel: 'mars',
     earned: 1925, projected: 0, trendPct: 4, completed: 28, hoursWorked: 55, hoursScheduled: 55, rate: 35,
     sessions: [
-      { place: 'The Cedars Residence', date: 'Apr 28', rating: 4.9, amount: 70 },
-      { place: 'Maple Court', date: 'Apr 25', rating: 4.6, amount: 70 },
-      { place: 'Bellevue Residence', date: 'Apr 22', rating: 5.0, amount: 105 },
-      { place: 'Park Care Home', date: 'Apr 18', rating: null, amount: 35 },
+      { place: 'Résidence Les Cèdres', date: '28 avr.', rating: 4.9, amount: 70 },
+      { place: 'Résidence Les Érables', date: '25 avr.', rating: 4.6, amount: 70 },
+      { place: 'Résidence Bellevue', date: '22 avr.', rating: 5.0, amount: 105 },
+      { place: 'Résidence du Parc', date: '18 avr.', rating: null, amount: 35 },
     ],
   },
   {
-    key: '2026-05', label: 'May 2026', prevLabel: 'Apr',
+    key: '2026-05', label: 'mai 2026', prevLabel: 'avr.',
     earned: 2100, projected: 0, trendPct: 9, completed: 30, hoursWorked: 60, hoursScheduled: 60, rate: 35,
     sessions: [
-      { place: 'The Lindens Care Home', date: 'May 30', rating: 4.8, amount: 70 },
-      { place: 'Riverside Care Home', date: 'May 27', rating: 4.7, amount: 35 },
-      { place: 'The Oaks', date: 'May 24', rating: 4.9, amount: 105 },
-      { place: 'Maple Court', date: 'May 20', rating: null, amount: 70 },
+      { place: 'Résidence Les Tilleuls', date: '30 mai', rating: 4.8, amount: 70 },
+      { place: 'Résidence des Berges', date: '27 mai', rating: 4.7, amount: 35 },
+      { place: 'Les Chênes', date: '24 mai', rating: 4.9, amount: 105 },
+      { place: 'Résidence Les Érables', date: '20 mai', rating: null, amount: 70 },
     ],
   },
   {
-    key: '2026-06', label: 'June 2026', prevLabel: 'May',
+    key: '2026-06', label: 'juin 2026', prevLabel: 'mai',
     earned: 840, projected: 1260, trendPct: 12, completed: 12, hoursWorked: 24, hoursScheduled: 60, rate: 35,
     sessions: [
-      { place: 'Bellevue Residence', date: 'Jun 7', rating: 4.8, amount: 105 },
-      { place: 'Riverside Care Home', date: 'Jun 7', rating: 4.6, amount: 35 },
-      { place: 'The Oaks', date: 'Jun 5', rating: 5.0, amount: 70 },
-      { place: 'The Cedars Residence', date: 'Jun 3', rating: null, amount: 70 },
-      { place: 'Maple Court', date: 'Jun 2', rating: 4.7, amount: 105 },
+      { place: 'Résidence Bellevue', date: '7 juin', rating: 4.8, amount: 105 },
+      { place: 'Résidence des Berges', date: '7 juin', rating: 4.6, amount: 35 },
+      { place: 'Les Chênes', date: '5 juin', rating: 5.0, amount: 70 },
+      { place: 'Résidence Les Cèdres', date: '3 juin', rating: null, amount: 70 },
+      { place: 'Résidence Les Érables', date: '2 juin', rating: 4.7, amount: 105 },
     ],
   },
 ];
@@ -118,10 +118,10 @@ const MONTHS: MonthData[] = [
 // The current month carries no invoice yet → status "In progress", no export. Past months are
 // statements the coach can download. Mirrors the per-month figures above.
 const HISTORY: Period[] = [
-  { label: 'June 2026', sessions: 12, amount: 840, status: 'inProgress' },
-  { label: 'May 2026', sessions: 30, amount: 2100, status: 'paid' },
-  { label: 'April 2026', sessions: 28, amount: 1925, status: 'awaiting' },
-  { label: 'March 2026', sessions: 26, amount: 1820, status: 'paid' },
+  { label: 'juin 2026', sessions: 12, amount: 840, status: 'inProgress' },
+  { label: 'mai 2026', sessions: 30, amount: 2100, status: 'paid' },
+  { label: 'avril 2026', sessions: 28, amount: 1925, status: 'awaiting' },
+  { label: 'mars 2026', sessions: 26, amount: 1820, status: 'paid' },
 ];
 
 // € grouping — placeholder (en-US "1,260"); production formats with fr-FR from locale.
@@ -208,21 +208,15 @@ function MonthStepper({
   );
 }
 
-function StatTile({ label, value, unit, Icon, tint, tintBg }: {
-  label: string; value: string; unit: string;
-  Icon: LucideIcon; tint: string; tintBg: string;
-}) {
+// Bare stat — no card, no icon. The three sit in one row separated by blank space (label · figure ·
+// unit stacked), so the breakdown reads as plain data under the hero rather than three more cards.
+function StatTile({ label, value, unit }: { label: string; value: string; unit: string }) {
   return (
-    <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={st.statTile}>
+    <View style={st.statTile}>
       <Text style={st.statLabel}>{label}</Text>
-      <View style={st.statValRow}>
-        <View style={[st.statChip, { backgroundColor: tintBg }]}>
-          <Icon size={13} color={tint} strokeWidth={2.5} />
-        </View>
-        <Text style={st.statValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{value}</Text>
-      </View>
+      <Text style={st.statValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{value}</Text>
       <Text style={st.statUnit} numberOfLines={2}>{unit}</Text>
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -320,16 +314,13 @@ export function RevenusScreen({ visible, onClose }: { visible: boolean; onClose:
 
         {/* ===== Monthly breakdown — sessions · hours worked/scheduled · default rate ===== */}
         <View style={st.statsRow}>
-          <StatTile label={c.stat.sessions} value={String(m.completed)} unit={c.stat.sessionsUnit}
-            Icon={Check} tint={INK.ok.fg} tintBg={INK.ok.bg} />
+          <StatTile label={c.stat.sessions} value={String(m.completed)} unit={c.stat.sessionsUnit} />
           <StatTile
             label={c.stat.hours}
             value={`${m.hoursWorked}h`}
             unit={`${c.stat.scheduledPrefix} ${m.hoursScheduled}h ${c.stat.scheduledSuffix}`}
-            Icon={Clock} tint={INK.info.fg} tintBg={INK.info.bg}
           />
-          <StatTile label={c.stat.rate} value={`${m.rate}€`} unit={c.stat.rateUnit}
-            Icon={Banknote} tint={INK.pending.fg} tintBg={INK.pending.bg} />
+          <StatTile label={c.stat.rate} value={`${m.rate}€`} unit={c.stat.rateUnit} />
         </View>
 
         {/* ===== Sessions contributing to this month ===== */}
@@ -437,7 +428,7 @@ const st = StyleSheet.create({
 
   /* hero card */
   heroCard: {
-    marginTop: sp.md, borderRadius: r.xl, padding: sp.lg,
+    marginTop: sp.lg, borderRadius: r.xl, padding: sp.lg,
     borderWidth: 1, borderColor: RAISED_BORDER,
     shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.35, shadowRadius: 20,
   },
@@ -464,16 +455,15 @@ const st = StyleSheet.create({
 
   /* stat tiles — Accueil's metric-tile pattern: a label, an accent icon chip + the figure, and a
      dim baseline, all on the shared raised-surface gradient. */
-  statsRow: { flexDirection: 'row', gap: sp.sm, marginTop: sp.md },
-  statTile: { flex: 1, borderRadius: r.lg, padding: sp.md, borderWidth: 1, borderColor: RAISED_BORDER },
+  // Flat stats — no card/border/padding; just three columns sharing the row with blank space between.
+  statsRow: { flexDirection: 'row', gap: sp.lg, marginTop: sp.xl },
+  statTile: { flex: 1 },
   statLabel: { fontFamily: F.body, fontSize: 13, color: S.textSecondary },
-  statValRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
-  statChip: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  statValue: { fontFamily: F.oswB, fontSize: 28, lineHeight: 32, color: S.textPrimary, flexShrink: 1 },
+  statValue: { fontFamily: F.oswB, fontSize: 28, lineHeight: 32, color: S.textPrimary, marginTop: 6 },
   statUnit: { fontFamily: F.body, fontSize: 12, lineHeight: 15, color: S.textSecondary, marginTop: 6 },
 
   /* sections */
-  section: { marginTop: sp.lg },
+  section: { marginTop: sp.xl },
   secHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sectionNote: { fontFamily: F.body, fontSize: 13, color: S.textSecondary, marginTop: 4, marginBottom: sp.sm },
   /* sessions / payment history — flat entry stacks on the canvas (no box), rows split by hairlines */

@@ -109,7 +109,7 @@ function formatSlots(slots: HalfDayValue, order: readonly string[], notSet: stri
       const s = slots[d];
       if (!s || (!s.am && !s.pm)) return null;
       if (s.am && s.pm) return d;
-      return `${d} (${s.am ? 'am' : 'pm'})`;
+      return `${d} (${s.am ? 'matin' : 'aprèm'})`;
     })
     .filter(Boolean);
   return parts.length ? parts.join(' · ') : notSet;
@@ -146,19 +146,19 @@ const INITIAL: ProfileData = {
   deleteRequested: false,
   av: {
     slots: {
-      Mon: { am: true, pm: true },
-      Tue: { am: true, pm: true },
-      Wed: { am: true, pm: false },
-      Thu: { am: true, pm: true },
-      Fri: { am: false, pm: true },
-      Sat: { am: false, pm: false },
-      Sun: { am: false, pm: false },
+      Lun: { am: true, pm: true },
+      Mar: { am: true, pm: true },
+      Mer: { am: true, pm: false },
+      Jeu: { am: true, pm: true },
+      Ven: { am: false, pm: true },
+      Sam: { am: false, pm: false },
+      Dim: { am: false, pm: false },
     },
     travelMin: 45,
-    transport: 'Car',
-    departures: ['12 Rue de la République, Lyon 2nd'],
-    areas: 'Lyon 3rd · 6th · 7th · Villeurbanne',
-    unavailability: 'None upcoming',
+    transport: 'Voiture',
+    departures: ['12 rue de la République, Lyon 2e'],
+    areas: 'Lyon 3e · 6e · 7e · Villeurbanne',
+    unavailability: 'Aucune à venir',
   },
   goals: { target: '40', flexibility: 'Flexible', rate: '35' },
   docs: { cv: 'verified', urssaf: 'verified', insurance: 'verified', diploma: 'verified' },
@@ -243,6 +243,17 @@ function Card({ children }: { children: React.ReactNode }) {
 export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const c = copy.profile;
   const { signOut } = useAuth();
+  // Log out only AFTER this page-sheet has finished dismissing: signOut() unmounts the whole
+  // signed-in branch, and tearing the tree down mid-dismiss leaves the native iOS sheet stuck on
+  // screen (so logout appeared to do nothing / landed on a blank screen). On logout we dismiss the
+  // sheet first, then sign out — fired by whichever lands first, the Modal's onDismiss or a timeout
+  // fallback (onDismiss can be flaky), guarded so it runs exactly once.
+  const pendingLogout = React.useRef(false);
+  const finishLogout = React.useCallback(() => {
+    if (!pendingLogout.current) return;
+    pendingLogout.current = false;
+    signOut();
+  }, [signOut]);
 
   const [p, setP] = React.useState<ProfileData>(INITIAL);
   const [sheet, setSheet] = React.useState<SheetKind | null>(null);
@@ -267,7 +278,7 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
   const ago =
     p.updatedDaysAgo === 0
       ? `${c.availability.updatedPrefix} ${c.availability.justNow}`
-      : `${c.availability.updatedPrefix} ${p.updatedDaysAgo} ${p.updatedDaysAgo === 1 ? c.availability.dayAgo : c.availability.daysAgo}`;
+      : `${c.availability.updatedPrefix} il y a ${p.updatedDaysAgo} ${p.updatedDaysAgo === 1 ? c.availability.dayAgo : c.availability.daysAgo}`;
 
   const DOC_META: Record<DocKey, { label: string; Icon: LucideIcon }> = {
     cv: { label: c.documents.cv, Icon: FileText },
@@ -307,7 +318,7 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
       case 'areas':
         return { title: e.areas.title, fields: [{ key: 'v', label: e.areas.label, value: p.av.areas, help: e.areas.help, autoCapitalize: 'words' }], onSave: (v) => editAv({ areas: v.v.trim() || p.av.areas }) };
       case 'unavailability':
-        return { title: e.unavailability.title, fields: [{ key: 'v', label: e.unavailability.label, value: p.av.unavailability, help: e.unavailability.help, autoCapitalize: 'sentences' }], onSave: (v) => editAv({ unavailability: v.v.trim() || 'None upcoming' }) };
+        return { title: e.unavailability.title, fields: [{ key: 'v', label: e.unavailability.label, value: p.av.unavailability, help: e.unavailability.help, autoCapitalize: 'sentences' }], onSave: (v) => editAv({ unavailability: v.v.trim() || 'Aucune à venir' }) };
       case 'rate':
         return { title: e.rate.title, fields: [{ key: 'v', label: e.rate.label, value: p.goals.rate, keyboardType: 'number-pad' }], onSave: (v) => setP((s) => ({ ...s, goals: { ...s.goals, rate: v.v.trim() || s.goals.rate } })) };
       case 'target':
@@ -361,7 +372,13 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
   const docStatus = p.docs[docKey];
 
   return (
-    <Modal visible={visible} onRequestClose={onClose} animationType="slide" presentationStyle="pageSheet">
+    <Modal
+      visible={visible}
+      onRequestClose={onClose}
+      onDismiss={finishLogout}
+      animationType="slide"
+      presentationStyle="pageSheet"
+    >
       <View style={{ flex: 1, backgroundColor: CANVAS }}>
         {/* ===== Top bar — eyebrow + title left, close right ===== */}
         <View style={st.topbar}>
@@ -424,8 +441,8 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
           {/* ===== Goals & rate ===== */}
           <View style={st.sectionHead}><Eyebrow>{c.goals.eyebrow}</Eyebrow></View>
           <Card>
-            <Row first icon={Target} label={c.goals.target} value={`${p.goals.target} sessions · ${p.goals.flexibility}`} onPress={() => openField('target')} />
-            <Row icon={Wallet} label={c.goals.rate} value={`${p.goals.rate} € / hour`} onPress={() => openField('rate')} />
+            <Row first icon={Target} label={c.goals.target} value={`${p.goals.target} séances · ${p.goals.flexibility}`} onPress={() => openField('target')} />
+            <Row icon={Wallet} label={c.goals.rate} value={`${p.goals.rate} € / heure`} onPress={() => openField('rate')} />
           </Card>
 
           {/* ===== Progression & activity (GAME-01/02 · SESS-05 · SESS-06) ===== */}
@@ -616,7 +633,9 @@ export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose:
           title={c.logoutConfirm.title}
           body={c.logoutConfirm.body}
           primaryLabel={c.logout}
-          onPrimary={() => { onClose(); signOut(); }}
+          // Close the confirm sheet + dismiss the profile; signOut fires once the page-sheet is
+          // gone — via onDismiss, or a 500ms fallback if onDismiss doesn't land (see finishLogout).
+          onPrimary={() => { pendingLogout.current = true; close(); onClose(); setTimeout(finishLogout, 500); }}
           secondaryLabel={c.common.cancel}
           closeA11y={c.common.close}
         />

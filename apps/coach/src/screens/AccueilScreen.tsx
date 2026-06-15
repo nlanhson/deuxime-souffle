@@ -10,7 +10,7 @@ import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Animated, Easing, AccessibilityInfo, LayoutChangeEvent, PanResponder, GestureResponderHandlers } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronLeft, ChevronRight, Wallet, TrendingUp, Bell, MapPin, CalendarDays, Check, CheckCircle2, Trophy, Building2 } from '../icons';
+import { ChevronLeft, ChevronRight, Bell, MapPin, CalendarDays, Check, CheckCircle2, Clock } from '../icons';
 
 import { palette, color, spacing as sp, radius as r, surfaces, motion, cardGradient as RAISED_GRAD } from '../theme/theme';
 import { copy } from '../copy';
@@ -21,11 +21,12 @@ import { COACH_PHOTO } from '../lib/coachProfile';
 import { AvailableDetailModal } from '../components/AvailableDetailModal';
 import { AvailableTodayModal } from '../components/AvailableTodayModal';
 import { NextSessionDetailModal } from '../components/NextSessionDetailModal';
+import { SessionMap } from '../components/SessionMap';
 import { CheckInModal } from '../components/CheckInModal';
 import { Segmented } from '../components/segmented';
 import { ProfileScreen } from './ProfileScreen';
 import { RevenusScreen } from './RevenusScreen';
-import { BadgesScreen, CURRENT_LEVEL } from './BadgesScreen';
+import { BadgesScreen, CURRENT_LEVEL, LEVEL_PROGRESS } from './BadgesScreen';
 import { useTabBarInset } from '../navigation/tabBarInsets';
 import { openDirections } from '../lib/openDirections';
 import { useFirstLoad } from '../lib/useFirstLoad';
@@ -42,7 +43,7 @@ const MOVEMENT = [palette.rouge[500], palette.or[500]] as const; // signature gr
    light surfaces). Reaching into the global ramp here; SPEC §4 proposes promoting these
    to coach-theme tokens (--color-success-on-ink, etc.). */
 const INK = {
-  ok: palette.vert[300],
+  ok: palette.vert[500],
   okBg: 'rgba(47,158,107,0.16)',
   pending: palette.or[300],
   pendingBg: 'rgba(242,194,0,0.13)',
@@ -82,28 +83,44 @@ const F = {
 // totals, AND the under-calendar detail all read from this, so a day's dot count always matches
 // what tapping it reveals, and "done" always means "already happened".
 const TODAY = 9; // June 9 — the today marker AND the past/future boundary (due vs upcoming)
+
+// Hero next-session timing (LIVE). The card's check-in state + countdown derive from a mock "now"
+// anchored to the session day and ticked from the real-time delta — so the hero behaves like a
+// real app (pre-window → check-in open → checked in) instead of a single static state, the way
+// Jobber / Square Go do. Times mirror copy.nextSession.start/end (14:30 → 15:30).
+const SESSION_START = new Date(2026, 5, TODAY, 14, 30);
+const CHECKIN_LEAD_MS = 15 * 60 * 1000;                       // check-in opens 15 min before start
+const CHECKIN_OPENS = SESSION_START.getTime() - CHECKIN_LEAD_MS;
+// Seed "now" 12 min before start: the window is already open and the coach is on site, so the
+// signature "Check in" CTA shows on load with a live countdown. Different seeds/proximity render
+// the pre-window ("Check-in opens at …") and out-of-radius ("Move closer") states automatically.
+const MOCK_NOW_SEED = SESSION_START.getTime() - 12 * 60 * 1000;
+const ON_SITE = true; // mock proximity; false renders the out-of-radius "move closer" state
+
+type CheckInPhase = 'tooEarly' | 'away' | 'ready';
+
 type DaySession = { place: string; time: string; end: string; addr: string };
 const SESSIONS_BY_DAY: Record<number, DaySession[]> = {
   2:  [{ place: 'Les Glycines', time: '10:00', end: '11:00', addr: 'Villeurbanne · 3.1 km' }],
-  4:  [{ place: 'Résidence Bellevue', time: '09:30', end: '10:30', addr: 'Lyon 6th · 2.0 km' },
-       { place: 'Park Care Home', time: '15:00', end: '16:00', addr: 'Villeurbanne · 3.1 km' }],
-  6:  [{ place: 'Les Tilleuls', time: '11:00', end: '12:00', addr: 'Lyon 3rd · 1.8 km' }],
-  8:  [{ place: 'Résidence Bellevue', time: '14:30', end: '15:30', addr: 'Lyon 6th · 2.0 km' }],
-  9:  [{ place: 'The Lindens Care Home', time: '14:30', end: '15:30', addr: '12 Lilac Street, Lyon 3rd · 2.4 km' }],
-  11: [{ place: 'Park Care Home', time: '10:00', end: '11:00', addr: 'Villeurbanne · 3.1 km' }],
-  12: [{ place: 'The Cedars Residence', time: '16:00', end: '17:00', addr: 'Lyon 7th · 4.8 km' }],
+  4:  [{ place: 'Résidence Bellevue', time: '09:30', end: '10:30', addr: 'Lyon 6e · 2.0 km' },
+       { place: 'Résidence du Parc', time: '15:00', end: '16:00', addr: 'Villeurbanne · 3.1 km' }],
+  6:  [{ place: 'Les Tilleuls', time: '11:00', end: '12:00', addr: 'Lyon 3e · 1.8 km' }],
+  8:  [{ place: 'Résidence Bellevue', time: '14:30', end: '15:30', addr: 'Lyon 6e · 2.0 km' }],
+  9:  [{ place: 'Résidence Les Tilleuls', time: '14:30', end: '15:30', addr: '12 rue des Lilas, Lyon 3e · 2.4 km' }],
+  11: [{ place: 'Résidence du Parc', time: '10:00', end: '11:00', addr: 'Villeurbanne · 3.1 km' }],
+  12: [{ place: 'Résidence Les Cèdres', time: '16:00', end: '17:00', addr: 'Lyon 7e · 4.8 km' }],
   16: [{ place: 'Les Glycines', time: '10:00', end: '11:00', addr: 'Villeurbanne · 3.1 km' }],
-  18: [{ place: 'Résidence Bellevue', time: '15:00', end: '16:00', addr: 'Lyon 6th · 2.0 km' }],
-  20: [{ place: 'Les Tilleuls', time: '09:30', end: '10:30', addr: 'Lyon 3rd · 1.8 km' }],
-  23: [{ place: 'Park Care Home', time: '11:00', end: '12:00', addr: 'Villeurbanne · 3.1 km' }],
-  25: [{ place: 'The Cedars Residence', time: '16:00', end: '17:00', addr: 'Lyon 7th · 4.8 km' }],
+  18: [{ place: 'Résidence Bellevue', time: '15:00', end: '16:00', addr: 'Lyon 6e · 2.0 km' }],
+  20: [{ place: 'Les Tilleuls', time: '09:30', end: '10:30', addr: 'Lyon 3e · 1.8 km' }],
+  23: [{ place: 'Résidence du Parc', time: '11:00', end: '12:00', addr: 'Villeurbanne · 3.1 km' }],
+  25: [{ place: 'Résidence Les Cèdres', time: '16:00', end: '17:00', addr: 'Lyon 7e · 4.8 km' }],
   27: [{ place: 'Les Glycines', time: '14:00', end: '15:00', addr: 'Villeurbanne · 3.1 km' }],
-  30: [{ place: 'Résidence Bellevue', time: '10:30', end: '11:30', addr: 'Lyon 6th · 2.0 km' }],
+  30: [{ place: 'Résidence Bellevue', time: '10:30', end: '11:30', addr: 'Lyon 6e · 2.0 km' }],
 };
 const isDue = (n: number) => n < TODAY; // past sessions already happened → "due", shown grayed
 // "Mon · June 8" label — June 1 2026 is a Monday, so weekday index = (n-1) mod 7 (Mon-first).
-const WEEKDAY_ABBR = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const dayLabel = (n: number) => `${WEEKDAY_ABBR[(n - 1) % 7]} · June ${n}`;
+const WEEKDAY_ABBR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+const dayLabel = (n: number) => `${WEEKDAY_ABBR[(n - 1) % 7]} · ${n} juin`;
 const dayA11y = (n: number, load: number) =>
   `${dayLabel(n)}, ${load === 0 ? copy.week.daySection.a11yNone : `${load} ${copy.week.daySection.a11ySessions}`}` +
   (load > 0 && isDue(n) ? `, ${copy.week.daySection.due}` : '');
@@ -111,8 +128,8 @@ const dayA11y = (n: number, load: number) =>
 // Week strip is date-driven so it can page to any week. June 8 2026 is the Monday of "this
 // week" (offset 0); offset ±1 = next/previous week. Days outside June have no mock sessions
 // (the map is June-only) and render muted + non-selectable. Month grid stays June.
-const MONTHS_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTHS_ABBR = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+const MONTHS_FULL = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const weekMonday = (offset: number) => new Date(2026, 5, 8 + offset * 7);
 const TODAY_DATE = new Date(2026, 5, TODAY);
 const parseMin = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
@@ -174,15 +191,17 @@ function monthData(offset: number) {
 }
 
 // Today's open sessions (mock). The Home card previews the first two; "See all" lists them all.
+// `pay` = the session fee (mock; real code formats it from rate × duration). Surfaced on the row
+// so coaches can triage open sessions by pay at a glance — the Grab Driver "Booking Planner" pattern.
 const AVAILABLE = [
-  { dow: 'Today', hr: '10:00', nm: 'Park Care Home', ds: 'Villeurbanne · 3.1 km · 1h',
-    date: 'Today · Tue June 9', end: '11:00', dur: '1h', addr: '8 Rue des Tilleuls, Villeurbanne · 3.1 km' },
-  { dow: 'Today', hr: '13:30', nm: 'The Cedars Residence', ds: 'Lyon 7th · 4.8 km · 1h',
-    date: 'Today · Tue June 9', end: '14:30', dur: '1h', addr: '23 Avenue du Parc, Lyon 7th · 4.8 km' },
-  { dow: 'Today', hr: '16:00', nm: 'Maple Court', ds: 'Lyon 6th · 1.9 km · 1h',
-    date: 'Today · Tue June 9', end: '17:00', dur: '1h', addr: '5 Rue Bellecour, Lyon 6th · 1.9 km' },
-  { dow: 'Today', hr: '17:30', nm: 'Riverside Care Home', ds: 'Lyon 7th · 4.1 km · 1h',
-    date: 'Today · Tue June 9', end: '18:30', dur: '1h', addr: '40 Quai Rambaud, Lyon 7th · 4.1 km' },
+  { dow: 'Aujourd’hui', hr: '10:00', nm: 'Résidence du Parc', ds: 'Villeurbanne · 3.1 km · 1h', pay: '45 €',
+    date: 'Aujourd’hui · Mar 9 juin', end: '11:00', dur: '1h', addr: '8 rue des Tilleuls, Villeurbanne · 3.1 km' },
+  { dow: 'Aujourd’hui', hr: '13:30', nm: 'Résidence Les Cèdres', ds: 'Lyon 7e · 4.8 km · 1h', pay: '45 €',
+    date: 'Aujourd’hui · Mar 9 juin', end: '14:30', dur: '1h', addr: '23 avenue du Parc, Lyon 7e · 4.8 km' },
+  { dow: 'Aujourd’hui', hr: '16:00', nm: 'Résidence Les Érables', ds: 'Lyon 6e · 1.9 km · 1h', pay: '50 €',
+    date: 'Aujourd’hui · Mar 9 juin', end: '17:00', dur: '1h', addr: '5 rue Bellecour, Lyon 6e · 1.9 km' },
+  { dow: 'Aujourd’hui', hr: '17:30', nm: 'Résidence des Berges', ds: 'Lyon 7e · 4.1 km · 1h', pay: '45 €',
+    date: 'Aujourd’hui · Mar 9 juin', end: '18:30', dur: '1h', addr: '40 quai Rambaud, Lyon 7e · 4.1 km' },
 ];
 type AvailItem = (typeof AVAILABLE)[number];
 
@@ -286,23 +305,19 @@ function MetricTile({ label, value, unit, base, Icon, tint, tintBg, a11y, valueO
   );
 }
 
-function CalSummary({ done, total, pct, hours, valueOpacity }: { done: number; total: number; pct: number; hours: string; valueOpacity?: Animated.Value }) {
+// Condensed to a single quiet line ("4 of 5 sessions · 7h 30m") instead of two big-number tiles —
+// the calendar grid below is the real "schedule at a glance"; this is just its caption. The done
+// count keeps a subtle green accent; everything else stays muted. Crossfades on Week/Month switch.
+function CalSummary({ done, total, hours, valueOpacity }: { done: number; total: number; pct: number; hours: string; valueOpacity?: Animated.Value }) {
   const t = copy.week.tiles;
   return (
-    <View style={st.tileRow}>
-      <MetricTile
-        label={t.scheduled} value={total} unit={t.unit} base={hours}
-        Icon={CalendarDays} tint={INK.info} tintBg={INK.infoBg}
-        a11y={`${total} ${t.unit} ${t.scheduled.toLowerCase()}, ${hours}`}
-        valueOpacity={valueOpacity}
-      />
-      <MetricTile
-        label={t.done} value={done} unit={t.unit} base={`${pct}% ${t.complete}`}
-        Icon={Check} tint={INK.ok} tintBg={INK.okBg}
-        a11y={`${done} ${t.unit} ${t.done.toLowerCase()}, ${pct}% ${t.complete}`}
-        valueOpacity={valueOpacity}
-      />
-    </View>
+    <Animated.Text
+      style={[st.calSummary, valueOpacity != null && { opacity: valueOpacity }]}
+      accessibilityLabel={`${done} ${copy.week.ofLabel} ${total} ${t.unit} ${t.done.toLowerCase()}, ${hours}`}
+    >
+      <Text style={st.calSummaryStrong}>{done}</Text>
+      {` ${copy.week.ofLabel} ${total} ${t.unit} · ${hours}`}
+    </Animated.Text>
   );
 }
 
@@ -335,10 +350,13 @@ function WeekView({ days, selected, onSelect, fade, x, pan }: {
               <View style={[st.dayNumWrap, on && st.dayNumSel]}>
                 <Text style={[st.dayN, on && st.dayNSelText, day.empty && !on && { color: S.textSecondary }, day.today && { color: palette.neutral[0] }]}>{day.dom}</Text>
               </View>
+              {/* Per-day session count — a small red number circle (shared with the Available page). */}
               <View style={st.load}>
-                {Array.from({ length: day.load }).map((_, i) => (
-                  <View key={i} style={st.loadDot} />
-                ))}
+                {day.load > 0 ? (
+                  <View style={st.dayCountPill}>
+                    <Text style={st.dayCountTxt}>{day.load}</Text>
+                  </View>
+                ) : null}
               </View>
             </Pressable>
           );
@@ -473,6 +491,7 @@ export function AccueilScreen() {
   const [nextDetail, setNextDetail] = React.useState(false);
   const [checkInOpen, setCheckInOpen] = React.useState(false);   // C16 check-in flow (hero next session)
   const [checkedIn, setCheckedIn] = React.useState(false);       // flips the hero CTA once on site
+  const [late, setLate] = React.useState(false);                 // C18 — checked in after the on-time window
   const [seeAllOpen, setSeeAllOpen] = React.useState(false);
   const [revenusOpen, setRevenusOpen] = React.useState(false);
   const [calMode, setCalMode] = React.useState<CalMode>('week');   // drives the toggle — updates instantly on press
@@ -493,6 +512,22 @@ export function AccueilScreen() {
   const [measured, setMeasured] = React.useState(false);
   const tabBarInset = useTabBarInset();
   const loading = useFirstLoad('accueil');
+
+  // Live mock clock for the hero — anchored to the session day, ticked from the real-time delta so
+  // the countdown actually moves. Drives the check-in phase + the "starts in …" readout. We poll
+  // each second but only re-render when the displayed MINUTE changes (the countdown + every phase
+  // boundary are minute-aligned), so the screen doesn't re-render 60×/min for no visible change.
+  const [nowMs, setNowMs] = React.useState(MOCK_NOW_SEED);
+  React.useEffect(() => {
+    const t0 = Date.now();
+    let lastMin = Math.floor(MOCK_NOW_SEED / 60000);
+    const id = setInterval(() => {
+      const next = MOCK_NOW_SEED + (Date.now() - t0);
+      const min = Math.floor(next / 60000);
+      if (min !== lastMin) { lastMin = min; setNowMs(next); }
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   // Slide + fade between the two periods. The content moves WITH the toggle's spatial order
   // (Week left, Month right): picking Month slides the current view out to the left and brings
@@ -598,6 +633,19 @@ export function AccueilScreen() {
   ).current;
   const mo = monthData(monthOffset);
 
+  // Hero check-in phase, derived live from the mock clock + proximity. Pre-window shows a
+  // countdown to when check-in opens; out-of-radius asks the coach to move closer; on site shows
+  // the red check-in CTA. The status chip and countdown track the same source.
+  const checkInPhase: CheckInPhase =
+    nowMs < CHECKIN_OPENS ? 'tooEarly' : !ON_SITE ? 'away' : 'ready';
+  const statusChip = checkedIn
+    ? (late
+        ? { label: copy.nextSession.statusLate, fg: INK.pending, bg: INK.pendingBg }
+        : { label: copy.sessions.status.checkedIn, fg: INK.ok, bg: INK.okBg })
+    : checkInPhase === 'ready'
+      ? { label: copy.sessions.status.checkinOpen, fg: INK.ok, bg: INK.okBg }
+      : { label: copy.nextSession.status, fg: INK.info, bg: INK.infoBg };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: S.canvas }} edges={['top', 'left', 'right']}>
       <Reveal loading={loading} skeleton={<AccueilSkeleton />}>
@@ -605,17 +653,31 @@ export function AccueilScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: sp.lg, paddingBottom: sp.xl + tabBarInset }}
       >
-        {/* ===== App header — greeting left, notifications + profile right ===== */}
+        {/* ===== App header — name + level/progress left, notifications + profile right ===== */}
         <View style={st.appbar}>
           <View style={{ flex: 1 }}>
-            <Eyebrow>{copy.header.date}</Eyebrow>
             <Text style={st.greet} numberOfLines={1}>{copy.header.greeting}</Text>
+            {/* Level + progress to next (PLA-01) — sits under the name as plain "Lv3" + a meter
+                (no badge/chip), opening Badges & level. The rouge→or meter matches the Badges
+                screen's level bar (the theme reserves that gradient for medals / progress). */}
+            <Pressable
+              style={({ pressed }) => [st.levelRow, pressed && { opacity: 0.6 }]}
+              hitSlop={8}
+              onPress={() => setBadgesOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel={copy.header.levelA11y}
+            >
+              <Text style={st.levelTxt}>{`${copy.header.levelPrefix}${CURRENT_LEVEL}`}</Text>
+              <View style={st.levelTrack}>
+                <LinearGradient
+                  colors={MOVEMENT}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[st.levelFill, { width: `${Math.round(LEVEL_PROGRESS * 100)}%` }]}
+                />
+              </View>
+            </Pressable>
           </View>
-          {/* Coach badge / level (PLA-01) — opens Badges & level; gold to read as a reward. */}
-          <Pressable style={st.levelChip} hitSlop={6} onPress={() => setBadgesOpen(true)} accessibilityRole="button" accessibilityLabel={copy.header.levelA11y}>
-            <Trophy size={14} color={palette.or[300]} />
-            <Text style={st.levelTxt}>{`${copy.header.levelPrefix} ${CURRENT_LEVEL}`}</Text>
-          </Pressable>
           <Pressable style={st.iconBtn} hitSlop={6} onPress={() => setNotifOpen(true)} accessibilityLabel={copy.header.notificationsA11y}>
             <Bell size={22} color={S.textPrimary} fill={S.textPrimary} />
             <View style={st.badgeDot} />
@@ -629,57 +691,39 @@ export function AccueilScreen() {
             surface through the notification center (the bell) — report alerts are anomaly-only,
             availability reminders live in the coach inbox. Kept off Home to stick to scope. */}
 
-        {/* ===== This month (C35) — moved to the top per request ===== */}
+        {/* ===== This month earnings (C35) — kept at the top, condensed to a single quiet line. No
+            box/border (per design direction): it reads as a plain section header + figures, tappable
+            via the chevron + press feedback, flush with the other sections. ===== */}
         <View style={st.section}>
-          <SectionHeader title={copy.earnings.eyebrow} onLink={() => setRevenusOpen(true)} />
-          {/* Two columns (Earned · Projected) sitting bare on the canvas — no boxed background. The
-              whole "This month" section is the affordance — tapping anywhere opens the dashboard. */}
           <Pressable
             style={({ pressed }) => [pressed && { opacity: 0.7 }]}
             onPress={() => setRevenusOpen(true)}
             accessibilityRole="button"
-            accessibilityLabel={`${copy.earnings.earned}, 840 €. ${copy.earnings.projected}, 1,260 €`}
+            accessibilityLabel={`${copy.earnings.eyebrow}. ${copy.earnings.earned}, 840 €. ${copy.earnings.projected}, 1,260 €`}
           >
-            <View style={st.earnFill}>
-              {/* Earned — green accent = realised revenue */}
-              <View style={st.metricCol}>
-                <View style={[st.metricIcon, { backgroundColor: ACCENT_GREEN_BG }]}>
-                  <Wallet size={18} color={ACCENT_GREEN} strokeWidth={2.4} />
-                </View>
-                <View style={st.metricText}>
-                  <Text style={st.metricTitle}>{copy.earnings.earned}</Text>
-                  <Text style={st.metricValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
-                    <Text style={{ color: ACCENT_GREEN }}>840 </Text>
-                    <Text style={[st.metricUnit, { color: ACCENT_GREEN }]}>€</Text>
-                  </Text>
-                </View>
-              </View>
-
-              {/* Projected — yellow accent = forecast revenue */}
-              <View style={st.metricCol}>
-                <View style={[st.metricIcon, { backgroundColor: ACCENT_YELLOW_BG }]}>
-                  <TrendingUp size={18} color={ACCENT_YELLOW} strokeWidth={2.4} />
-                </View>
-                <View style={st.metricText}>
-                  <Text style={st.metricTitle}>{copy.earnings.projected}</Text>
-                  <Text style={st.metricValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
-                    <Text style={{ color: ACCENT_YELLOW }}>1,260 </Text>
-                    <Text style={[st.metricUnit, { color: ACCENT_YELLOW }]}>€</Text>
-                  </Text>
-                </View>
-              </View>
+            <View style={st.earnCardHead}>
+              <Text style={st.secTitle}>{copy.earnings.eyebrow}</Text>
+              <ChevronRight size={16} color={S.textSecondary} />
+            </View>
+            <View style={st.earnRowVals}>
+              <Text style={st.earnFigEarned}>840 €</Text>
+              <Text style={st.earnWord}>{copy.earnings.earned}</Text>
+              <Text style={st.earnSep}>·</Text>
+              <Text style={st.earnFigProj}>1,260 €</Text>
+              <Text style={st.earnWord}>{copy.earnings.projected}</Text>
             </View>
           </Pressable>
         </View>
 
-        {/* ===== Hero: next session (C16 / C21 / C22) ===== */}
+        {/* ===== Hero: next session (C16 / C21 / C22) — the screen's single focal point ===== */}
         <View style={st.section}>
           <View style={st.secHead}>
             <Text style={st.secTitle}>{copy.nextSession.eyebrow}</Text>
-            {/* Status chip lives on the section-title row (outside the card), far right. */}
-            <View style={[st.chip, { backgroundColor: INK.okBg }]}>
-              <View style={[st.dot, { backgroundColor: INK.ok }]} />
-              <Text style={[st.chipTxt, { color: INK.ok }]}>{copy.nextSession.status}</Text>
+            {/* Status chip lives on the section-title row (outside the card), far right. Tracks the
+                live phase: Confirmed → Check-in open → Checked in (or Running late). */}
+            <View style={[st.chip, { backgroundColor: statusChip.bg }]}>
+              <View style={[st.dot, { backgroundColor: statusChip.fg }]} />
+              <Text style={[st.chipTxt, { color: statusChip.fg }]}>{statusChip.label}</Text>
             </View>
           </View>
 
@@ -691,37 +735,68 @@ export function AccueilScreen() {
             accessibilityRole="button"
             accessibilityLabel={`${copy.nextSession.place}, ${copy.nextSession.start} to ${copy.nextSession.end}, ${copy.nextSession.address}`}
           >
-            <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={st.heroFill}>
-              <View style={st.heroTitleRow}>
-                <Text style={[st.heroTitle, { flex: 1 }]} numberOfLines={1}>{copy.nextSession.place}</Text>
-              </View>
-              <View style={st.metaRow}>
-                <MapPin size={15} color={S.textSecondary} />
-                <Text style={st.metaLight}>{copy.nextSession.address}</Text>
-              </View>
-              {/* Unit type (PLA-01) — which care unit inside the EHPAD. */}
-              <View style={st.metaRow}>
-                <Building2 size={15} color={S.textSecondary} />
-                <Text style={st.metaLight}>{copy.nextSession.unit}</Text>
-              </View>
+            {/* Fresha "Upcoming" layout: a functional map on top, then a minimal info stack
+                (place · when · duration+unit). The map shows WHERE, so the address line is dropped. */}
+            <View style={st.heroClip}>
+              <SessionMap
+                onPress={() => openDirections(copy.nextSession.address)}
+                a11y={`${copy.nextSession.directions}: ${copy.nextSession.address}`}
+                style={st.heroMap}
+              />
+              <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={st.heroBody}>
+                <Text style={st.heroTitle} numberOfLines={1}>{copy.nextSession.place}</Text>
+                <Text style={st.heroWhen}>{`${copy.nextSession.whenPrefix} · ${copy.nextSession.start} → ${copy.nextSession.end}`}</Text>
+                <Text style={st.heroMeta} numberOfLines={1}>{`${copy.nextSession.duration} · ${copy.nextSession.unit}`}</Text>
 
-              <View style={st.timeRow}>
-                <Text style={st.timeBig}>14:30</Text>
-                <Text style={st.timeTo}>→ 15:30</Text>
-              </View>
-
-              {/* Check-in state line lives here in the NOT-yet-available states (pre-window /
-                  out-of-radius) — e.g. "Check-in opens at 14:15" / "Move closer to check in".
-                  In the open/on-site state the enabled gradient button is signal enough, so the
-                  always-on "you're on site" chip was dropped to declutter. Copy kept in copy.ts. */}
-
+              {/* Phase-aware footer (mirrors the CheckInModal's own time + location states):
+                  pre-window  → "Check-in opens at …" + Directions only
+                  out-of-radius → "Move closer" hint + Directions + a disabled Check-in
+                  on site     → Directions + the red Check-in CTA
+                  checked in  → confirmation badge (with the late variant). */}
               {checkedIn ? (
                 <View style={st.ctaRow}>
                   <View style={st.checkedInBadge}>
-                    <CheckCircle2 size={16} color={palette.vert[300]} style={{ marginRight: 6 }} />
-                    <Text style={st.checkedInTxt}>{copy.sessions.status.checkedIn}</Text>
+                    <CheckCircle2 size={16} color={palette.vert[500]} style={{ marginRight: 6 }} />
+                    <Text style={st.checkedInTxt}>{late ? copy.nextSession.checkedInLate : copy.sessions.status.checkedIn}</Text>
                   </View>
                 </View>
+              ) : checkInPhase === 'tooEarly' ? (
+                <>
+                  <View style={st.statusLine}>
+                    <Clock size={14} color={INK.info} />
+                    <Text style={[st.statusLineTxt, { color: INK.info }]}>{copy.nextSession.opensLine}</Text>
+                  </View>
+                  <View style={st.ctaRow}>
+                    <Pressable
+                      style={st.secondaryBtn}
+                      onPress={() => openDirections(copy.nextSession.address)}
+                      accessibilityRole="button"
+                      accessibilityLabel={copy.nextSession.directions}
+                    >
+                      <Text style={st.secondaryTxt}>{copy.nextSession.directions}</Text>
+                    </Pressable>
+                  </View>
+                </>
+              ) : checkInPhase === 'away' ? (
+                <>
+                  <View style={st.statusLine}>
+                    <MapPin size={14} color={INK.pending} />
+                    <Text style={[st.statusLineTxt, { color: INK.pending }]}>{copy.nextSession.awayLine}</Text>
+                  </View>
+                  <View style={st.ctaRow}>
+                    <Pressable
+                      style={st.secondaryBtn}
+                      onPress={() => openDirections(copy.nextSession.address)}
+                      accessibilityRole="button"
+                      accessibilityLabel={copy.nextSession.directions}
+                    >
+                      <Text style={st.secondaryTxt}>{copy.nextSession.directions}</Text>
+                    </Pressable>
+                    <View style={[st.disabledBtn, { flex: 1 }]} accessibilityRole="button" accessibilityState={{ disabled: true }}>
+                      <Text style={st.disabledTxt}>{copy.nextSession.checkInCta}</Text>
+                    </View>
+                  </View>
+                </>
               ) : (
                 <View style={st.ctaRow}>
                   <Pressable
@@ -732,10 +807,11 @@ export function AccueilScreen() {
                   >
                     <Text style={st.secondaryTxt}>{copy.nextSession.directions}</Text>
                   </Pressable>
-                  <PrimaryButton label={copy.nextSession.checkInCta} onPress={() => setCheckInOpen(true)} style={{ flex: 1 }} />
+                  <PrimaryButton compact label={copy.nextSession.checkInCta} onPress={() => setCheckInOpen(true)} style={{ flex: 1 }} />
                 </View>
               )}
-            </LinearGradient>
+              </LinearGradient>
+            </View>
           </Pressable>
         </View>
 
@@ -762,6 +838,8 @@ export function AccueilScreen() {
                 <Text style={st.availNm} numberOfLines={1}>{a.nm}</Text>
                 <Text style={st.availDs} numberOfLines={1}>{a.ds}</Text>
               </View>
+              {/* Session fee, trailing — lets coaches triage open sessions by pay (Grab Driver). */}
+              <Text style={st.availPay}>{a.pay}</Text>
             </Pressable>
           ))}
         </View>
@@ -872,7 +950,7 @@ export function AccueilScreen() {
         visible={checkInOpen}
         session={{ place: copy.nextSession.place, time: copy.nextSession.start, addr: copy.nextSession.address }}
         onClose={() => setCheckInOpen(false)}
-        onConfirmed={() => setCheckedIn(true)}
+        onConfirmed={(wasLate) => { setCheckedIn(true); setLate(wasLate); }}
       />
     </SafeAreaView>
   );
@@ -904,13 +982,13 @@ const st = StyleSheet.create({
 
   /* header */
   appbar: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, paddingTop: sp.sm, paddingBottom: sp.sm },
-  greet: { fontFamily: F.oswS, fontSize: 28, lineHeight: 32, color: S.textPrimary, marginTop: 6 },
-  // Coach level chip — gold-tinted pill (reward), 44px tall touch target.
-  levelChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 32,
-    paddingHorizontal: 12, borderRadius: r.pill, backgroundColor: 'rgba(242,194,0,0.13)',
-  },
+  greet: { fontFamily: F.oswS, fontSize: 28, lineHeight: 32, color: S.textPrimary },
+  // Level + progress under the name (PLA-01) — plain "Lv3" in gold (reads as reward without a
+  // chip/badge) beside a slim rouge→or meter. Row padding + hitSlop keep the tap target ≥44.
+  levelRow: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, marginTop: 0, minHeight: 32, paddingVertical: 4, alignSelf: 'flex-start' },
   levelTxt: { fontFamily: F.bodyS, fontSize: 13, color: palette.or[300] },
+  levelTrack: { width: 96, height: 6, borderRadius: r.pill, backgroundColor: 'rgba(255,255,255,0.10)', overflow: 'hidden' },
+  levelFill: { height: 6, borderRadius: r.pill },
   // No background — the bell sits directly on the canvas; keep 44×44 for the tap target.
   iconBtn: {
     width: 44, height: 44, alignItems: 'center', justifyContent: 'center',
@@ -944,43 +1022,33 @@ const st = StyleSheet.create({
   chipTxt: { fontFamily: F.body, fontSize: 12 },
   dot: { width: 8, height: 8, borderRadius: 999 },
 
-  /* hero card — ink, elevated. Same raised-surface effect as the summary tiles (slight gradient +
-     very dim hairline), plus the shadow + the red gradient CTA that keep it the hero. The outer
-     Pressable carries the rounded shadow (bg matches the gradient base so the shadow stays rounded);
-     the inner LinearGradient is the visible fill, clipped to the radius and dim-bordered. */
+  /* hero card — Fresha "Upcoming" layout: a map on top, then a minimal info stack. The outer
+     Pressable carries the rounded shadow; heroClip rounds + clips the map's top corners; heroBody
+     is the ink fill under the map holding the text + actions. */
   heroCard: {
     backgroundColor: S.surface, borderRadius: r.xl,
     shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.35, shadowRadius: 20,
   },
-  heroFill: {
-    borderRadius: r.xl, padding: sp.lg, overflow: 'hidden',
-    borderWidth: 1, borderColor: RAISED_BORDER,
-  },
-  heroTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: sp.sm },
+  heroClip: { borderRadius: r.xl, overflow: 'hidden', borderWidth: 1, borderColor: RAISED_BORDER },
+  heroMap: { height: 150 }, // square corners — heroClip rounds the top; the body covers the bottom
+  heroBody: { padding: sp.lg },
   heroTitle: { fontFamily: F.bodyB, fontSize: 20, color: S.textPrimary },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  metaLight: { fontFamily: F.body, fontSize: 14, color: S.textSecondary },
-  // Centering the visible digits between address and buttons: the Anton lineHeight box carries
-  // MORE empty space below the digits (descender room, no descenders in numerals) than above,
-  // so we give the row a bigger TOP margin (16) than the effective bottom (ctaRow uses 8). Net
-  // visible gap above ≈ below → the time block reads as the exact middle of the card.
-  timeRow: { flexDirection: 'row', alignItems: 'baseline', gap: sp.sm, marginTop: sp.md, marginBottom: 0 },
-  // Anton needs lineHeight >= ~1.2x fontSize or iOS clips the glyph top/bottom.
-  timeBig: { fontFamily: F.display, fontSize: 50, lineHeight: 62, color: S.textPrimary },
-  timeTo: { fontFamily: F.oswS, fontSize: 20, color: S.textSecondary },
+  // Compact when-line ("Today · 14:30 → 15:30") — replaces the old 50px Anton time block.
+  heroWhen: { fontFamily: F.bodyS, fontSize: 15, color: S.textPrimary, marginTop: 12 },
+  heroMeta: { fontFamily: F.body, fontSize: 14, color: S.textSecondary, marginTop: 2 },
 
-  ctaRow: { flexDirection: 'row', gap: sp.sm, marginTop: sp.sm },
+  ctaRow: { flexDirection: 'row', gap: sp.sm, marginTop: sp.lg },
   secondaryBtn: {
     flex: 1, minHeight: 44, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center',
     borderWidth: 1.5, borderColor: palette.neutral[600],
   },
-  secondaryTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: S.textPrimary },
+  secondaryTxt: { fontFamily: F.bodyS, fontSize: 15, letterSpacing: 0.2, color: S.textPrimary },
   // checked-in confirmation — replaces the CTA row on the hero once the coach is on site
   checkedInBadge: {
     flex: 1, minHeight: 44, borderRadius: r.pill, flexDirection: 'row',
     alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(47,158,107,0.16)',
   },
-  checkedInTxt: { fontFamily: F.bodyS, fontSize: 15, letterSpacing: 0.2, color: palette.vert[300] },
+  checkedInTxt: { fontFamily: F.bodyS, fontSize: 15, letterSpacing: 0.2, color: palette.vert[500] },
 
   /* generic card on ink */
   /* month grid — 7-column calendar; one red dot marks days with sessions, today gold-on-ink */
@@ -1019,7 +1087,14 @@ const st = StyleSheet.create({
   dayNumSel: { backgroundColor: color.action }, // selected day → filled red circle
   dayN: { fontFamily: F.oswM, fontSize: 20, color: S.textPrimary },
   dayNSelText: { color: color.onAction }, // white digit on the red circle
-  load: { flexDirection: 'row', gap: 3, marginTop: 6, minHeight: 5 },
+  load: { flexDirection: 'row', marginTop: 6, minHeight: 16, alignItems: 'center', justifyContent: 'center' },
+  // Week strip: per-day session count as a small red number circle (shared with the Available page).
+  dayCountPill: {
+    minWidth: 16, height: 16, borderRadius: 999, paddingHorizontal: 4,
+    backgroundColor: 'rgba(225,50,43,0.16)', alignItems: 'center', justifyContent: 'center',
+  },
+  dayCountTxt: { fontFamily: F.bodyS, fontSize: 11, color: palette.rouge[300] },
+  // Month grid: a simple red dot marks days with sessions (count circle reserved for the week strip).
   loadDot: { width: 5, height: 5, borderRadius: 999, backgroundColor: color.action },
   muted: { fontFamily: F.body, fontSize: 14, color: S.textSecondary },
   // Apple-Fitness-style metric tiles (scheduled / done) — two cards side by side above the
@@ -1035,6 +1110,9 @@ const st = StyleSheet.create({
   tileNum: { fontFamily: F.display, fontSize: 30, color: S.textPrimary },
   tileUnit: { fontFamily: F.body, fontSize: 13, color: S.textSecondary },
   tileBase: { fontFamily: F.body, fontSize: 12, color: S.textSecondary },
+  // Condensed calendar caption ("4 of 5 sessions · 7h 30m") — replaces the two big-number tiles.
+  calSummary: { fontFamily: F.body, fontSize: 14, color: S.textSecondary, marginBottom: sp.xs },
+  calSummaryStrong: { fontFamily: F.bodyS, fontSize: 14, color: palette.vert[500] },
 
   /* available rows */
   availRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: sp.md },
@@ -1077,4 +1155,27 @@ const st = StyleSheet.create({
   metricTitle: { fontFamily: F.body, fontSize: 14, color: S.textSecondary, marginBottom: 2 },
   metricValue: { fontFamily: F.bodyS, fontSize: 26, lineHeight: 32, letterSpacing: -0.3 },
   metricUnit: { fontFamily: F.bodyS, fontSize: 18 },
+  // Sub-figure under each earnings number (e.g. "12 sessions confirmed" / "+6 upcoming").
+  metricSub: { fontFamily: F.body, fontSize: 12, color: S.textSecondary, marginTop: 2 },
+  // Condensed earnings caption at the foot of the page — one compact line, a single green accent
+  // on the realised figure (Earned); projected stays neutral so colour isn't overused.
+  // Flat bordered container (no shadow) — signals tappable per the house style, lighter than a card.
+  earnCardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  earnRowVals: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', gap: 6, marginTop: sp.xs },
+  earnFigEarned: { fontFamily: F.bodyS, fontSize: 18, color: palette.vert[500] },
+  earnFigProj: { fontFamily: F.bodyS, fontSize: 18, color: S.textPrimary },
+  earnWord: { fontFamily: F.body, fontSize: 13, color: S.textSecondary },
+  earnSep: { fontFamily: F.body, fontSize: 13, color: S.textSecondary },
+
+  /* hero — phase status line + disabled check-in (out-of-radius) */
+  // Status line above the CTA row in the pre-window / out-of-radius states (icon + word — never
+  // colour alone). Colour is carried inline per phase (info blue / pending amber).
+  statusLine: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: sp.sm },
+  statusLineTxt: { fontFamily: F.bodyS, fontSize: 13, letterSpacing: 0.2 },
+  // Disabled check-in button (out-of-radius): a step lighter than the card, muted label — clearly
+  // not the live red CTA.
+  disabledBtn: { minHeight: 44, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.neutral[700] },
+  disabledTxt: { fontFamily: F.bodyS, fontSize: 15, letterSpacing: 0.2, color: palette.neutral[400] },
+  // Session fee, trailing on the available-row (green = money, matching the Earned figure).
+  availPay: { fontFamily: F.oswS, fontSize: 16, color: palette.vert[500] },
 });

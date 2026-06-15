@@ -57,15 +57,19 @@ const LEVEL = {
   bandSize: 25,
 };
 
+// Fraction (0–1) into the current level band — exposed so the Home header progress bar (PLA-01)
+// shows the same progress without re-deriving it.
+export const LEVEL_PROGRESS = LEVEL.bandDone / LEVEL.bandSize;
+
 type BadgeKey = keyof typeof copy.game.badges;
 type Badge = { key: BadgeKey; icon: LucideIcon; earned: string | null }; // earned = mock date label
 
 const BADGES: Badge[] = [
-  { key: 'first', icon: Sparkles, earned: 'Sep 2025' },
-  { key: 'ten', icon: Star, earned: 'Oct 2025' },
-  { key: 'fifty', icon: Trophy, earned: 'Feb 2026' },
-  { key: 'punctual', icon: Clock, earned: 'Mar 2026' },
-  { key: 'favourite', icon: Flame, earned: 'May 2026' },
+  { key: 'first', icon: Sparkles, earned: 'sept. 2025' },
+  { key: 'ten', icon: Star, earned: 'oct. 2025' },
+  { key: 'fifty', icon: Trophy, earned: 'févr. 2026' },
+  { key: 'punctual', icon: Clock, earned: 'mars 2026' },
+  { key: 'favourite', icon: Flame, earned: 'mai 2026' },
   { key: 'hundred', icon: Trophy, earned: null },
   { key: 'explorer', icon: MapPin, earned: null },
   { key: 'streak', icon: ShieldCheck, earned: null },

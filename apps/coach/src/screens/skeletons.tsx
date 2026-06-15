@@ -90,7 +90,8 @@ function CalendarSkeleton() {
           <View key={i} style={sk.day}>
             <Skeleton w={22} h={12} r={4} />
             <SkeletonCircle d={34} style={{ marginTop: 8 }} />
-            <Skeleton w={5} h={5} r={3} style={{ marginTop: 8 }} />
+            {/* week strip shows a small count circle (month view uses dots) */}
+            <Skeleton w={16} h={16} r={8} style={{ marginTop: 8 }} />
           </View>
         ))}
       </View>
@@ -125,19 +126,17 @@ export function AccueilSkeleton() {
     <View style={sk.screen}>
       <HeaderSkeleton level />
 
-      {/* This month — earnings (two bare metric columns, no boxed background) */}
+      {/* This month — earnings: title + chevron, then one condensed value line (no box) */}
       <View style={sk.section}>
-        <Skeleton w={118} h={14} r={5} style={{ marginBottom: sp.sm }} />
+        <View style={sk.secHead}>
+          <Skeleton w={140} h={14} r={5} />
+          <SkeletonCircle d={16} />
+        </View>
         <View style={sk.earnRow}>
-          {[0, 1].map((i) => (
-            <View key={i} style={sk.metricCol}>
-              <Skeleton w={36} h={36} r={11} />
-              <View style={{ flex: 1, gap: 7 }}>
-                <Skeleton w={58} h={12} r={4} />
-                <Skeleton w={'70%'} h={22} r={6} />
-              </View>
-            </View>
-          ))}
+          <Skeleton w={72} h={18} r={6} />
+          <Skeleton w={48} h={13} r={4} />
+          <Skeleton w={84} h={18} r={6} />
+          <Skeleton w={64} h={13} r={4} />
         </View>
       </View>
 
@@ -154,8 +153,8 @@ export function AccueilSkeleton() {
           <Skeleton w={'66%'} h={14} r={5} style={{ marginTop: 8 }} />
           <Skeleton w={150} h={44} r={8} style={{ marginTop: sp.md }} />
           <View style={sk.ctaRow}>
-            <Skeleton w={'40%'} h={44} r={r.pill} />
-            <Skeleton style={{ flex: 1 }} h={44} r={r.pill} />
+            <Skeleton w={'40%'} h={52} r={r.pill} />
+            <Skeleton style={{ flex: 1 }} h={52} r={r.pill} />
           </View>
         </SkCard>
       </View>
@@ -249,7 +248,7 @@ export function RevenusSkeleton() {
           <Skeleton w={120} h={12} r={4} />
           <Skeleton w={100} h={12} r={4} />
         </View>
-        <Skeleton w={'100%'} h={44} r={r.pill} style={{ marginTop: sp.lg }} />
+        <Skeleton w={'100%'} h={52} r={r.pill} style={{ marginTop: sp.lg }} />
       </SkCard>
 
       {/* Three stat tiles */}
@@ -298,7 +297,7 @@ export function ProfileSkeleton() {
 
       {/* Availability (6 rows) + CTA */}
       <CardRowsSkeleton rows={6} />
-      <Skeleton w={'100%'} h={48} r={r.pill} style={{ marginTop: sp.md }} />
+      <Skeleton w={'100%'} h={52} r={r.pill} style={{ marginTop: sp.md }} />
 
       {/* Goals & rate (2), Progression & activity (3), Documents (4), Account (4 — incl. delete) */}
       <CardRowsSkeleton rows={2} />
@@ -441,9 +440,8 @@ const sk = StyleSheet.create({
     backgroundColor: CARD_BG, borderRadius: r.xl, padding: sp.lg,
     borderWidth: 1, borderColor: CARD_BORDER,
   },
-  // Bare earnings row (matches the real screen — no boxed background; columns sit on the canvas).
-  earnRow: { flexDirection: 'row', alignItems: 'center', marginTop: sp.xs },
-  metricCol: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  // Bare earnings value line (matches the real screen — figure + word · figure + word, no box).
+  earnRow: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, marginTop: sp.xs, flexWrap: 'wrap' },
 
   ctaRow: { flexDirection: 'row', gap: sp.sm, marginTop: sp.md },
 

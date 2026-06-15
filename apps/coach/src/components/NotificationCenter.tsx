@@ -66,12 +66,12 @@ const TYPE_ACTION: Record<NotifType, {
   doneBody?: string;    // success-state body (task kind)
   resultChip?: string;  // short label left on the row after the task completes
 }> = {
-  assigned:     { kind: 'task', doneTitle: 'Hand raised', doneBody: "You're on the shortlist for this session. We'll let you know as soon as the coordinator confirms.", resultChip: 'Applied' },
-  checkin:      { kind: 'task', doneTitle: 'Checked in', doneBody: 'Your geolocated check-in is confirmed. The session has started, so have a great session.', resultChip: 'Checked in' },
+  assigned:     { kind: 'task', doneTitle: 'Candidature envoyée', doneBody: 'Vous êtes sur la liste des coachs pressentis pour cette séance. Nous vous préviendrons dès que le coordinateur confirme.', resultChip: 'Postulé' },
+  checkin:      { kind: 'task', doneTitle: 'Check-in fait', doneBody: 'Votre check-in géolocalisé est confirmé. La séance a commencé, belle séance à vous.', resultChip: 'Check-in fait' },
   reportDue:    { kind: 'report' },
-  confirmed:    { kind: 'task', doneTitle: 'Added to your calendar', doneBody: 'This session is saved to your calendar. Directions open on the day from your schedule.', resultChip: 'In calendar' },
+  confirmed:    { kind: 'task', doneTitle: 'Ajouté à votre agenda', doneBody: 'Cette séance est enregistrée dans votre agenda. L’itinéraire s’ouvrira le jour même depuis votre planning.', resultChip: 'Au calendrier' },
   payment:      { kind: 'revenus' },
-  availability: { kind: 'task', doneTitle: 'Availability updated', doneBody: 'Your availability is refreshed. The matching algorithm will keep offering you sessions that fit your schedule.', resultChip: 'Updated' },
+  availability: { kind: 'task', doneTitle: 'Disponibilités mises à jour', doneBody: 'Vos disponibilités sont actualisées. L’algorithme de matching continuera de vous proposer des séances adaptées à votre planning.', resultChip: 'Mis à jour' },
 };
 
 // Icon + on-ink colour per type (same tones the screens use for status).
@@ -87,34 +87,34 @@ const TYPE_META: Record<NotifType, { Icon: LucideIcon; fg: string; bg: string }>
 // Mock notifications — placeholders (real code pulls from the notifications service / push).
 const SEED: Notif[] = [
   {
-    id: 'n1', type: 'assigned', title: 'New session available', body: 'Maple Court · Thu 11 June, 11:00 · 1.9 km', time: '2m', unread: true,
-    detail: 'Maple Court is looking for a coach for a group session on Thursday 11 June at 11:00 (1 hour, ~10 residents). It’s 1.9 km from you. Raise your hand to be matched.',
-    action: 'Raise your hand',
+    id: 'n1', type: 'assigned', title: 'Nouvelle séance disponible', body: 'Résidence Les Érables · jeu. 11 juin, 11:00 · 1,9 km', time: '2m', unread: true,
+    detail: 'La Résidence Les Érables recherche un coach pour une séance de groupe le jeudi 11 juin à 11:00 (1 heure, ~10 résidents). C’est à 1,9 km de chez vous. Postulez pour être mis en relation.',
+    action: 'Postuler',
   },
   {
-    id: 'n2', type: 'checkin', title: 'Check-in window open', body: 'The Lindens Care Home · 14:30 · you’re on site', time: '12m', unread: true,
-    detail: 'You’ve arrived at The Lindens Care Home. Your 14:30 group session check-in window is open. Confirm your geolocated check-in to start the session.',
-    action: 'Check in',
+    id: 'n2', type: 'checkin', title: 'Fenêtre de check-in ouverte', body: 'Résidence Les Tilleuls · 14:30 · vous êtes sur place', time: '12m', unread: true,
+    detail: 'Vous êtes arrivé à la Résidence Les Tilleuls. La fenêtre de check-in de votre séance de groupe de 14:30 est ouverte. Confirmez votre check-in géolocalisé pour démarrer la séance.',
+    action: 'Faire le check-in',
   },
   {
-    id: 'n3', type: 'reportDue', title: 'Report to complete', body: 'Bellevue Residence · yesterday’s session', time: '1h', unread: true,
-    detail: 'Your session at Bellevue Residence yesterday needs a post-session report. Complete the 6-step report to validate the session and trigger billing.',
-    action: 'Write report',
+    id: 'n3', type: 'reportDue', title: 'Compte rendu à compléter', body: 'Résidence Bellevue · séance d’hier', time: '1h', unread: true,
+    detail: 'Votre séance d’hier à la Résidence Bellevue nécessite un compte rendu. Complétez le compte rendu en 6 étapes pour valider la séance et déclencher la facturation.',
+    action: 'Rédiger le compte rendu',
   },
   {
-    id: 'n4', type: 'confirmed', title: 'Session confirmed', body: 'Park Care Home · today 17:00', time: '3h', unread: false,
-    detail: 'Your application for Park Care Home today at 17:00 was accepted. The session is now confirmed in your schedule.',
-    action: 'Add to calendar',
+    id: 'n4', type: 'confirmed', title: 'Séance confirmée', body: 'Résidence du Parc · aujourd’hui 17:00', time: '3h', unread: false,
+    detail: 'Votre candidature pour la Résidence du Parc aujourd’hui à 17:00 a été acceptée. La séance est désormais confirmée dans votre planning.',
+    action: 'Ajouter à l’agenda',
   },
   {
-    id: 'n5', type: 'payment', title: 'Payment processed', body: '€840 for May · via Pennylane', time: 'Yesterday', unread: false,
-    detail: 'Your payment of €840 for May has been processed via Pennylane. It should arrive in your account within 2–3 business days.',
-    action: 'View earnings',
+    id: 'n5', type: 'payment', title: 'Paiement effectué', body: '€840 pour mai · via Pennylane', time: 'Hier', unread: false,
+    detail: 'Votre paiement de €840 pour mai a été effectué via Pennylane. Il devrait arriver sur votre compte sous 2 à 3 jours ouvrés.',
+    action: 'Voir mes revenus',
   },
   {
-    id: 'n6', type: 'availability', title: 'Update your availability', body: 'It’s 6 days old. Refresh it to keep getting matched to sessions', time: '2d', unread: false,
-    detail: 'Your availability was last updated 6 days ago. Keep it fresh so the matching algorithm can offer you sessions that fit your schedule.',
-    action: 'Update availability',
+    id: 'n6', type: 'availability', title: 'Mettez à jour vos disponibilités', body: 'Elles datent de 6 jours. Actualisez-les pour continuer à recevoir des séances', time: '2d', unread: false,
+    detail: 'Vos disponibilités ont été mises à jour il y a 6 jours. Gardez-les à jour pour que l’algorithme de matching puisse vous proposer des séances adaptées à votre planning.',
+    action: 'Mettre à jour mes disponibilités',
   },
 ];
 
@@ -205,7 +205,7 @@ export function NotificationCenter({ visible, onClose }: { visible: boolean; onC
           <View style={{ flex: 1 }} />
           {unread.length ? (
             <Pressable onPress={markAll} hitSlop={8} style={st.markBtn} accessibilityRole="button">
-              <Text style={st.markTxt}>{copy.notifications.markAllRead}</Text>
+              <Text style={st.markTxt} numberOfLines={1}>{copy.notifications.markAllRead}</Text>
             </Pressable>
           ) : null}
           <Pressable
@@ -323,9 +323,12 @@ const st = StyleSheet.create({
     paddingHorizontal: sp.lg, paddingTop: sp.lg, paddingBottom: sp.md,
   },
   h1: { fontFamily: F.interM, fontSize: 26, color: ON_CANVAS },
-  markBtn: { minHeight: 36, justifyContent: 'center', paddingHorizontal: 4 },
+  // Shrinkable so a long "mark all read" label truncates instead of pushing the close button
+  // off the right edge; the close button itself never shrinks (flexShrink 0, fixed 44).
+  markBtn: { flexShrink: 1, minHeight: 36, justifyContent: 'center', paddingHorizontal: 4 },
   markTxt: { fontFamily: F.bodyS, fontSize: 13, letterSpacing: 0.2, color: color.action },
   closeBtn: {
+    flexShrink: 0,
     width: 44, height: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
     backgroundColor: SUBTLE,
   },

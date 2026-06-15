@@ -8,7 +8,7 @@
  * splash, distinct from the native cold-start splash configured in app.json.
  *
  * Motion: a single ease-out reveal driven off one timeline — the mark scales 0.96 → 1 (never from
- * scale(0)) while the wordmark and tagline rise in on a slight stagger. Auto-advances after a short
+ * scale(0)) while the wordmark rises in on a slight stagger. Auto-advances after a short
  * hold; tap anywhere to skip. Honors reduced motion: the scale/translate are dropped and only a
  * brief, vestibular-safe opacity fade remains.
  *
@@ -17,13 +17,13 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
-import { palette, color, spacing as sp, surfaces } from '../theme/theme';
+import { spacing as sp, surfaces } from '../theme/theme';
 import { copy } from '../copy';
 import { Logo } from '../components/Logo';
 import { ease, dur } from '../lib/motion';
 
 const S = surfaces.coach;
-const F = { display: 'Anton_400Regular', oswM: 'Oswald_500Medium' };
+const F = { display: 'Anton_400Regular' };
 
 export function SplashScreen({ onDone, reduced }: { onDone: () => void; reduced: boolean }) {
   const c = copy.auth.splash;
@@ -52,10 +52,9 @@ export function SplashScreen({ onDone, reduced }: { onDone: () => void; reduced:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // One timeline, three offset reveals — a natural stagger without separate animations.
+  // One timeline, offset reveals — a natural stagger without separate animations.
   const markOpacity = t.interpolate({ inputRange: [0, 0.7], outputRange: [0, 1], extrapolate: 'clamp' });
   const wordOpacity = t.interpolate({ inputRange: [0.2, 1], outputRange: [0, 1], extrapolate: 'clamp' });
-  const tagOpacity = t.interpolate({ inputRange: [0.45, 1], outputRange: [0, 1], extrapolate: 'clamp' });
   const markScale = reduced ? 1 : t.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] });
   const wordY = reduced ? 0 : t.interpolate({ inputRange: [0, 1], outputRange: [10, 0] });
 
@@ -67,7 +66,7 @@ export function SplashScreen({ onDone, reduced }: { onDone: () => void; reduced:
       accessibilityLabel={c.a11y}
       accessibilityHint={c.skipA11y}
     >
-      <Animated.View style={[st.markWrap, { opacity: markOpacity, transform: [{ scale: markScale }] }]}>
+      <Animated.View style={{ opacity: markOpacity, transform: [{ scale: markScale }] }}>
         <Logo size={112} />
       </Animated.View>
 
@@ -75,27 +74,16 @@ export function SplashScreen({ onDone, reduced }: { onDone: () => void; reduced:
         <Animated.Text style={[st.word, { opacity: wordOpacity, transform: [{ translateY: wordY }] }]}>
           {c.wordmark}
         </Animated.Text>
-        <Animated.Text style={[st.tag, { opacity: tagOpacity }]}>{c.tagline}</Animated.Text>
       </View>
     </Pressable>
   );
 }
 
 const st = StyleSheet.create({
-  root: { flex: 1, backgroundColor: S.canvas, alignItems: 'center', justifyContent: 'center', gap: sp.xl },
-  markWrap: {
-    shadowColor: palette.rouge[500],
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.45,
-    shadowRadius: 24,
-  },
+  root: { flex: 1, backgroundColor: S.canvas, alignItems: 'center', justifyContent: 'center', gap: sp.md },
   words: { alignItems: 'center', gap: sp.sm },
   word: {
     fontFamily: F.display, fontSize: 34, lineHeight: 41, letterSpacing: 0.5,
     color: S.textPrimary, textAlign: 'center', paddingHorizontal: sp.xl,
-  },
-  // Sentence case (brand rule: no all-caps); a touch of tracking keeps the tagline feel.
-  tag: {
-    fontFamily: F.oswM, fontSize: 13, letterSpacing: 1.5, color: color.action,
   },
 });

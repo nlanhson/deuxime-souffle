@@ -1,9 +1,8 @@
 /**
  * UI copy for the Coach app — the single localization seam.
  *
- * English for now (for review / easier understanding). The production app ships in
- * FRENCH: to localize, translate the values in this file (or add a `copy.fr.ts` and
- * select by locale). Components must never hardcode user-facing text — pull it from here.
+ * The app ships in FRENCH. Components must never hardcode user-facing text — pull it
+ * from here. To support another locale, add a `copy.en.ts` (or similar) and select by locale.
  *
  * Note: the dates, times, weekday labels, distances (km) and currency (€) that appear in
  * the screen's mock data are placeholders. Real code will format those from data + locale,
@@ -11,45 +10,45 @@
  */
 export const copy = {
   header: {
-    date: 'Tue · June 9',
-    greeting: 'Hi, Karim',
-    notificationsA11y: 'Notifications, 2 unread',
-    profileA11y: "Karim's profile",
+    date: 'mar. · 9 juin',
+    greeting: 'Bonjour, Karim',
+    notificationsA11y: 'Notifications, 2 non lues',
+    profileA11y: 'Profil de Karim',
     // Coach badge / level chip in the header (WBS PLA-01: "Dashboard displays Coach badge").
     // "Lv" + the number is composed in-component; opens the Badges & level screen.
-    levelPrefix: 'Lv',
-    levelA11y: 'Your level and badges',
+    levelPrefix: 'Niv',
+    levelA11y: 'Votre niveau et vos badges',
   },
   reportBanner: {
-    title: 'Report to complete',
-    subtitle: "Yesterday's session · Bellevue Residence",
-    action: 'Complete',
+    title: 'Compte rendu à compléter',
+    subtitle: 'Séance d’hier · Résidence Bellevue',
+    action: 'Compléter',
   },
   // Availability nudge (C15). Matching depends on the coach keeping availability + area current
   // (WBS: "the importance of coaches keeping their availability and area up to date"). The
   // "3 weeks ago" is mock — real code shows the actual staleness / hides this when fresh.
   availabilityBanner: {
-    title: 'Confirm your availability',
-    subtitle: 'Last updated 3 weeks ago. Stay matchable.',
-    action: 'Update',
-    a11y: 'Confirm your availability. Last updated 3 weeks ago.',
+    title: 'Confirmez vos disponibilités',
+    subtitle: 'Mises à jour il y a 3 semaines. Restez disponible.',
+    action: 'Mettre à jour',
+    a11y: 'Confirmez vos disponibilités. Mises à jour il y a 3 semaines.',
   },
   // Report-due popup (C25). Steps are the WBS's verbatim 6-step post-session report.
   reportModal: {
-    eyebrow: "Yesterday's session · Bellevue Residence",
-    title: 'Complete your report',
-    body: 'The 6-step post-session report validates the session and triggers billing. It takes about two minutes.',
+    eyebrow: 'Séance d’hier · Résidence Bellevue',
+    title: 'Complétez votre compte rendu',
+    body: 'Le compte rendu en 6 étapes valide la séance et déclenche la facturation. Cela prend environ deux minutes.',
     steps: [
-      'Number of participants',
-      'Activities covered',
-      'Anything to flag to the facility',
-      'Notes for the next session',
-      'Facility readiness',
-      'Your desired session volume',
+      'Nombre de participants',
+      'Activités réalisées',
+      'Points à signaler à l’établissement',
+      'Notes pour la prochaine séance',
+      'Préparation de l’établissement',
+      'Votre volume de séances souhaité',
     ],
-    primary: 'Start report',
-    secondary: 'Later',
-    closeA11y: 'Close report prompt',
+    primary: 'Commencer le compte rendu',
+    secondary: 'Plus tard',
+    closeA11y: 'Fermer la fenêtre du compte rendu',
   },
   // Post-session report (C25/C26) — the full-page form, opened straight from the home banner
   // and the Sessions "Write report" CTA (no "Start report" gate). Mirrors the WBS 6-step report
@@ -57,166 +56,183 @@ export const copy = {
   // text field), and a 5-point atmosphere rating. Submitting validates the session and triggers
   // billing. Field VALUES (counts, options) are mock placeholders formatted in the component.
   report: {
-    eyebrow: 'Post-session report',
+    eyebrow: 'Compte rendu de séance',
     // The reported session — mock, mirrors the home banner ("Yesterday's session · Bellevue").
-    session: "Yesterday's session",
-    place: 'Bellevue Residence',
-    intro: 'Two minutes. This validates the session and triggers your billing.',
-    closeA11y: 'Close report',
-    required: 'Required',
-    yes: 'Yes',
-    no: 'No',
+    session: 'Séance d’hier',
+    place: 'Résidence Bellevue',
+    intro: 'Deux minutes. Cela valide la séance et déclenche votre facturation.',
+    closeA11y: 'Fermer le compte rendu',
+    required: 'Obligatoire',
+    yes: 'Oui',
+    no: 'Non',
     // 1 · participants (numeric stepper, WBS default-ish; pre-filled from the session size).
     participants: {
-      label: 'Number of participants',
-      help: 'How many residents took part.',
-      minusA11y: 'One fewer participant',
-      plusA11y: 'One more participant',
-      unit: 'residents',
+      label: 'Nombre de participants',
+      help: 'Combien de résidents ont participé.',
+      minusA11y: 'Un participant de moins',
+      plusA11y: 'Un participant de plus',
+      unit: 'résidents',
     },
     // 2 · activities (multiple choice from admin-configured options — mock list here).
     activities: {
-      label: 'Activities covered',
-      help: 'Select all that apply.',
-      options: ['Mobility & balance', 'Strength', 'Flexibility', 'Coordination', 'Cardio', 'Cognitive games'],
+      label: 'Activités réalisées',
+      help: 'Sélectionnez tout ce qui s’applique.',
+      options: ['Mobilité & équilibre', 'Renforcement', 'Souplesse', 'Coordination', 'Cardio', 'Jeux cognitifs'],
     },
     // 3 · flag to facility (Yes/No → reveals an optional message).
     flag: {
-      label: 'Anything to flag to the facility?',
-      help: 'The coordinator will see this directly.',
-      placeholder: 'What should the facility know?',
+      label: 'Un point à signaler à l’établissement ?',
+      help: 'Le coordinateur le verra directement.',
+      placeholder: 'Que doit savoir l’établissement ?',
     },
     // 4 · notes for next session (Yes/No → reveals a REQUIRED note).
     nextNotes: {
-      label: 'Notes for the next session?',
-      help: 'Carried over to whoever runs it next.',
-      placeholder: 'e.g. Mr Lambert needs a chair with armrests.',
+      label: 'Des notes pour la prochaine séance ?',
+      help: 'Transmises à la personne qui l’animera ensuite.',
+      placeholder: 'ex. M. Lambert a besoin d’une chaise avec accoudoirs.',
     },
     // 5 · facility readiness (plain Yes/No).
     readiness: {
-      label: 'Was the facility ready for you?',
-      help: 'Room set up, residents gathered, equipment available.',
+      label: 'L’établissement était-il prêt à vous accueillir ?',
+      help: 'Salle préparée, résidents réunis, matériel disponible.',
     },
     // 6 · participant engagement (WBS SESS-01: 4 emoji options, not a star rating).
     engagement: {
-      label: 'Overall participant engagement',
-      help: 'How engaged the group was overall.',
+      label: 'Engagement global des participants',
+      help: 'À quel point le groupe était impliqué dans l’ensemble.',
       // index 0–3, low → high. The WBS's verbatim four levels.
       levels: [
-        { emoji: '😴', word: 'Rather tired' },
-        { emoji: '😐', word: 'Average' },
-        { emoji: '🙂', word: 'Well engaged' },
-        { emoji: '🔥', word: 'Very dynamic' },
+        { emoji: '😴', word: 'Plutôt fatigués' },
+        { emoji: '😐', word: 'Moyen' },
+        { emoji: '🙂', word: 'Bien impliqués' },
+        { emoji: '🔥', word: 'Très dynamiques' },
       ],
-      a11y: 'Participant engagement',
+      a11y: 'Engagement des participants',
     },
     // 7 · perceived session difficulty (WBS SESS-01: Easy / Standard / Demanding).
     difficulty: {
-      label: 'Perceived session difficulty',
-      help: 'How demanding the session felt to run.',
+      label: 'Difficulté ressentie de la séance',
+      help: 'À quel point la séance a été exigeante à animer.',
       // index 0–2, light → hard.
       options: [
-        { key: 'easy', word: 'Easy' },
+        { key: 'easy', word: 'Facile' },
         { key: 'standard', word: 'Standard' },
-        { key: 'demanding', word: 'Demanding' },
+        { key: 'demanding', word: 'Exigeante' },
       ],
-      a11y: 'Session difficulty',
+      a11y: 'Difficulté de la séance',
     },
-    submit: 'Submit report',
-    incomplete: 'Answer the highlighted questions to submit.',
+    submit: 'Envoyer le compte rendu',
+    incomplete: 'Répondez aux questions en surbrillance pour envoyer.',
     // Confirmation state (replaces the form after submit).
     done: {
-      title: 'Report sent',
-      body: 'Thanks, Karim. This session is validated and your billing is on its way.',
-      cta: 'Done',
+      title: 'Compte rendu envoyé',
+      body: 'Merci, Karim. Cette séance est validée et votre facturation est en cours.',
+      cta: 'Terminé',
     },
   },
   // Availability popup (C15). Note line = current setup (day/time · max travel · transport),
   // the three things the WBS availability config holds; "3 weeks ago" is mock staleness.
   availabilityModal: {
-    eyebrow: 'Last updated 3 weeks ago',
-    title: 'Still available as usual?',
-    body: 'Matching uses your weekly availability and travel area to offer you sessions. Confirm it’s current, or edit it.',
-    note: 'Mon–Fri mornings · up to 30 min · by car',
-    primary: "Yes, it's current",
-    secondary: 'Edit availability',
-    closeA11y: 'Close availability prompt',
+    eyebrow: 'Mises à jour il y a 3 semaines',
+    title: 'Toujours disponible comme d’habitude ?',
+    body: 'Le matching utilise vos disponibilités hebdomadaires et votre zone de déplacement pour vous proposer des séances. Confirmez qu’elles sont à jour, ou modifiez-les.',
+    note: 'Lun–ven matins · jusqu’à 30 min · en voiture',
+    primary: 'Oui, c’est à jour',
+    secondary: 'Modifier mes disponibilités',
+    closeA11y: 'Fermer la fenêtre de disponibilités',
   },
   nextSession: {
-    eyebrow: 'Next session',
-    status: 'Confirmed',
-    place: 'The Lindens Care Home',
-    address: '12 Lilac Street, Lyon 3rd · 2.4 km',
+    eyebrow: 'Prochaine séance',
+    status: 'Confirmée',
+    place: 'Résidence Les Tilleuls',
+    address: '12 rue des Lilas, Lyon 3e · 2,4 km',
+    // Condensed location for the hero card (neighbourhood + travel time). The full street address
+    // and unit move to the session detail sheet — progressive disclosure keeps the card glanceable.
+    locShort: 'Lyon 3e · ~10 min',
     // Care unit within the EHPAD (WBS PLA-01: "Session cards display Unit type").
-    unit: 'Protected unit · Ground floor',
-    unitLabel: 'Unit',
+    unit: 'Unité protégée · Rez-de-chaussée',
+    unitLabel: 'Unité',
     // Client session-detail fields (WBS Coach Planning & Check-in): EHPAD name, time,
     // address, contact person. `contact` = the on-site person to ask for on arrival.
-    contact: 'Ask for Marie Laurent · Coordinator',
-    checkin: "Check-in open. You're on site.",
+    contact: 'Demandez Marie Laurent · Coordinatrice',
+    checkin: 'Check-in ouvert. Vous êtes sur place.',
     // Primary action = geolocated check-in (C16) — the PRD's #1 field action, not a generic "Start".
-    checkInCta: 'Check in',
-    directions: 'Directions',
+    checkInCta: 'Faire le check-in',
+    directions: 'Itinéraire',
+    // Live hero status (Square Go / Jobber pattern): the card reflects the REAL check-in window
+    // and travel, not one always-open state. Mock times/distance are formatted in-component.
+    inPrefix: 'dans',                        // "in 12 min" / "in 2h 05m" countdown to start
+    minUnit: 'min',
+    inProgress: 'En cours',
+    travel: '~10 min · en voiture',          // travel estimate row (PLA-06)
+    opensLine: 'Check-in ouvert à 14h15',    // shown before the check-in window opens
+    awayLine: 'Rapprochez-vous pour faire le check-in', // shown when out of the check-in radius
+    statusLate: 'En retard',                 // status chip when checked in after the on-time window
+    checkedInLate: 'Check-in fait · en retard',
     // Tapping the hero opens the full session detail (same modal language as the available rows).
-    detailEyebrow: 'Confirmed · Today',
-    start: '14:30',
-    end: '15:30',
-    duration: '1h',
-    closeA11y: 'Close session detail',
+    detailEyebrow: 'Confirmée · Aujourd’hui',
+    start: '14h30',
+    end: '15h30',
+    duration: '1 h',
+    // Compact when-line on the hero card ("Today · 14:30 → 15:30"). "Today" because this is the
+    // coach's NEXT session; real code formats the actual day/date from data + locale.
+    whenPrefix: 'Aujourd’hui',
+    closeA11y: 'Fermer le détail de la séance',
   },
   week: {
-    eyebrow: 'This week',
-    monthEyebrow: 'This month',
+    eyebrow: 'Cette semaine',
+    monthEyebrow: 'Ce mois-ci',
     // Week-view paging labels (swipe to previous/next week). |offset|>1 → "Week of {Mon Abbr} {d}".
-    lastWeek: 'Last week',
-    nextWeek: 'Next week',
-    weekOf: 'Week of',
-    prevWeekA11y: 'Previous week',
-    nextWeekA11y: 'Next week',
+    lastWeek: 'Semaine dernière',
+    nextWeek: 'Semaine prochaine',
+    weekOf: 'Semaine du',
+    prevWeekA11y: 'Semaine précédente',
+    nextWeekA11y: 'Semaine suivante',
     // Month-view paging labels — the home calendar pages months too (unlike the June-only
     // Available screen, where the month chevrons are present but disabled).
-    prevMonthA11y: 'Previous month',
-    nextMonthA11y: 'Next month',
-    link: 'Sessions',
+    prevMonthA11y: 'Mois précédent',
+    nextMonthA11y: 'Mois suivant',
+    link: 'Séances',
     // Week/Month toggle on the home calendar card (C09/C10).
-    seg: { week: 'Week', month: 'Month' },
-    toggleA11y: 'Calendar view',
+    seg: { week: 'Semaine', month: 'Mois' },
+    toggleA11y: 'Vue du calendrier',
     // Mon-first weekday initials for the month grid (locale-formatted in real code).
-    weekdays: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+    weekdays: ['L', 'M', 'M', 'J', 'V', 'S', 'D'],
     // Reads "{done} done · {total} scheduled · {hours}" — counts are injected from data in the
     // screen; only words/units live here. `doneLabel` is the NEW done-so-far progress metric.
-    doneLabel: 'done',
-    scheduledLabel: 'scheduled',
-    hours: '7h 30m',
-    monthHours: '31h',
-    progressA11y: 'sessions done this week',
-    monthProgressA11y: 'sessions done this month',
+    doneLabel: 'faites',
+    scheduledLabel: 'prévues',
+    hours: '7 h 30',
+    monthHours: '31 h',
+    ofLabel: 'sur', // "4 of 5 sessions" — the condensed calendar summary connector
+    progressA11y: 'séances faites cette semaine',
+    monthProgressA11y: 'séances faites ce mois-ci',
     // Two metric tiles above the calendar: scheduled (the plan) + done (progress so far).
     tiles: {
-      scheduled: 'Scheduled',
-      done: 'Done',
-      unit: 'sessions',
-      complete: 'complete',
+      scheduled: 'Prévues',
+      done: 'Faites',
+      unit: 'séances',
+      complete: 'terminées',
     },
     // Under-calendar detail: tapping a date reveals its sessions. Past ("due", already happened)
     // sessions read muted; upcoming ones read normal — the chip carries the status in words so
     // it never relies on the graying alone.
     daySection: {
-      empty: 'No session this day',
-      due: 'Due',
-      upcoming: 'Upcoming',
-      a11ySessions: 'sessions',
-      a11yNone: 'no session',
+      empty: 'Aucune séance ce jour',
+      due: 'À faire',
+      upcoming: 'À venir',
+      a11ySessions: 'séances',
+      a11yNone: 'aucune séance',
     },
   },
   available: {
-    eyebrow: 'Available sessions today',
-    link: 'See all',
-    near: 'Open near you today · Lyon & nearby',
-    apply: 'Apply',
+    eyebrow: 'Séances disponibles aujourd’hui',
+    link: 'Voir tout',
+    near: 'Disponibles près de vous aujourd’hui · Lyon et alentours',
+    apply: 'Postuler',
     // "See all" sheet (today's open sessions)
-    allTitle: 'Available sessions today',
-    closeA11y: 'Close available sessions',
+    allTitle: 'Séances disponibles aujourd’hui',
+    closeA11y: 'Fermer les séances disponibles',
   },
   // Available sessions screen (Disponibles tab) — open, not-yet-assigned sessions the coach
   // can apply to. C-stories: "raise or withdraw my interest for an available session" from
@@ -225,373 +241,380 @@ export const copy = {
   // DS assigns ONE coach), so this screen shows no candidate/competitor count — applying is
   // joining a shortlist, not winning a race. `appliedNote` makes that expectation explicit.
   availableScreen: {
-    eyebrow: 'Open sessions',
-    title: 'Available',
-    seg: { list: 'List', week: 'Week' },
-    filterA11y: 'Filter open sessions',
+    eyebrow: 'Séances ouvertes',
+    title: 'Disponibles',
+    seg: { list: 'Liste', week: 'Semaine' },
+    filterA11y: 'Filtrer les séances ouvertes',
     // The leading count is formatted in code from the data, e.g. "5 open · Lyon & nearby".
-    nearSuffix: 'open · Lyon & nearby',
-    status: { applied: 'Applied' },
+    nearSuffix: 'ouvertes · Lyon et alentours',
+    status: { applied: 'Postulé' },
     action: {
-      apply: 'Raise hand',
-      withdraw: 'Withdraw',
+      apply: 'Lever la main',
+      withdraw: 'Retirer',
     },
     // Transient confirmation toasts after raising a hand / withdrawing (WBS PLA-07, verbatim).
     toast: {
-      applied: 'Your application has been sent',
-      withdrawn: 'Your candidacy has been cancelled',
+      applied: 'Votre candidature a été envoyée',
+      withdrawn: 'Votre candidature a été annulée',
     },
     // Session type (WBS PLA-15 card field / PLA-06 "session context"). 'first' = a TEST / first
     // session with this EHPAD ("first visit"); 'regular' = an ongoing session. Localizable labels.
-    type: { first: 'First visit', regular: 'Regular session' },
-    typeA11y: 'Session type',
+    type: { first: 'Première visite', regular: 'Séance régulière' },
+    typeA11y: 'Type de séance',
     // Estimated travel time + over-limit warning (WBS PLA-06 / PLA-08). The estimate is derived
     // in-component from the session distance + the coach's transport preference (mock), so the
     // minute figures are composed in code, not stored here. {mins}/{mode}/{max} are filled in code.
     travel: {
       min: 'min',
-      by: 'by',                 // "~12 min by car"
-      car: 'car',
-      onFoot: 'on foot',        // "~24 min on foot"
-      detailLabel: 'Travel',
-      overLimit: 'Over your travel limit',
-      overLimitBody: 'About {mins} min {mode}, past your {max}-min limit. You can still raise your hand.',
-      overLimitTail: 'over your limit',
+      by: 'en',                 // "~12 min en voiture"
+      car: 'voiture',
+      onFoot: 'à pied',         // "~24 min à pied"
+      detailLabel: 'Trajet',
+      overLimit: 'Au-delà de votre temps de trajet',
+      overLimitBody: 'Environ {mins} min {mode}, au-delà de votre limite de {max} min. Vous pouvez quand même lever la main.',
+      overLimitTail: 'au-delà de votre limite',
     },
-    appliedNote: "You're on the shortlist. DS assigns one coach.",
-    empty: 'No open sessions here right now.',
-    emptyHint: 'New ones appear as EHPADs open them up near you.',
+    appliedNote: 'Vous êtes présélectionné. DS désigne un seul coach.',
+    empty: 'Aucune séance ouverte ici pour le moment.',
+    emptyHint: 'De nouvelles apparaissent quand les EHPAD en ouvrent près de chez vous.',
     // Filter sheet (List view). Distance maps to the coach's max-travel-time preference (WBS
     // PLA-08); status is the coach's own application state. The "≤ N km" labels and the result
     // count are composed in-component from data.
     filter: {
-      title: 'Filters',
-      closeA11y: 'Close filters',
+      title: 'Filtres',
+      closeA11y: 'Fermer les filtres',
       distance: 'Distance',
-      status: 'Availability',
-      distAny: 'Any',
-      statusAll: 'All',
-      statusOpen: 'Open',
-      statusApplied: 'Applied',
-      reset: 'Reset',
-      showPrefix: 'Show',
-      showSuffix: 'sessions',
-      showOne: 'Show 1 session',
-      showNone: 'No matches',
+      status: 'Disponibilité',
+      distAny: 'Toutes',
+      statusAll: 'Toutes',
+      statusOpen: 'Ouvertes',
+      statusApplied: 'Postulé',
+      reset: 'Réinitialiser',
+      showPrefix: 'Voir',
+      showSuffix: 'séances',
+      showOne: 'Voir 1 séance',
+      showNone: 'Aucun résultat',
     },
-    emptyFiltered: 'No sessions match your filters.',
-    clearFilters: 'Clear filters',
+    emptyFiltered: 'Aucune séance ne correspond à vos filtres.',
+    clearFilters: 'Effacer les filtres',
     // Calendar-led view (copied from the Home calendar, wired to OPEN sessions). The two metric
     // tiles are adapted to this screen: Open = open sessions in the period, Applied = how many
     // the coach has raised a hand for. Counts/dates are composed in-component from the data.
     cal: {
       // `seg.month` shows the current month name (composed in-component, e.g. "June").
-      seg: { week: 'Week', month: 'Month', all: 'All' },
-      toggleA11y: 'Calendar view',
-      thisWeek: 'This week',
-      thisMonth: 'This month',
-      allTitle: 'All open sessions',
-      lastWeek: 'Last week',
-      nextWeek: 'Next week',
-      weekOf: 'Week of',
-      prevWeekA11y: 'Previous week',
-      nextWeekA11y: 'Next week',
-      tiles: { open: 'Open', applied: 'Applied', unit: 'sessions' },
+      seg: { week: 'Semaine', month: 'Mois', all: 'Tout' },
+      toggleA11y: 'Vue du calendrier',
+      thisWeek: 'Cette semaine',
+      thisMonth: 'Ce mois-ci',
+      allTitle: 'Toutes les séances ouvertes',
+      lastWeek: 'Semaine dernière',
+      nextWeek: 'Semaine prochaine',
+      weekOf: 'Semaine du',
+      prevWeekA11y: 'Semaine précédente',
+      nextWeekA11y: 'Semaine suivante',
+      tiles: { open: 'Ouvertes', applied: 'Postulé', unit: 'séances' },
       // Per-day count (WBS PLA-04: "displays count per day"). Suffix for the day-detail header,
       // composed in-component as "{n} open" / "{n} open sessions".
-      dayCountSuffix: 'open',
-      dayEmpty: 'No open sessions this day.',
+      dayCountSuffix: 'ouvertes',
+      dayEmpty: 'Aucune séance ouverte ce jour.',
       // Whole shown week / month has no open sessions (PLA-04 / PLA-05) — reachable now the
       // calendar pages freely past the seeded period.
-      periodEmpty: 'No sessions scheduled',
-      a11ySessions: 'open',
-      a11yNone: 'no open sessions',
+      periodEmpty: 'Aucune séance prévue',
+      a11ySessions: 'ouvertes',
+      a11yNone: 'aucune séance ouverte',
       // Month view: prev/next month a11y + a legend for the day dots (WBS PLA-05). The calendar
       // pages months freely (a live schedule), so the chevrons are active.
-      prevMonthA11y: 'Previous month',
-      nextMonthA11y: 'Next month',
+      prevMonthA11y: 'Mois précédent',
+      nextMonthA11y: 'Mois suivant',
     },
     // List view (the "All" tab) — open sessions bucketed the way the matching algorithm weighs
     // them for THIS coach (WBS PLA-15). Recommended = close to the coach (a strong match); Urgent
     // = starts very soon; Available = everything else. Each session has exactly one bucket, so the
     // counts partition the list. Counts + the urgency countdown are composed in-component.
     list: {
-      filterA11y: 'Filter open sessions by category',
-      cats: { all: 'All', recommended: 'Recommended', urgent: 'Urgent', available: 'Available' },
+      filterA11y: 'Filtrer les séances ouvertes par catégorie',
+      cats: { all: 'Toutes', recommended: 'Recommandées', urgent: 'Urgentes', available: 'Disponibles' },
       // Urgency countdown on urgent cards. "In N days" is composed as `${inDays} ${n} ${days}`.
-      urgency: { today: 'Today', tomorrow: 'Tomorrow', inDays: 'In', days: 'days' },
-      empty: 'No sessions in this category.',
+      urgency: { today: 'Aujourd’hui', tomorrow: 'Demain', inDays: 'Dans', days: 'jours' },
+      empty: 'Aucune séance dans cette catégorie.',
       // Total-count caption under the chips (PLA-15: total for the selected period — the List view
       // is one month). No filter → `${n} ${period}`; with a refine filter → `${vis} ${of} ${total} ${shown}`.
-      count: { period: 'open this month', of: 'of', shown: 'shown' },
+      count: { period: 'ouvertes ce mois-ci', of: 'sur', shown: 'affichées' },
     },
     // Detail page — opens when an available-session card is tapped (mirrors the Séances detail).
     detail: {
-      title: 'Session details',
-      closeA11y: 'Close session details',
-      when: 'When',
-      where: 'Where',
-      copyA11y: 'Copy address',
-      copied: 'Address copied',   // transient confirmation toast (PLA-06)
+      title: 'Détails de la séance',
+      closeA11y: 'Fermer les détails de la séance',
+      when: 'Quand',
+      where: 'Où',
+      copyA11y: 'Copier l’adresse',
+      copied: 'Adresse copiée',   // transient confirmation toast (PLA-06)
       // Session-info rows (PLA-06): the care unit, how to get in, and who to ask for on arrival.
-      unit: 'Unit',
-      access: 'Access',
+      unit: 'Unité',
+      access: 'Accès',
       contact: 'Contact',
-      contextA11y: 'Session context', // a11y prefix for the context tag (e.g. "First visit")
+      contextA11y: 'Contexte de la séance', // a11y prefix for the context tag (e.g. "First visit")
     },
   },
   earnings: {
     // Home preview (Earnings block on Accueil) — taps through to the Earnings dashboard.
-    eyebrow: 'This month Earnings',
-    link: 'Earnings',
-    earned: 'Earned',
-    confirmedSub: '12 sessions confirmed',
-    projected: 'Projected',
-    projectedSub: '+6 upcoming',
-    goal: 'Goal', // monthly target (set at onboarding) — shown on the Earned card
+    eyebrow: 'Revenus ce mois-ci',
+    link: 'Revenus',
+    earned: 'Gagné',
+    confirmedSub: '12 séances confirmées',
+    projected: 'Prévu',
+    projectedSub: '+6 à venir',
+    goal: 'Objectif', // monthly target (set at onboarding) — shown on the Earned card
     // Earnings screen (Revenus tab · C35 "View financial dashboard"). All copy here; the
     // euros, hours, dates, ratings and counts are placeholders formatted in the component.
     // Note: this is an *activity report*, not an invoice (WBS) — coaches invoice DS by email.
     screen: {
-      eyebrow: 'My dashboard',
-      title: 'Earnings',
-      closeA11y: 'Close earnings',
-      prevMonthA11y: 'Previous month',
-      nextMonthA11y: 'Next month',
-      earnedLabel: 'Earned so far',
-      trendSuffix: 'vs', // composed in-component, e.g. "+12% vs May"
-      projectedLabel: 'projected to come',
-      expectedLabel: 'expected this month',
-      exportPdf: 'Export PDF',
-      exportA11y: 'Export this month as a PDF summary',
+      eyebrow: 'Mon tableau de bord',
+      title: 'Revenus',
+      closeA11y: 'Fermer les revenus',
+      prevMonthA11y: 'Mois précédent',
+      nextMonthA11y: 'Mois suivant',
+      earnedLabel: 'Gagné jusqu’ici',
+      trendSuffix: 'vs', // composed in-component, e.g. "+12% vs mai"
+      projectedLabel: 'prévu à venir',
+      expectedLabel: 'attendu ce mois-ci',
+      exportPdf: 'Exporter en PDF',
+      exportA11y: 'Exporter ce mois-ci en résumé PDF',
       stat: {
-        sessions: 'Sessions',
-        sessionsUnit: 'completed',
-        hours: 'Hours',
-        scheduledPrefix: 'of', // composed in-component, e.g. "of 60h scheduled"
-        scheduledSuffix: 'scheduled',
-        rate: 'Rate',
-        rateUnit: 'per hour',
+        sessions: 'Séances',
+        sessionsUnit: 'réalisées',
+        hours: 'Heures',
+        scheduledPrefix: 'sur', // composed in-component, e.g. "of 60h scheduled"
+        scheduledSuffix: 'prévues',
+        rate: 'Tarif',
+        rateUnit: 'par heure',
       },
-      sessionsTitle: "This month's sessions",
-      sessionsNote: 'Revenue updates after each completed session',
-      notRated: 'Not rated',
-      historyTitle: 'Payment history',
-      historyNote: 'Activity report, not an invoice',
-      sessionsCountUnit: 'sessions',
+      sessionsTitle: 'Séances de ce mois-ci',
+      sessionsNote: 'Les revenus se mettent à jour après chaque séance réalisée',
+      notRated: 'Non évaluée',
+      historyTitle: 'Historique des paiements',
+      historyNote: 'Relevé d’activité, pas une facture',
+      sessionsCountUnit: 'séances',
       status: {
-        paid: 'Paid',
-        awaiting: 'Awaiting payment',
-        inProgress: 'In progress',
+        paid: 'Payé',
+        awaiting: 'En attente de paiement',
+        inProgress: 'En cours',
       },
-      downloadA11y: 'Download statement',
+      downloadA11y: 'Télécharger le relevé',
     },
   },
   // Sessions screen (Séances tab) — the coach's assigned sessions. Check-in (C16) and the
   // 6-step report (C25) are the contextual actions that live here.
   sessions: {
-    eyebrow: 'Your schedule',
-    title: 'Sessions',
-    seg: { upcoming: 'Confirmed', past: 'Past', applications: 'Applications' },
+    eyebrow: 'Votre planning',
+    title: 'Séances',
+    seg: { upcoming: 'Confirmées', past: 'Passées', applications: 'Candidatures' },
     status: {
-      checkinOpen: 'Check-in open',
-      confirmed: 'Confirmed',
-      checkedIn: 'Checked in',
-      reportDue: 'Report due',
-      reportSent: 'Report sent',
+      checkinOpen: 'Check-in ouvert',
+      confirmed: 'Confirmée',
+      checkedIn: 'Check-in fait',
+      reportDue: 'Compte rendu à faire',
+      reportSent: 'Compte rendu envoyé',
     },
     action: {
-      checkin: 'Check in',
-      directions: 'Directions',
-      writeReport: 'Write report',
-      viewReport: 'View report',
+      checkin: 'Faire le check-in',
+      directions: 'Itinéraire',
+      writeReport: 'Rédiger le compte rendu',
+      viewReport: 'Voir le compte rendu',
     },
-    emptyPast: 'No past sessions yet.',
-    emptyUpcoming: 'No upcoming sessions.',
-    expandA11y: 'Show session details',
-    collapseA11y: 'Hide session details',
+    emptyPast: 'Aucune séance passée pour l’instant.',
+    emptyUpcoming: 'Aucune séance à venir.',
+    expandA11y: 'Afficher les détails de la séance',
+    collapseA11y: 'Masquer les détails de la séance',
     // Session detail page (C22 "View session details") — opens when a session card is tapped.
     detail: {
-      title: 'Session details',
-      closeA11y: 'Close session details',
-      when: 'When',
-      where: 'Where',
+      title: 'Détails de la séance',
+      closeA11y: 'Fermer les détails de la séance',
+      when: 'Quand',
+      where: 'Où',
       format: 'Format',
-      contact: 'On-site contact',
+      contact: 'Contact sur place',
       // Coach hourly rate (WBS PLA-14) — the "€ / hour" value is composed in-component.
-      rate: 'Your hourly rate',
-      rateUnit: '€ / hour',
+      rate: 'Votre tarif horaire',
+      rateUnit: '€ / heure',
       // Copy address (WBS PLA-02 — no Google Maps API needed to grab the address).
-      copyA11y: 'Copy address',
-      copied: 'Copied',
+      copyA11y: 'Copier l’adresse',
+      copied: 'Copiée',
+      // Action-required banner (Fresha pattern) — an explanatory strip at the top of the
+      // sheet when the session needs the coach to do something next. Pairs with the pinned
+      // footer button (which is the actual action).
+      banner: {
+        checkin: 'C’est bientôt l’heure — faites le check-in une fois sur place.',
+        reportDue: 'Cette séance est terminée. Envoyez votre compte rendu pour que l’établissement reçoive votre retour.',
+      },
     },
     // Check-in flow (C16) — geolocated presence confirm, opened by the "Check in" CTA. The modal
     // runs a small state machine: intro → locating → outcome. Outcomes encode the C17 time+location
     // validation and the C18 late case. Geolocation isn't wired yet, so a prototype switcher picks
     // the outcome to preview.
     checkInModal: {
-      eyebrow: 'On site',
-      title: 'Confirm check-in',
-      body: "We'll use your location to confirm you're at the care home, then notify the team you've arrived.",
-      note: 'Location is checked only at check-in, never tracked in the background.',
-      confirm: 'Check in now',
-      cancel: 'Not yet',
-      closeA11y: 'Close check-in',
-      locating: "Checking you're on site…",
+      eyebrow: 'Sur place',
+      title: 'Confirmer le check-in',
+      body: 'Nous utilisons votre position pour confirmer que vous êtes à l’établissement, puis nous prévenons l’équipe de votre arrivée.',
+      note: 'La position est vérifiée uniquement au check-in, jamais suivie en arrière-plan.',
+      confirm: 'Faire le check-in',
+      cancel: 'Pas encore',
+      closeA11y: 'Fermer le check-in',
+      locating: 'Vérification de votre présence sur place…',
       result: {
-        success:  { title: 'Checked in', body: "You're on site. The care home has been notified you've arrived. Have a great session." },
-        late:     { title: 'Checked in, running late', body: "You're checked in, but after the on-time window. The care home has been notified you're running late." },
-        tooFar:   { title: "You're not there yet", body: 'You\'re still too far from the care home. Head over and check in once you arrive.' },
-        tooEarly: { title: 'Check-in not open yet', body: 'Check-in opens shortly before the session starts. Come back a little closer to the time.' },
-        denied:   { title: 'Location needed', body: "We need your location to confirm you're on site. Turn on location access to check in." },
+        success:  { title: 'Check-in effectué', body: 'Vous êtes sur place. L’établissement a été prévenu de votre arrivée. Bonne séance.' },
+        late:     { title: 'Check-in effectué, en retard', body: 'Votre check-in est validé, mais après le créneau prévu. L’établissement a été prévenu de votre retard.' },
+        tooFar:   { title: 'Vous n’y êtes pas encore', body: 'Vous êtes encore trop loin de l’établissement. Rendez-vous sur place et faites le check-in à votre arrivée.' },
+        tooEarly: { title: 'Check-in pas encore ouvert', body: 'Le check-in ouvre peu avant le début de la séance. Revenez un peu plus près de l’heure.' },
+        denied:   { title: 'Position requise', body: 'Nous avons besoin de votre position pour confirmer votre présence. Activez l’accès à la localisation pour faire le check-in.' },
       },
-      done: 'Done',
-      directions: 'Directions',
-      openSettings: 'Open settings',
+      done: 'Terminé',
+      directions: 'Itinéraire',
+      openSettings: 'Ouvrir les réglages',
       // Prototype-only control (no geolocation backend yet) to preview each outcome.
-      demoLabel: 'Preview outcome',
-      demo: { success: 'On site', late: 'Late', tooFar: 'Too far', tooEarly: 'Too early', denied: 'No GPS' },
+      demoLabel: 'Aperçu du résultat',
+      demo: { success: 'Sur place', late: 'En retard', tooFar: 'Trop loin', tooEarly: 'Trop tôt', denied: 'Pas de GPS' },
     },
     // Per-session management actions — shown as a "Manage" group inside the session detail
     // sheet, because each acts on the session you're looking at: cancel participation (C24),
     // declare absence (C20), declare a delay (PLA-14 "Late"), transmission notes (C28).
     manage: {
-      title: 'Manage this session',
-      cancelParticipation: 'Cancel participation',
-      declareAbsence: 'Declare absence',
-      late: 'Running late',
-      transmissionNotes: 'Transmission notes',
+      title: 'Gérer cette séance',
+      cancelParticipation: 'Annuler ma participation',
+      declareAbsence: 'Déclarer une absence',
+      late: 'Signaler un retard',
+      transmissionNotes: 'Notes de transmission',
     },
     // Declare a delay (WBS PLA-14: "Coach can declare a delay by selecting 'Late'") — pick a
     // rough delay, the care home is notified right away. Then a short acknowledgement.
     lateModal: {
-      title: 'Running late?',
-      help: 'Pick roughly how late you’ll be. The care home is notified right away.',
+      title: 'En retard ?',
+      help: 'Indiquez à peu près votre retard. L’établissement est prévenu immédiatement.',
       options: {
-        five: 'About 5 minutes',
-        ten: 'About 10 minutes',
-        fifteen: 'About 15 minutes',
-        thirty: '30 minutes or more',
+        five: 'Environ 5 minutes',
+        ten: 'Environ 10 minutes',
+        fifteen: 'Environ 15 minutes',
+        thirty: '30 minutes ou plus',
       },
-      doneTitle: 'Delay declared',
-      doneBody: 'The care home has been notified you’re running late. Check in as usual when you arrive.',
-      closeA11y: 'Close late declaration',
+      doneTitle: 'Retard déclaré',
+      doneBody: 'L’établissement a été prévenu de votre retard. Faites le check-in comme d’habitude à votre arrivée.',
+      closeA11y: 'Fermer la déclaration de retard',
     },
     // Cancel participation (C24) — confirm before dropping an assigned session. The warning nods to
     // the reputation rules: a late cancellation (< 48h) and a no-show both carry score penalties.
     cancelConfirm: {
-      title: 'Cancel this session?',
-      body: "You'll be removed from this session and the care home will be notified. Cancelling close to the start time can affect your reputation score.",
-      confirm: 'Cancel participation',
-      cancel: 'Keep session',
-      closeA11y: 'Close',
+      title: 'Annuler cette séance ?',
+      body: 'Vous serez retiré de cette séance et l’établissement sera prévenu. Annuler peu avant le début peut affecter votre score de réputation.',
+      confirm: 'Annuler ma participation',
+      cancel: 'Garder la séance',
+      closeA11y: 'Fermer',
     },
     // Declare absence (C20 / WBS PLA-11 — a 3-STEP required form, not a one-tap confirm):
     // 1 reason (required) → 2 message to the care home → 3 review + confirm. The assignment
     // algorithm treats a declared absence as an availability exclusion, and the reputation
     // system weighs absences/no-shows — hence the deliberate, reviewable flow.
     absenceModal: {
-      title: 'Declare absence',
-      body: "Let the care home know you can't attend. They'll be notified right away and the session reassigned.",
+      title: 'Déclarer une absence',
+      body: 'Prévenez l’établissement que vous ne pouvez pas venir. Il sera prévenu immédiatement et la séance réattribuée.',
       // "Step 1 of 3 — Reason" is composed in-component from these parts.
-      stepPrefix: 'Step',
-      stepOf: 'of',
-      steps: { reason: 'Reason', details: 'Message', confirm: 'Confirm' },
-      reasonLabel: 'Reason',
-      reasons: { illness: 'Illness', emergency: 'Personal emergency', transport: 'Transport problem', other: 'Other' },
-      detailsLabel: 'Message to the care home',
-      detailsOptional: 'optional',
-      detailsHelp: 'Anything useful for the coordinator, sent with the notification.',
-      detailsPlaceholder: 'e.g. I could run the session on Thursday instead.',
-      summaryReason: 'Reason',
+      stepPrefix: 'Étape',
+      stepOf: 'sur',
+      steps: { reason: 'Motif', details: 'Message', confirm: 'Confirmer' },
+      reasonLabel: 'Motif',
+      reasons: { illness: 'Maladie', emergency: 'Urgence personnelle', transport: 'Problème de transport', other: 'Autre' },
+      detailsLabel: 'Message à l’établissement',
+      detailsOptional: 'facultatif',
+      detailsHelp: 'Toute information utile pour le coordinateur, envoyée avec la notification.',
+      detailsPlaceholder: 'ex. Je pourrais animer la séance jeudi à la place.',
+      summaryReason: 'Motif',
       summaryMessage: 'Message',
-      summaryNone: 'No message',
-      note: 'Frequent or last-minute absences can affect your reputation score.',
-      next: 'Continue',
-      back: 'Back',
-      confirm: 'Declare absence',
-      cancel: 'Keep session',
-      closeA11y: 'Close absence',
+      summaryNone: 'Aucun message',
+      note: 'Des absences fréquentes ou de dernière minute peuvent affecter votre score de réputation.',
+      next: 'Continuer',
+      back: 'Retour',
+      confirm: 'Déclarer l’absence',
+      cancel: 'Garder la séance',
+      closeA11y: 'Fermer l’absence',
     },
     // Transmission notes (C28) — continuity log shared between coaches for a care home. The coach
     // reads prior notes and adds their own for whoever runs the next session there.
     notesModal: {
-      title: 'Transmission notes',
-      body: 'Notes are shared with whoever runs the next session here.',
-      empty: 'No notes yet. Add the first one.',
-      placeholder: 'e.g. Mr Lambert prefers seated exercises (knee). The group responds well to music.',
-      save: 'Save note',
-      you: 'You',
-      justNow: 'Just now',
-      closeA11y: 'Close transmission notes',
+      title: 'Notes de transmission',
+      body: 'Les notes sont partagées avec la personne qui animera la prochaine séance ici.',
+      empty: 'Aucune note pour l’instant. Ajoutez la première.',
+      placeholder: 'ex. M. Lambert préfère les exercices assis (genou). Le groupe réagit bien à la musique.',
+      save: 'Enregistrer la note',
+      you: 'Vous',
+      justNow: 'À l’instant',
+      closeA11y: 'Fermer les notes de transmission',
     },
     // View report (C27) — read-only view of a submitted report + its review status. Field labels
     // and the atmosphere/activity values are reused from copy.report (the 6-step form).
     reportView: {
-      title: 'Session report',
-      closeA11y: 'Close report',
-      submittedLabel: 'Submitted',
-      reviewStatus: { pending: 'Awaiting validation', validated: 'Validated', changes: 'Needs changes' },
+      title: 'Compte rendu de séance',
+      closeA11y: 'Fermer le compte rendu',
+      submittedLabel: 'Envoyé',
+      reviewStatus: { pending: 'En attente de validation', validated: 'Validé', changes: 'Modifications requises' },
       reviewNote: {
-        pending: "Submitted. Awaiting validation by the team. Billing starts once it's validated.",
-        validated: 'Validated. This session is confirmed and your billing is on its way.',
-        changes: 'The team asked for a change before this report can be validated.',
+        pending: 'Envoyé. En attente de validation par l’équipe. La facturation démarre une fois validé.',
+        validated: 'Validé. Cette séance est confirmée et votre facturation est en cours.',
+        changes: 'L’équipe a demandé une modification avant de pouvoir valider ce compte rendu.',
       },
-      flagNone: 'Nothing flagged',
-      nextNone: 'No notes left',
-      readyYes: 'Yes',
-      readyNo: 'No',
+      flagNone: 'Rien à signaler',
+      nextNone: 'Aucune note laissée',
+      readyYes: 'Oui',
+      readyNo: 'Non',
     },
     // Application status (C13) — a cross-session list (your applied-for sessions and where each
     // stands), so it's the third segment rather than a per-session action.
-    appStatus: { pending: 'Pending', accepted: 'Accepted', rejected: 'Declined' },
-    emptyApplications: 'No applications in progress.',
+    appStatus: { pending: 'En attente', accepted: 'Acceptée', rejected: 'Refusée' },
+    emptyApplications: 'Aucune candidature en cours.',
     // Application detail (C13) — opens when an application row is tapped.
     appDetail: {
-      title: 'Application',
-      closeA11y: 'Close application',
-      statusLabel: 'Status',
-      when: 'Session',
-      where: 'Where',
+      title: 'Candidature',
+      closeA11y: 'Fermer la candidature',
+      statusLabel: 'Statut',
+      when: 'Séance',
+      where: 'Où',
       format: 'Format',
-      contact: 'On-site contact',
-      applied: 'Applied on',
+      contact: 'Contact sur place',
+      applied: 'Postulé le',
       // A plain-language line explaining what the status means / what happens next.
       note: {
-        pending: "Awaiting the care home's decision. You'll be notified as soon as it's reviewed.",
-        accepted: "You're assigned. This session has been added to your schedule.",
-        rejected: 'This session was assigned to another coach.',
+        pending: 'En attente de la décision de l’établissement. Vous serez prévenu dès qu’elle est prise.',
+        accepted: 'Vous êtes désigné. Cette séance a été ajoutée à votre planning.',
+        rejected: 'Cette séance a été attribuée à un autre coach.',
       },
       // Withdraw application (C14) — only offered while the application is still Pending; once
       // accepted/declined there's nothing to withdraw (an assigned session is cancelled, not withdrawn).
-      manageTitle: 'Manage application',
-      withdraw: 'Withdraw application',
+      manageTitle: 'Gérer la candidature',
+      withdraw: 'Retirer ma candidature',
       withdrawConfirm: {
-        title: 'Withdraw this application?',
-        body: "You'll be removed from the candidates for this session. You can apply again while it stays open.",
-        confirm: 'Withdraw',
-        cancel: 'Keep application',
+        title: 'Retirer cette candidature ?',
+        body: 'Vous serez retiré des candidats pour cette séance. Vous pourrez repostuler tant qu’elle reste ouverte.',
+        confirm: 'Retirer',
+        cancel: 'Garder ma candidature',
       },
     },
   },
   // Generic placeholder screen — a built-but-unwired empty state for sub-flows that don't
   // have a screen yet (e.g. the Sessions overflow-menu destinations). Title is passed per use.
   blank: {
-    title: 'Coming soon',
-    body: 'This screen is on the way.',
-    closeA11y: 'Close',
+    title: 'Bientôt disponible',
+    body: 'Cet écran arrive bientôt.',
+    closeA11y: 'Fermer',
   },
   // Notification center (C32) — the near-full-screen modal behind the header bell.
   // Item titles/bodies/times are mock placeholders and live in the component, like other mock data.
   notifications: {
     title: 'Notifications',
-    markAllRead: 'Mark all read',
-    sectionNew: 'New',
-    sectionEarlier: 'Earlier',
-    empty: "You're all caught up.",
-    closeA11y: 'Close notifications',
-    actionDone: 'Done',
-    doneChipA11y: 'Done',
+    markAllRead: 'Tout marquer comme lu',
+    sectionNew: 'Nouvelles',
+    sectionEarlier: 'Plus anciennes',
+    empty: 'Vous êtes à jour.',
+    closeA11y: 'Fermer les notifications',
+    actionDone: 'Terminé',
+    doneChipA11y: 'Terminé',
   },
   // Profile (C06) — the coach's personal space, opened from the header avatar (locked IA:
   // Profil lives top-right, not in the bottom nav). It is the HUB that gathers the coach's
@@ -601,168 +624,168 @@ export const copy = {
   // is a reasoned synthesis pending the client coach video + approved Figma. Mock values
   // (name, email, address, rate, "updated N days ago") live in the component as placeholders.
   profile: {
-    eyebrow: 'Your account',
-    title: 'Profile',
-    closeA11y: 'Close profile',
-    editPhotoA11y: 'Change profile photo',
-    role: 'APA Coach · Lyon',
+    eyebrow: 'Votre compte',
+    title: 'Profil',
+    closeA11y: 'Fermer le profil',
+    editPhotoA11y: 'Changer la photo de profil',
+    role: 'Coach APA · Lyon',
     // Account status (WBS E01: Active · Pending approval · Rejected · Deleted).
-    status: { active: 'Active', pending: 'Pending approval', rejected: 'Application rejected' },
+    status: { active: 'Actif', pending: 'En attente de validation', rejected: 'Candidature refusée' },
     // Availability & travel preferences (PLA-08 / S18) — the section matching leans on.
     availability: {
-      eyebrow: 'Availability',
+      eyebrow: 'Disponibilités',
       // "Updated N days ago" is composed in-component from the data.
-      updatedPrefix: 'Updated',
-      justNow: 'just now',
-      dayAgo: 'day ago',
-      daysAgo: 'days ago',
-      staleNudge: 'Keep it fresh so you stay matched to sessions nearby.',
-      schedule: 'Weekly schedule',
-      travel: 'Max travel time',
+      updatedPrefix: 'Mis à jour',
+      justNow: 'à l’instant',
+      dayAgo: 'jour',
+      daysAgo: 'jours',
+      staleNudge: 'Gardez-les à jour pour rester proposé aux séances proches.',
+      schedule: 'Planning hebdomadaire',
+      travel: 'Temps de trajet max',
       transport: 'Transport',
       // Plural (WBS PLA-08): a primary + an optional secondary departure point.
-      departure: 'Departure addresses',
-      areas: 'Preferred areas',
-      unavailability: 'Unavailable periods',
-      cta: 'Update availability',
+      departure: 'Adresses de départ',
+      areas: 'Zones préférées',
+      unavailability: 'Périodes d’indisponibilité',
+      cta: 'Mettre à jour mes disponibilités',
     },
     // Progression & past activity — badges/levels (GAME-01/02), submitted reports (SESS-05) and
     // the EHPAD feedback the coach received (SESS-06). Row values are mock placeholders (like
     // availabilityModal.note) — real code composes them from data.
     activity: {
-      eyebrow: 'Progression & activity',
-      badges: 'Badges & level',
-      badgesValue: 'Level 3 · 5 badges',
-      reports: 'Report history',
-      reportsValue: '14 sent',
-      feedback: 'Facility feedback',
-      feedbackValue: '4.8 average',
+      eyebrow: 'Progression & activité',
+      badges: 'Badges & niveau',
+      badgesValue: 'Niveau 3 · 5 badges',
+      reports: 'Historique des comptes rendus',
+      reportsValue: '14 envoyés',
+      feedback: 'Avis des établissements',
+      feedbackValue: '4,8 de moyenne',
     },
     // Fairness target (target monthly volume + flexibility) and default rate.
     goals: {
-      eyebrow: 'Goals & rate',
-      target: 'Monthly target',
-      rate: 'Default hourly rate',
+      eyebrow: 'Objectifs & tarif',
+      target: 'Objectif mensuel',
+      rate: 'Tarif horaire par défaut',
     },
     // Onboarding / account-validation documents (WBS E01). An Active coach has all verified.
     documents: {
-      eyebrow: 'My documents',
-      note: 'Required to keep your account active',
+      eyebrow: 'Mes documents',
+      note: 'Requis pour garder votre compte actif',
       cv: 'CV',
-      urssaf: 'URSSAF certificate',
-      insurance: 'Professional insurance',
-      diploma: 'APA diploma',
-      status: { verified: 'Verified', pending: 'Pending' },
+      urssaf: 'Attestation URSSAF',
+      insurance: 'Assurance professionnelle',
+      diploma: 'Diplôme APA',
+      status: { verified: 'Vérifié', pending: 'En attente' },
     },
     account: {
-      eyebrow: 'Account',
-      personal: 'Personal information',
+      eyebrow: 'Compte',
+      personal: 'Informations personnelles',
       calendar: 'Google Calendar',
-      connected: 'Connected',
-      password: 'Change password',
+      connected: 'Connecté',
+      password: 'Changer le mot de passe',
       // Account deletion (WBS AUTH-14) — a REQUEST: the DS team processes it (GDPR), nothing is
       // wiped on-device. Once requested, the row shows the pending state.
-      deleteAccount: 'Delete account',
-      deleteRequested: 'Requested',
+      deleteAccount: 'Supprimer le compte',
+      deleteRequested: 'Demandée',
     },
     support: {
-      eyebrow: 'Support',
-      help: 'Help centre',
-      contact: 'Contact us',
+      eyebrow: 'Aide',
+      help: 'Centre d’aide',
+      contact: 'Nous contacter',
       version: 'Version',
     },
-    logout: 'Log out',
-    logoutA11y: 'Log out of your account',
+    logout: 'Se déconnecter',
+    logoutA11y: 'Se déconnecter de votre compte',
     // ---- Interactive sheets (every row is functional) ----
     // Quick selects/confirms use the shared BottomSheet; multi-field edits use a keyboard-safe
     // form sheet. Photo pick + document upload are mocked (no native picker wired in the prototype).
-    common: { cancel: 'Cancel', save: 'Save', close: 'Close', done: 'Done' },
+    common: { cancel: 'Annuler', save: 'Enregistrer', close: 'Fermer', done: 'Terminé' },
     avatarSheet: {
-      title: 'Profile photo',
-      help: 'Add a photo so the care home recognises you on arrival.',
-      choose: 'Choose a photo',
-      remove: 'Remove photo',
-      closeA11y: 'Close photo options',
+      title: 'Photo de profil',
+      help: 'Ajoutez une photo pour que l’établissement vous reconnaisse à votre arrivée.',
+      choose: 'Choisir une photo',
+      remove: 'Supprimer la photo',
+      closeA11y: 'Fermer les options de photo',
     },
     edit: {
       // WBS PLA-08 names Car + Two-wheel vehicle; Walking and the free-text Other stay as
       // client-accepted extras.
-      transport: { title: 'Mode of transport', car: 'Car', twoWheel: 'Two-wheel vehicle', walking: 'Walking', other: 'Other' },
-      vehicle: { title: 'Your vehicle', label: 'Vehicle', placeholder: 'e.g. Public transport' },
+      transport: { title: 'Mode de transport', car: 'Voiture', twoWheel: 'Deux-roues', walking: 'À pied', other: 'Autre' },
+      vehicle: { title: 'Votre véhicule', label: 'Véhicule', placeholder: 'ex. Transports en commun' },
       // Slider, 10–90 min (WBS PLA-08). The "≤ N min" readout is composed in-component.
       travel: {
-        title: 'Max travel time',
-        help: 'How far you’ll travel, measured from your departure address.',
-        decA11y: 'Decrease max travel time',
-        incA11y: 'Increase max travel time',
+        title: 'Temps de trajet max',
+        help: 'Jusqu’où vous acceptez de vous déplacer, depuis votre adresse de départ.',
+        decA11y: 'Diminuer le temps de trajet max',
+        incA11y: 'Augmenter le temps de trajet max',
       },
       // Half-day grid, Mon→Sun (WBS PLA-09) — not whole weekdays.
       schedule: {
-        title: 'Weekly schedule',
-        help: 'Activate the half-days you can work, weekends included.',
-        weekdays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        am: 'Morning',
-        pm: 'Afternoon',
-        notSet: 'No half-days set',
+        title: 'Planning hebdomadaire',
+        help: 'Activez les demi-journées où vous pouvez travailler, week-ends compris.',
+        weekdays: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+        am: 'Matin',
+        pm: 'Après-midi',
+        notSet: 'Aucune demi-journée définie',
       },
       // Primary + optional secondary departure point (WBS PLA-08 "Departure addresses").
       departure: {
-        title: 'Departure addresses',
-        primaryLabel: 'Primary address',
-        secondaryLabel: 'Secondary address',
-        secondaryOptional: 'optional',
-        help: 'Travel time to each session is measured from the closest of these.',
+        title: 'Adresses de départ',
+        primaryLabel: 'Adresse principale',
+        secondaryLabel: 'Adresse secondaire',
+        secondaryOptional: 'facultatif',
+        help: 'Le temps de trajet vers chaque séance est calculé depuis la plus proche.',
       },
-      areas: { title: 'Preferred areas', label: 'Areas', help: 'Sessions outside these still appear. They’re never hidden.' },
-      unavailability: { title: 'Unavailable periods', label: 'Period', help: 'Holidays or time off. Use “None upcoming” when you’re fully available.' },
-      target: { title: 'Monthly target', label: 'Sessions per month', help: 'Used to share sessions fairly between coaches.', flexibilityLabel: 'Flexibility', strict: 'Strict', flexible: 'Flexible' },
-      rate: { title: 'Default hourly rate', label: 'Rate (€ / hour)' },
-      personal: { title: 'Personal information', name: 'Full name', email: 'Email', phone: 'Phone' },
+      areas: { title: 'Zones préférées', label: 'Zones', help: 'Les séances en dehors apparaissent quand même. Elles ne sont jamais masquées.' },
+      unavailability: { title: 'Périodes d’indisponibilité', label: 'Période', help: 'Vacances ou congés. Indiquez « Aucune à venir » lorsque vous êtes pleinement disponible.' },
+      target: { title: 'Objectif mensuel', label: 'Séances par mois', help: 'Utilisé pour répartir équitablement les séances entre coachs.', flexibilityLabel: 'Flexibilité', strict: 'Strict', flexible: 'Flexible' },
+      rate: { title: 'Tarif horaire par défaut', label: 'Tarif (€ / heure)' },
+      personal: { title: 'Informations personnelles', name: 'Nom complet', email: 'E-mail', phone: 'Téléphone' },
     },
     password: {
-      title: 'Change password',
-      current: 'Current password',
-      next: 'New password',
-      confirm: 'Confirm new password',
-      help: 'At least 8 characters.',
-      mismatch: 'New passwords don’t match.',
-      tooShort: 'Use at least 8 characters.',
-      missing: 'Fill in every field.',
+      title: 'Changer le mot de passe',
+      current: 'Mot de passe actuel',
+      next: 'Nouveau mot de passe',
+      confirm: 'Confirmer le nouveau mot de passe',
+      help: 'Au moins 8 caractères.',
+      mismatch: 'Les nouveaux mots de passe ne correspondent pas.',
+      tooShort: 'Utilisez au moins 8 caractères.',
+      missing: 'Remplissez tous les champs.',
     },
     confirmAvail: {
-      title: 'Still available as usual?',
-      body: 'Matching uses your weekly availability and travel area to offer you sessions. Confirm it’s current, or review your settings.',
-      primary: 'Yes, it’s current',
-      secondary: 'Review settings',
+      title: 'Toujours disponible comme d’habitude ?',
+      body: 'Le matching utilise vos disponibilités hebdomadaires et votre zone de déplacement pour vous proposer des séances. Confirmez qu’elles sont à jour, ou vérifiez vos réglages.',
+      primary: 'Oui, c’est à jour',
+      secondary: 'Vérifier les réglages',
     },
     calendar: {
-      connectTitle: 'Connect Google Calendar',
-      connectBody: 'Sync your confirmed sessions to your Google Calendar automatically.',
-      connect: 'Connect',
-      disconnectTitle: 'Disconnect Google Calendar?',
-      disconnectBody: 'Your confirmed sessions will stop syncing to Google Calendar.',
-      disconnect: 'Disconnect',
-      disconnected: 'Not connected',
+      connectTitle: 'Connecter Google Calendar',
+      connectBody: 'Synchronisez automatiquement vos séances confirmées avec votre Google Calendar.',
+      connect: 'Connecter',
+      disconnectTitle: 'Déconnecter Google Calendar ?',
+      disconnectBody: 'Vos séances confirmées ne seront plus synchronisées avec Google Calendar.',
+      disconnect: 'Déconnecter',
+      disconnected: 'Non connecté',
     },
     documentSheet: {
-      body: 'This document is on file and keeps your account active.',
-      replace: 'Replace document',
-      pendingNote: 'New file uploaded. Pending review by the DS team.',
+      body: 'Ce document est enregistré et garde votre compte actif.',
+      replace: 'Remplacer le document',
+      pendingNote: 'Nouveau fichier envoyé. En attente de vérification par l’équipe DS.',
     },
-    logoutConfirm: { title: 'Log out?', body: 'You’ll need to sign in again to see your sessions.' },
+    logoutConfirm: { title: 'Se déconnecter ?', body: 'Vous devrez vous reconnecter pour voir vos séances.' },
     // Delete account (AUTH-14) — a deletion REQUEST handled by the DS team, framed as such.
     deleteConfirm: {
-      title: 'Delete your account?',
-      body: 'This sends a deletion request to the Deuxième Souffle team. Your account, sessions and documents are removed once it’s processed, and this can’t be undone.',
-      confirm: 'Request deletion',
-      requestedTitle: 'Deletion requested',
-      requestedBody: 'The team has received your request and will confirm by email. You can keep using the app until it’s processed.',
+      title: 'Supprimer votre compte ?',
+      body: 'Cela envoie une demande de suppression à l’équipe Deuxième Souffle. Votre compte, vos séances et vos documents sont supprimés une fois la demande traitée, et c’est irréversible.',
+      confirm: 'Demander la suppression',
+      requestedTitle: 'Suppression demandée',
+      requestedBody: 'L’équipe a reçu votre demande et confirmera par e-mail. Vous pouvez continuer à utiliser l’app jusqu’à son traitement.',
     },
-    about: { title: 'Deuxième Souffle · Coach', body: 'APA coaching coordination for care homes.\nVersion 0.1.0 (prototype).' },
+    about: { title: 'Deuxième Souffle · Coach', body: 'Coordination du coaching APA pour les établissements.\nVersion 0.1.0 (prototype).' },
     links: {
       helpUrl: 'https://deuxiemesouffle.fr/aide',
       contactEmail: 'support@deuxiemesouffle.fr',
-      contactSubject: 'Coach app: support request',
+      contactSubject: 'App Coach : demande d’assistance',
     },
   },
   // Onboarding & auth (E01 — Auth & Account). The coach is a VETTED professional: accounts go
@@ -771,53 +794,73 @@ export const copy = {
   // traces to E01 (email + password; a 30-day session + manual logout handled by the auth layer);
   // the LAYOUT is a reasoned synthesis pending the coach video + approved Figma. Facebook social
   // login is a PRD open question (pending client validation) — intentionally left out of this
-  // draft. English for review; French to ship (translate the values here).
+  // draft.
   auth: {
     // Splash — the in-app branded launch beat (distinct from the native cold-start splash).
     splash: {
       wordmark: 'Deuxième Souffle',
       tagline: 'Le Club',
       a11y: 'Deuxième Souffle',
-      skipA11y: 'Skip',
+      skipA11y: 'Passer',
     },
     // Welcome — value proposition for the APA coach + the entry to log in.
     welcome: {
-      eyebrow: 'APA Coach',
+      eyebrow: 'Coach APA',
       // Headline traces to the coach's real job (matching · on-site check-in · earnings).
-      title: 'Your sessions,\nyour rhythm.',
-      body: 'Get matched to sessions in care homes near you, check in on site, and keep an eye on your earnings, all in one place.',
-      login: 'Log in',
+      title: 'Vos séances,\nvotre rythme.',
+      body: 'Soyez mis en relation avec des séances en établissement près de chez vous, faites votre check-in sur place et suivez vos revenus, le tout au même endroit.',
+      login: 'Se connecter',
       // Opens the self-registration flow (E01: "Coach self-registration … with admin validation").
-      apply: 'New coach? Apply to join',
-      applyA11y: 'Apply to join as a coach',
+      apply: 'Postuler comme coach',
+      applyA11y: 'Poser sa candidature en tant que coach',
     },
     // Login — email + password sign-in (+ Google OAuth, per WBS "Coach can log in via Google
     // OAuth", + a cross-link to registration).
     login: {
-      eyebrow: 'Welcome back',
-      title: 'Log in',
-      subtitle: 'Sign in to your coach account.',
-      google: 'Continue with Google',
-      orDivider: 'or',
-      email: { label: 'Email', placeholder: 'you@email.com' },
+      eyebrow: 'Bon retour',
+      title: 'Connexion',
+      subtitle: 'Connectez-vous à votre compte coach.',
+      google: 'Continuer avec Google',
+      orDivider: 'ou',
+      email: { label: 'E-mail', placeholder: 'vous@email.com' },
       password: {
-        label: 'Password',
-        placeholder: 'Your password',
-        showA11y: 'Show password',
-        hideA11y: 'Hide password',
+        label: 'Mot de passe',
+        placeholder: 'Votre mot de passe',
+        showA11y: 'Afficher le mot de passe',
+        hideA11y: 'Masquer le mot de passe',
       },
-      forgot: 'Forgot password?',
-      forgotA11y: 'Reset your password',
+      forgot: 'Mot de passe oublié ?',
+      forgotA11y: 'Réinitialiser votre mot de passe',
       // Standard privacy-preserving confirmation (doesn't reveal whether the email is registered).
       // Prototype: no email backend yet — real code triggers the reset email here.
-      forgotSent: 'If that email is registered, we’ll send a reset link.',
-      submit: 'Log in',
+      forgotSent: 'Si cet e-mail est enregistré, nous enverrons un lien de réinitialisation.',
+      submit: 'Se connecter',
       // Shown when the form is incomplete/invalid. (Prototype has no backend; real code surfaces
       // the server’s auth error in this same slot.)
-      error: 'Enter a valid email and your password to continue.',
-      backA11y: 'Back',
-      noAccount: 'New coach?',
-      createAccount: 'Create an account',
+      error: 'Saisissez un e-mail valide et votre mot de passe pour continuer.',
+      backA11y: 'Retour',
+      noAccount: 'Nouveau coach ?',
+      createAccount: 'Créer un compte',
+    },
+    // Forgot password — dedicated reset flow opened from Login's "Forgot password?" link. One email
+    // field → a privacy-preserving confirmation (never reveals whether the email is registered).
+    // PROTOTYPE: no email backend yet; real code triggers the reset email on submit.
+    forgot: {
+      eyebrow: 'Aide mot de passe',
+      title: 'Réinitialiser le mot de passe',
+      subtitle: 'Saisissez l’e-mail de votre compte coach et nous enverrons un lien pour définir un nouveau mot de passe.',
+      email: { label: 'E-mail', placeholder: 'vous@email.com' },
+      submit: 'Envoyer le lien',
+      invalid: 'Saisissez un e-mail valide pour continuer.',
+      backA11y: 'Retour à la connexion',
+      backToLogin: 'Retour à la connexion',
+      // Confirmation state (replaces the form after submit). {email} is composed in-component.
+      sentTitle: 'Vérifiez vos e-mails',
+      sentBodyPrefix: 'Si ',
+      sentBodySuffix: ' est enregistré, un lien pour réinitialiser votre mot de passe est en route. Il peut mettre quelques minutes à arriver.',
+      sentHint: 'Pas reçu ? Vérifiez vos spams, ou renvoyez-le.',
+      resend: 'Renvoyer',
+      done: 'Retour à la connexion',
     },
     // Sign-up / registration (E01 — "Coach self-registration (email / Google) with admin validation").
     // The FIELD SET mirrors the client's back-office "Invite a coach · Step 1 — Coach's identity"
@@ -827,90 +870,90 @@ export const copy = {
     // Submitting creates a PENDING_APPROVAL account (see `pending` — the KYC-documents step).
     // Google OAuth, the INSEE/uniqueness checks and profile completion are stubbed here.
     signup: {
-      eyebrow: 'Join the club',
-      title: 'Apply to coach',
-      subtitle: 'Create your coach account. The team reviews it before you go live.',
-      google: 'Continue with Google',
-      orDivider: 'or',
+      eyebrow: 'Rejoindre le club',
+      title: 'Candidater comme coach',
+      subtitle: 'Créez votre compte coach. L’équipe le vérifie avant votre mise en ligne.',
+      google: 'Continuer avec Google',
+      orDivider: 'ou',
       // Step header, verbatim from the back-office flow; documents follow on the pending screen.
-      step: 'Step 1: Coach’s identity',
-      optionalTag: 'optional',
+      step: 'Étape 1 : Identité du coach',
+      optionalTag: 'facultatif',
       civility: {
-        label: 'Civility',
-        placeholder: 'Select',
-        sheetTitle: 'Civility',
-        options: { madam: 'Madam', sir: 'Sir' },
+        label: 'Civilité',
+        placeholder: 'Sélectionner',
+        sheetTitle: 'Civilité',
+        options: { madam: 'Madame', sir: 'Monsieur' },
       },
       // Typed as DD/MM/YYYY (French format) — the slashes are inserted as you type.
-      dob: { label: 'Date of birth', placeholder: 'DD/MM/YYYY' },
-      firstName: { label: 'First name', placeholder: 'Marie' },
-      lastName: { label: 'Name', placeholder: 'Dubois' },
-      email: { label: 'Email', placeholder: 'marie.dubois@coach.fr' },
-      phone: { label: 'Phone', placeholder: '06 12 34 56 78' },
+      dob: { label: 'Date de naissance', placeholder: 'JJ/MM/AAAA' },
+      firstName: { label: 'Prénom', placeholder: 'Marie' },
+      lastName: { label: 'Nom', placeholder: 'Dubois' },
+      email: { label: 'E-mail', placeholder: 'marie.dubois@coach.fr' },
+      phone: { label: 'Téléphone', placeholder: '06 12 34 56 78' },
       address: {
-        label: 'Personal address',
-        placeholder: '12 rue Vaugirard, 75015 Paris',
-        help: 'Used for the default travel-time calculation.',
+        label: 'Adresse personnelle',
+        placeholder: '12 rue de Vaugirard, 75015 Paris',
+        help: 'Utilisée pour le calcul du temps de trajet par défaut.',
       },
       // SIRET = the independent coach's 14-digit business identifier (uniqueness enforced server-side).
-      siret: { label: 'SIRET', placeholder: '123 456 789 00012', help: 'Your auto-entrepreneur or company number.' },
+      siret: { label: 'SIRET', placeholder: '123 456 789 00012', help: 'Votre numéro d’auto-entrepreneur ou de société.' },
       legalStatus: {
-        label: 'Legal status',
-        placeholder: 'Select',
-        sheetTitle: 'Legal status',
+        label: 'Statut juridique',
+        placeholder: 'Sélectionner',
+        sheetTitle: 'Statut juridique',
         options: {
-          selfEmployed: 'Self-employed',
-          soleProprietor: 'Sole proprietorship',
-          company: 'Company (EURL / SASU)',
-          other: 'Other',
+          selfEmployed: 'Auto-entrepreneur',
+          soleProprietor: 'Entreprise individuelle',
+          company: 'Société (EURL / SASU)',
+          other: 'Autre',
         },
       },
       // Mirrors the back-office note: SIRET → INSEE check; the DS training course gates validation.
       verification: {
-        title: 'Automatic verification',
-        body: 'Your SIRET number is verified with INSEE. The Deuxième Souffle training course is mandatory before validation.',
+        title: 'Vérification automatique',
+        body: 'Votre numéro SIRET est vérifié auprès de l’INSEE. La formation Deuxième Souffle est obligatoire avant la validation.',
       },
       password: {
-        label: 'Password',
-        placeholder: 'At least 8 characters',
-        showA11y: 'Show password',
-        hideA11y: 'Hide password',
+        label: 'Mot de passe',
+        placeholder: 'Au moins 8 caractères',
+        showA11y: 'Afficher le mot de passe',
+        hideA11y: 'Masquer le mot de passe',
       },
       // Optional — only coaches invited by the team receive a code (code ↔ email pairing).
-      invite: { label: 'Invitation code', optional: 'optional', placeholder: 'If the team gave you one' },
-      consent: 'I agree to the Terms of Service and Privacy Policy.',
-      consentA11y: 'Agree to the Terms of Service and Privacy Policy',
-      submit: 'Submit application',
-      haveAccount: 'Already have an account?',
-      login: 'Log in',
-      backA11y: 'Back',
+      invite: { label: 'Code d’invitation', optional: 'facultatif', placeholder: 'Si l’équipe vous en a donné un' },
+      consent: 'J’accepte les conditions d’utilisation et la politique de confidentialité.',
+      consentA11y: 'Accepter les conditions d’utilisation et la politique de confidentialité',
+      submit: 'Envoyer ma candidature',
+      haveAccount: 'Vous avez déjà un compte ?',
+      login: 'Se connecter',
+      backA11y: 'Retour',
       // "Check" (not "fill in") — a field can be highlighted because it's invalid, not just empty.
-      error: 'Check the highlighted fields to submit your application.',
+      error: 'Vérifiez les champs en surbrillance pour envoyer votre candidature.',
     },
     // Pending-approval screen (E01 — "Account pending validation" screen). After registration the
     // account is PENDING_APPROVAL and the rest of the app is locked until an admin validates the KYC
     // documents (CV · URSSAF · insurance · APA diploma). "Complete my application" opens document
     // upload (stubbed here). A rejected application would get its own screen + resubmit (deferred).
     pending: {
-      eyebrow: 'Account status',
-      statusChip: 'Pending approval',
-      title: 'Application under review',
+      eyebrow: 'Statut du compte',
+      statusChip: 'En attente de validation',
+      title: 'Candidature en cours d’examen',
       // {name} is composed in-component from the registered first name. The indicative review
       // time moved out of the body into its own visible line (WBS AUTH-19).
-      bodyPrefix: 'Thanks for applying, ',
-      bodySuffix: '. Our team is verifying your details, and we’ll email you as soon as your account is approved.',
-      bodyNoName: 'Thanks for applying. Our team is verifying your details, and we’ll email you as soon as your account is approved.',
+      bodyPrefix: 'Merci pour votre candidature, ',
+      bodySuffix: '. Notre équipe vérifie vos informations et vous enverra un e-mail dès que votre compte est approuvé.',
+      bodyNoName: 'Merci pour votre candidature. Notre équipe vérifie vos informations et vous enverra un e-mail dès que votre compte est approuvé.',
       // Indicative processing time (WBS AUTH-19: "Indicative processing time displayed").
-      processingTime: 'Typical review time: 2–3 working days',
-      docsEyebrow: 'Required documents',
-      docsNote: 'Add the missing ones to speed up your approval.',
-      docs: { cv: 'CV', urssaf: 'URSSAF certificate', insurance: 'Professional insurance', diploma: 'APA diploma' },
+      processingTime: 'Délai habituel d’examen : 2–3 jours ouvrés',
+      docsEyebrow: 'Documents requis',
+      docsNote: 'Ajoutez ceux qui manquent pour accélérer votre validation.',
+      docs: { cv: 'CV', urssaf: 'Attestation URSSAF', insurance: 'Assurance professionnelle', diploma: 'Diplôme APA' },
       // Per-document visual status (WBS AUTH-19: received vs pending, never colour alone).
-      docStatusMissing: 'To add',
-      docStatusReceived: 'Received',
-      complete: 'Complete my application',
-      completeBody: 'Document upload is the next slice. Your application is saved and the team can already see it.',
-      backA11y: 'Back',
+      docStatusMissing: 'À ajouter',
+      docStatusReceived: 'Reçu',
+      complete: 'Compléter ma candidature',
+      completeBody: 'L’envoi des documents est la prochaine étape. Votre candidature est enregistrée et l’équipe peut déjà la voir.',
+      backA11y: 'Retour',
     },
   },
   // Badges & level (GAME-01 badge system · GAME-02 levels & progression). Counts, dates and the
@@ -918,54 +961,54 @@ export const copy = {
   // progression is recognition, not pay.
   game: {
     eyebrow: 'Progression',
-    title: 'Badges & level',
-    closeA11y: 'Close badges and level',
-    levelPrefix: 'Level',
+    title: 'Badges & niveau',
+    closeA11y: 'Fermer les badges et le niveau',
+    levelPrefix: 'Niveau',
     // Composed in-component: "11 sessions to level 4".
-    toNextMid: 'sessions to level',
-    totalSuffix: 'sessions completed',
-    earnedTitle: 'Earned',
-    lockedTitle: 'In progress',
-    earnedPrefix: 'Earned',
-    note: 'Badges and levels grow with completed sessions, punctual check-ins and facility feedback. The DS team sees them too, but they never affect your pay.',
+    toNextMid: 'séances avant le niveau',
+    totalSuffix: 'séances réalisées',
+    earnedTitle: 'Obtenus',
+    lockedTitle: 'En cours',
+    earnedPrefix: 'Obtenu',
+    note: 'Les badges et niveaux progressent avec les séances réalisées, les check-ins ponctuels et les avis des établissements. L’équipe DS les voit aussi, mais ils n’affectent jamais votre rémunération.',
     badges: {
-      first: { name: 'First session', desc: 'Complete your first session' },
-      ten: { name: '10 sessions', desc: 'Complete 10 sessions' },
-      fifty: { name: '50 sessions', desc: 'Complete 50 sessions' },
-      punctual: { name: 'Right on time', desc: '20 punctual check-ins in a row' },
-      favourite: { name: 'Resident favourite', desc: 'A month above a 4.5 rating' },
-      hundred: { name: '100 sessions', desc: 'Complete 100 sessions' },
-      explorer: { name: 'Explorer', desc: 'Coach in 10 different facilities' },
-      streak: { name: 'Full month', desc: 'A calendar month with zero absences' },
+      first: { name: 'Première séance', desc: 'Réalisez votre première séance' },
+      ten: { name: '10 séances', desc: 'Réalisez 10 séances' },
+      fifty: { name: '50 séances', desc: 'Réalisez 50 séances' },
+      punctual: { name: 'Toujours à l’heure', desc: '20 check-ins ponctuels d’affilée' },
+      favourite: { name: 'Coup de cœur des résidents', desc: 'Un mois au-dessus de 4,5 de note' },
+      hundred: { name: '100 séances', desc: 'Réalisez 100 séances' },
+      explorer: { name: 'Explorateur', desc: 'Coach dans 10 établissements différents' },
+      streak: { name: 'Mois complet', desc: 'Un mois calendaire sans aucune absence' },
     },
   },
   // Report history (SESS-05) — chronological list of submitted reports, filterable by facility,
   // paginated. Dates/counts are mock placeholders; statuses reuse sessions.reportView wording.
   reportHistory: {
-    eyebrow: 'Your activity',
-    title: 'Report history',
-    closeA11y: 'Close report history',
-    filterAll: 'All facilities',
-    filterA11y: 'Filter reports by facility',
-    countSuffix: 'reports',
+    eyebrow: 'Votre activité',
+    title: 'Historique des comptes rendus',
+    closeA11y: 'Fermer l’historique des comptes rendus',
+    filterAll: 'Tous les établissements',
+    filterA11y: 'Filtrer les comptes rendus par établissement',
+    countSuffix: 'comptes rendus',
     participantsSuffix: 'participants',
-    empty: 'No reports for this facility yet.',
-    showMore: 'Show more',
+    empty: 'Aucun compte rendu pour cet établissement.',
+    showMore: 'Voir plus',
   },
   // EHPAD feedback (SESS-06) — the ratings + comments facilities left on the coach's sessions.
   ehpadFeedback: {
-    eyebrow: 'Your activity',
-    title: 'Facility feedback',
-    closeA11y: 'Close facility feedback',
-    averageLabel: 'Average rating',
-    countSuffix: 'ratings',
-    note: 'Facilities rate each session after it ends. New feedback lands here.',
-    empty: 'No feedback yet. It appears after your first rated session.',
+    eyebrow: 'Votre activité',
+    title: 'Avis des établissements',
+    closeA11y: 'Fermer les avis des établissements',
+    averageLabel: 'Note moyenne',
+    countSuffix: 'avis',
+    note: 'Les établissements évaluent chaque séance après sa fin. Les nouveaux avis apparaissent ici.',
+    empty: 'Aucun avis pour l’instant. Il apparaît après votre première séance évaluée.',
   },
   tabs: {
-    home: 'Home',
-    sessions: 'Sessions',
-    available: 'Available',
-    earnings: 'Earnings',
+    home: 'Accueil',
+    sessions: 'Séances',
+    available: 'Disponibles',
+    earnings: 'Revenus',
   },
 } as const;

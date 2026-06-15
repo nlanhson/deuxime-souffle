@@ -14,12 +14,11 @@
  */
 import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import { MapPin, AlertTriangle, Check, CheckCircle2, Navigation, Edit3, Users, Bell, Clock, User, X, ChevronDown, ChevronUp, ChevronRight, Ban, CalendarX, StickyNote, Send, Activity, Smile, Wallet, Copy, type LucideIcon } from '../icons';
 
-import { palette, color, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
+import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
 import { copy } from '../copy';
 import { NotificationCenter } from '../components/NotificationCenter';
 import { PrimaryButton } from '../components/PrimaryButton';
@@ -49,7 +48,6 @@ const CANVAS = S.canvas;                                            // ink (dark
 const CARD = S.surface;                                             // the dark ink card in both schemes
 const CARD_LIFT = isDark ? palette.neutral[700] : S.surfaceRaised;  // lifted cell inside a card
 const SUBTLE = isDark ? palette.neutral[800] : palette.neutral[100]; // subtle container on the canvas
-const DIVIDER = palette.neutral[700];                              // dividers inside dark cards
 const ON_CANVAS = S.textPrimary;                                   // on-canvas text — adapts per scheme
 const ON_CANVAS_2 = S.textSecondary;
 const ON_CARD = palette.neutral[50];                              // light text inside the dark card
@@ -85,42 +83,53 @@ type Status = 'checkin' | 'confirmed' | 'checkedIn' | 'reportDue' | 'reportSent'
 type Session = { id: string; time: string; end: string; place: string; addr: string; detail: string; contact: string; status: Status; rate: number };
 type Group = { label: string; items: Session[] };
 
+// Duration shown on the card's time rail (ClassPass idiom: start time over duration, not end time).
+// Times are "HH:MM" 24h; the full start→end range stays available in the detail sheet.
+function durationLabel(start: string, end: string): string {
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  let mins = eh * 60 + em - (sh * 60 + sm);
+  if (mins <= 0) mins += 24 * 60;
+  if (mins < 60) return `${mins} min`;
+  return mins % 60 === 0 ? `${mins / 60}h` : `${Math.floor(mins / 60)}h ${mins % 60}`;
+}
+
 // Mock data — placeholder content (real code formats weekday/distance/time from data + locale).
 // "The Lindens @ 14:30" mirrors the Accueil hero; "Bellevue, yesterday" mirrors its report banner.
 const UPCOMING: Group[] = [
   {
-    label: 'Today',
+    label: 'Aujourd’hui',
     items: [
-      { id: 'u1', time: '14:30', end: '15:30', place: 'The Lindens Care Home', addr: '12 Lilac Street, Lyon 3rd · 2.4 km', detail: 'Group · 8 residents', contact: 'Ask for Marie Laurent · Coordinator', status: 'checkin', rate: 35 },
-      { id: 'u2', time: '17:00', end: '18:00', place: 'Park Care Home', addr: '8 Rue Léon Blum, Villeurbanne · 3.1 km', detail: 'Individual · 1 resident', contact: 'Ask for Thomas Petit · Activities lead', status: 'confirmed', rate: 35 },
+      { id: 'u1', time: '14:30', end: '15:30', place: 'Résidence Les Tilleuls', addr: '12 rue des Lilas, Lyon 3e · 2.4 km', detail: 'Groupe · 8 résidents', contact: 'Demandez Marie Laurent · Coordinatrice', status: 'checkin', rate: 35 },
+      { id: 'u2', time: '17:00', end: '18:00', place: 'Résidence du Parc', addr: '8 rue Léon Blum, Villeurbanne · 3.1 km', detail: 'Individuel · 1 résident', contact: 'Demandez Thomas Petit · Responsable des animations', status: 'confirmed', rate: 35 },
     ],
   },
   {
-    label: 'Tomorrow',
+    label: 'Demain',
     items: [
-      { id: 'u3', time: '10:00', end: '11:00', place: 'The Cedars Residence', addr: '5 Avenue Jean Jaurès, Lyon 7th · 4.8 km', detail: 'Group · 6 residents', contact: 'Ask for Sophie Marchand · Coordinator', status: 'confirmed', rate: 40 },
+      { id: 'u3', time: '10:00', end: '11:00', place: 'Résidence Les Cèdres', addr: '5 avenue Jean Jaurès, Lyon 7e · 4.8 km', detail: 'Groupe · 6 résidents', contact: 'Demandez Sophie Marchand · Coordinatrice', status: 'confirmed', rate: 40 },
     ],
   },
   {
-    label: 'Thu · June 11',
+    label: 'Jeu · 11 juin',
     items: [
-      { id: 'u4', time: '11:00', end: '12:00', place: 'Maple Court', addr: '27 Cours Gambetta, Lyon 6th · 1.9 km', detail: 'Group · 10 residents', contact: 'Ask for Claire Dubois · Care manager', status: 'confirmed', rate: 35 },
+      { id: 'u4', time: '11:00', end: '12:00', place: 'Résidence Les Érables', addr: '27 cours Gambetta, Lyon 6e · 1.9 km', detail: 'Groupe · 10 résidents', contact: 'Demandez Claire Dubois · Responsable de soins', status: 'confirmed', rate: 35 },
     ],
   },
 ];
 
 const PAST: Group[] = [
   {
-    label: 'Yesterday',
+    label: 'Hier',
     items: [
-      { id: 'p1', time: '15:00', end: '16:00', place: 'Bellevue Residence', addr: '3 Rue Bellecombe, Lyon 6th · 1.9 km', detail: 'Group · 10 residents', contact: 'Ask for Julien Moreau · Coordinator', status: 'reportDue', rate: 35 },
-      { id: 'p2', time: '09:30', end: '10:30', place: 'Riverside Care Home', addr: '14 Quai Rambaud, Lyon 7th · 4.1 km', detail: 'Individual · 1 resident', contact: 'Ask for Amélie Roche · Activities lead', status: 'reportSent', rate: 35 },
+      { id: 'p1', time: '15:00', end: '16:00', place: 'Résidence Bellevue', addr: '3 rue Bellecombe, Lyon 6e · 1.9 km', detail: 'Groupe · 10 résidents', contact: 'Demandez Julien Moreau · Coordinateur', status: 'reportDue', rate: 35 },
+      { id: 'p2', time: '09:30', end: '10:30', place: 'Résidence des Berges', addr: '14 quai Rambaud, Lyon 7e · 4.1 km', detail: 'Individuel · 1 résident', contact: 'Demandez Amélie Roche · Responsable des animations', status: 'reportSent', rate: 35 },
     ],
   },
   {
-    label: 'Mon · June 8',
+    label: 'Lun · 8 juin',
     items: [
-      { id: 'p3', time: '14:00', end: '15:00', place: 'The Oaks', addr: '19 Montée des Soldats, Caluire · 5.2 km', detail: 'Group · 7 residents', contact: 'Ask for Luc Girard · Coordinator', status: 'reportSent', rate: 35 },
+      { id: 'p3', time: '14:00', end: '15:00', place: 'Résidence Les Chênes', addr: '19 montée des Soldats, Caluire · 5.2 km', detail: 'Groupe · 7 résidents', contact: 'Demandez Luc Girard · Coordinateur', status: 'reportSent', rate: 35 },
     ],
   },
 ];
@@ -220,11 +229,14 @@ function SessionCard({ s, day, first, onOpen, onCheckIn, onWriteReport, onViewRe
           accessibilityRole="button"
           accessibilityLabel={`${s.place}, ${s.time} to ${s.end}, ${STATUS_META[s.status].label}. View details.`}
         >
-          {/* time rail */}
+          {/* time rail — start time over duration (ClassPass idiom) */}
           <View style={st.timeRail}>
             <Text style={st.railTime} numberOfLines={1}>{s.time}</Text>
-            <Text style={st.railEnd}>{s.end}</Text>
+            <Text style={st.railEnd}>{durationLabel(s.time, s.end)}</Text>
           </View>
+
+          {/* thin connector rule between the rail and the content */}
+          <View style={st.railRule} />
 
           {/* title · tag · address */}
           <View style={st.cardBody}>
@@ -288,9 +300,9 @@ type AppStatus = 'pending' | 'accepted' | 'rejected';
 type Application = { place: string; addr: string; when: string; status: AppStatus; format: string; contact: string; applied: string };
 
 const APPLICATIONS: Application[] = [
-  { place: 'Saint-Joseph Residence', addr: '21 Rue de la Part-Dieu, Lyon 3rd · 1.2 km', when: 'Fri · June 12 · 10:00 → 11:00', status: 'pending', format: 'Group · 8 residents', contact: 'Ask for Nadia Berger · Coordinator', applied: 'June 7' },
-  { place: 'Les Tilleuls', addr: '6 Rue des Docks, Lyon 9th · 6.4 km', when: 'Sat · June 13 · 15:00 → 16:00', status: 'accepted', format: 'Individual · 1 resident', contact: 'Ask for Paul Mercier · Activities lead', applied: 'June 6' },
-  { place: 'Bellecour Care Home', addr: '2 Place Bellecour, Lyon 2nd · 3.0 km', when: 'Mon · June 8 · 11:00 → 12:00', status: 'rejected', format: 'Group · 6 residents', contact: 'Ask for Hélène Faure · Coordinator', applied: 'June 4' },
+  { place: 'Résidence Saint-Joseph', addr: '21 rue de la Part-Dieu, Lyon 3e · 1.2 km', when: 'Ven · 12 juin · 10:00 → 11:00', status: 'pending', format: 'Groupe · 8 résidents', contact: 'Demandez Nadia Berger · Coordinatrice', applied: '7 juin' },
+  { place: 'Résidence Les Tilleuls', addr: '6 rue des Docks, Lyon 9e · 6.4 km', when: 'Sam · 13 juin · 15:00 → 16:00', status: 'accepted', format: 'Individuel · 1 résident', contact: 'Demandez Paul Mercier · Responsable des animations', applied: '6 juin' },
+  { place: 'Résidence Bellecour', addr: '2 place Bellecour, Lyon 2e · 3.0 km', when: 'Lun · 8 juin · 11:00 → 12:00', status: 'rejected', format: 'Groupe · 6 résidents', contact: 'Demandez Hélène Faure · Coordinatrice', applied: '4 juin' },
 ];
 
 const APP_META: Record<AppStatus, { tone: keyof typeof INK; label: string; icon: LucideIcon }> = {
@@ -362,7 +374,6 @@ function ApplicationDetail({ detail, onClose, onWithdraw }: { detail: Applicatio
 
             {/* facts */}
             <View style={st.dCard}>
-              <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
               <DetailRow Icon={Clock} label={copy.sessions.appDetail.when} value={a.when} first />
               <DetailRow Icon={MapPin} label={copy.sessions.appDetail.where} value={a.addr} />
               <DetailRow Icon={Users} label={copy.sessions.appDetail.format} value={a.format} />
@@ -388,16 +399,18 @@ function ApplicationDetail({ detail, onClose, onWithdraw }: { detail: Applicatio
 
 /* Per-session management actions (C24 cancel · C20 absence · C28 notes) — live INSIDE the
    session detail sheet, where there's a session in context. Built per-session in SessionDetail. */
-function ManageRow({ Icon, label, danger, first, onPress }: { Icon: LucideIcon; label: string; danger?: boolean; first?: boolean; onPress?: () => void }) {
+function ManageRow({ Icon, label, danger, onPress }: { Icon: LucideIcon; label: string; danger?: boolean; first?: boolean; onPress?: () => void }) {
   const tint = danger ? palette.rouge[300] : ON_CARD;
   return (
     <Pressable
-      style={({ pressed }) => [st.manageRow, !first && st.dRowDivider, pressed && { opacity: 0.6 }]}
+      style={({ pressed }) => [st.manageRow, pressed && { opacity: 0.6 }]}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Icon size={18} color={danger ? palette.rouge[300] : ON_CARD_2} />
+      <View style={st.rowIcon}>
+        <Icon size={18} color={danger ? palette.rouge[300] : ON_CARD_2} />
+      </View>
       <Text style={[st.manageLabel, { color: tint }]}>{label}</Text>
       <ChevronRight size={18} color={ON_CARD_2} />
     </Pressable>
@@ -411,10 +424,10 @@ type NoteEntry = { author: string; date: string; text: string };
 // Seed: prior notes (by other coaches / earlier sessions), keyed by session id. Unlisted = empty.
 const SEED_NOTES: Record<string, NoteEntry[]> = {
   u1: [
-    { author: 'Sophie Marchand', date: 'May 28', text: 'Mr Lambert prefers seated exercises due to a knee issue. Keep the warm-up short; the group responds well to music.' },
+    { author: 'Sophie Marchand', date: '28 mai', text: 'M. Lambert préfère les exercices assis à cause d’un problème de genou. Gardez l’échauffement court ; le groupe réagit bien à la musique.' },
   ],
   p1: [
-    { author: copy.sessions.notesModal.you, date: 'Jun 8', text: 'Two new residents joined the group. Bring extra resistance bands next time.' },
+    { author: copy.sessions.notesModal.you, date: '8 juin', text: 'Deux nouveaux résidents ont rejoint le groupe. Pensez à apporter des élastiques supplémentaires la prochaine fois.' },
   ],
 };
 
@@ -505,8 +518,8 @@ type SubmittedReport = {
 
 // Mock submitted reports, keyed by the session id of each `reportSent` session.
 const REPORTS: Record<string, SubmittedReport> = {
-  p2: { submitted: 'Jun 8', review: 'validated', participants: 1, activities: ['Mobility & balance', 'Flexibility'], ready: true, engagement: 2, difficulty: 0, nextNotes: 'Keep the seated routine; resident responded well.' },
-  p3: { submitted: 'Jun 8', review: 'pending', participants: 7, activities: ['Strength', 'Cardio', 'Coordination'], flag: 'Heating was off in the activity room, so it was quite cold.', ready: false, engagement: 3, difficulty: 2 },
+  p2: { submitted: '8 juin', review: 'validated', participants: 1, activities: ['Mobilité & équilibre', 'Souplesse'], ready: true, engagement: 2, difficulty: 0, nextNotes: 'Conserver la routine assise ; le résident a bien réagi.' },
+  p3: { submitted: '8 juin', review: 'pending', participants: 7, activities: ['Renforcement', 'Cardio', 'Coordination'], flag: 'Le chauffage était coupé dans la salle d’activité, il faisait donc assez froid.', ready: false, engagement: 3, difficulty: 2 },
 };
 
 const REVIEW_META: Record<ReviewStatus, { tone: keyof typeof INK; label: string; icon: LucideIcon }> = {
@@ -554,7 +567,6 @@ function ReportView({ session, onClose }: { session: OpenSession | null; onClose
 
             {/* the submitted answers, read-only */}
             <View style={st.dCard}>
-              <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
               <DetailRow Icon={Clock} label={v.submittedLabel} value={`${session.day} · ${rep.submitted}`} first />
               <DetailRow Icon={Users} label={rc.participants.label} value={`${rep.participants} ${rc.participants.unit}`} />
               <DetailRow Icon={Activity} label={rc.activities.label} value={rep.activities.join(' · ')} />
@@ -573,14 +585,14 @@ function ReportView({ session, onClose }: { session: OpenSession | null; onClose
 
 /* ---------- session detail (C22) — pageSheet modal, opened by tapping a card ---------- */
 
-function DetailRow({ Icon, label, value, first, onCopy, copyA11y, copied, copiedLabel }: {
+function DetailRow({ Icon, label, value, onCopy, copyA11y, copied, copiedLabel }: {
   Icon: LucideIcon; label: string; value: string; first?: boolean;
   /** Copy-to-clipboard affordance (PLA-02 — the Where row). `copied` swaps in the confirmation. */
   onCopy?: () => void; copyA11y?: string; copied?: boolean; copiedLabel?: string;
 }) {
   return (
-    <View style={[st.dRow, !first && st.dRowDivider]}>
-      <View style={st.dRowIcon}><Icon size={18} color={ON_CARD_2} /></View>
+    <View style={st.dRow}>
+      <View style={st.rowIcon}><Icon size={18} color={ON_CARD_2} /></View>
       <View style={{ flex: 1 }}>
         <Text style={st.dRowLabel}>{label}</Text>
         <Text style={st.dRowValue}>{value}</Text>
@@ -604,6 +616,43 @@ function DetailRow({ Icon, label, value, first, onCopy, copyA11y, copied, copied
           )}
         </Pressable>
       ) : null}
+    </View>
+  );
+}
+
+/* Action-required banner (Fresha idiom) — a tinted strip explaining what the coach must do next.
+   Only the two action-required states show it; the pinned footer button is the actual action. */
+const BANNER_META: Partial<Record<Status, { tone: keyof typeof INK; icon: LucideIcon; text: string }>> = {
+  checkin:   { tone: 'info', icon: MapPin, text: copy.sessions.detail.banner.checkin },
+  reportDue: { tone: 'pending', icon: AlertTriangle, text: copy.sessions.detail.banner.reportDue },
+};
+function DetailBanner({ status }: { status: Status }) {
+  const m = BANNER_META[status];
+  if (!m) return null;
+  const c = INK[m.tone];
+  const Icon = m.icon;
+  return (
+    <View style={[st.banner, { backgroundColor: c.bg }]}>
+      <Icon size={18} color={c.fg} />
+      <Text style={[st.bannerTxt, { color: c.fg }]}>{m.text}</Text>
+    </View>
+  );
+}
+
+/* Pinned footer (CVS idiom) — the contextual action(s), kept on screen below the scroll. Reuses
+   the card's SessionCta so the vocabulary matches: Directions on checkin/confirmed, Check in,
+   Write report, View report, or the checked-in confirmation. */
+function SheetFooter({ s, onCheckIn, onWriteReport, onViewReport }: { s: OpenSession; onCheckIn: () => void; onWriteReport: () => void; onViewReport: () => void }) {
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[st.footerBar, { paddingBottom: sp.md + insets.bottom }]}>
+      <SessionCta
+        status={s.status}
+        onCheckIn={onCheckIn}
+        onWriteReport={onWriteReport}
+        onDirections={() => openDirections(s.addr)}
+        onViewReport={onViewReport}
+      />
     </View>
   );
 }
@@ -640,6 +689,7 @@ function SessionDetail({ detail, onClose, onCheckIn, onWriteReport, onCancel, on
         </View>
 
         {s ? (
+        <>
           <ScrollView contentContainerStyle={{ padding: sp.lg, paddingBottom: sp.xl }} showsVerticalScrollIndicator={false}>
             {/* hero — place + status */}
             <Text style={st.dPlace}>{s.place}</Text>
@@ -647,9 +697,11 @@ function SessionDetail({ detail, onClose, onCheckIn, onWriteReport, onCancel, on
               <StatusChip status={s.status} />
             </View>
 
-            {/* facts */}
-            <View style={st.dCard}>
-              <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
+            {/* action-required banner — only on the states that need the coach to act next */}
+            <DetailBanner status={s.status} />
+
+            {/* facts — a plain info list (no card box), divided by hairlines */}
+            <View style={st.factList}>
               <DetailRow Icon={Clock} label={copy.sessions.detail.when} value={`${s.day} · ${s.time} → ${s.end}`} first />
               <DetailRow
                 Icon={MapPin}
@@ -666,27 +718,25 @@ function SessionDetail({ detail, onClose, onCheckIn, onWriteReport, onCancel, on
               <DetailRow Icon={Wallet} label={copy.sessions.detail.rate} value={`${s.rate} ${copy.sessions.detail.rateUnit}`} />
             </View>
 
-            {/* contextual actions — same vocabulary as the card */}
-            <View style={{ marginTop: sp.lg }}>
-              <SessionCta
-                status={s.status}
-                onCheckIn={() => onCheckIn(s)}
-                onWriteReport={() => onWriteReport(s)}
-                onDirections={() => openDirections(s.addr)}
-                onViewReport={() => onViewReport(s)}
-              />
-            </View>
-
-            {/* manage — per-session actions. Cancel participation (C24) is wired; declare absence
-                (C20) and transmission notes (C28) are placed but not yet built. */}
+            {/* manage — per-session actions, kept as a boxed card (the "setting" stack).
+                Cancel participation (C24) is wired; declare absence (C20) and transmission
+                notes (C28) are placed but not yet built. */}
             <Text style={st.manageTitle}>{copy.sessions.manage.title}</Text>
             <View style={st.manageCard}>
-              <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
               {manageRows.map((it, i) => (
                 <ManageRow key={it.label} Icon={it.icon} label={it.label} danger={it.danger} first={i === 0} onPress={it.onPress} />
               ))}
             </View>
           </ScrollView>
+
+          {/* pinned primary action (CVS idiom) */}
+          <SheetFooter
+            s={s}
+            onCheckIn={() => onCheckIn(s)}
+            onWriteReport={() => onWriteReport(s)}
+            onViewReport={() => onViewReport(s)}
+          />
+        </>
         ) : null}
       </View>
     </Modal>
@@ -801,7 +851,7 @@ export function SeancesScreen() {
           value={seg}
           onChange={setSeg}
           options={SEG_OPTIONS}
-          theme={{ track: SUBTLE, selected: palette.neutral[900] }}
+          theme={{ track: SUBTLE, selected: palette.neutral[700] }}
           style={{ marginTop: sp.md }}
         />
 
@@ -823,7 +873,10 @@ export function SeancesScreen() {
           /* ===== Grouped session list ===== */
           groups.map((g) => (
             <View key={g.label} style={st.group}>
-              <Text style={st.groupLabel}>{g.label}</Text>
+              <View style={st.dayPill}>
+                <Text style={st.dayPillTxt}>{g.label}</Text>
+                <Text style={st.dayPillCount}>{g.items.length}</Text>
+              </View>
               {g.items.map((s, i) => (
                 <SessionCard
                   key={`${g.label}-${s.time}-${s.place}`}
@@ -988,23 +1041,29 @@ const st = StyleSheet.create({
 
   /* groups */
   group: { marginTop: sp.lg },
-  groupLabel: {
-    fontFamily: F.oswS, fontSize: 13, letterSpacing: 1,
-    color: ON_CANVAS_2, marginBottom: sp.sm,
+  // Day-pill header (ClassPass idiom) — a compact chip marking each day, with a session count.
+  dayPill: {
+    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: sp.sm,
+    backgroundColor: SUBTLE, borderRadius: r.pill, paddingVertical: 5, paddingHorizontal: 12,
+    marginBottom: sp.sm,
   },
+  dayPillTxt: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 0.6, color: ON_CANVAS },
+  dayPillCount: { fontFamily: F.bodyB, fontSize: 12, color: ON_CANVAS_2 },
 
   /* session card — dark "component" on the cream canvas */
   // Flat session rows on the canvas — a light hairline divider separates consecutive entries.
   card: { paddingVertical: sp.md },
   cardDivider: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: sp.sm },
-  // tappable collapsed header: time rail · divider · (title / tag / address)
-  headerTap: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: sp.md },
+  // tappable collapsed header: time rail · connector rule · (title / tag / address)
+  headerTap: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm },
 
-  /* time rail — fixed-width column: start time bold over the muted end time. */
-  timeRail: { width: 52, alignItems: 'flex-start' },
+  /* time rail — fixed-width column: start time bold over the muted duration. */
+  timeRail: { width: 50, alignItems: 'flex-start', paddingTop: 1 },
   railTime: { fontFamily: F.oswB, fontSize: 18, color: ON_CARD },
   railEnd: { fontFamily: F.body, fontSize: 12, color: palette.neutral[400], marginTop: 1 },
+  // hairline connector tying the time rail to the session content
+  railRule: { width: 2, borderRadius: 1, alignSelf: 'stretch', backgroundColor: 'rgba(255,255,255,0.09)', marginLeft: 2 },
 
   /* card content — title, status tag, then address (the collapsed default) */
   cardBody: { flex: 1 },
@@ -1064,12 +1123,13 @@ const st = StyleSheet.create({
     backgroundColor: SUBTLE,
   },
   dPlace: { fontFamily: F.bodyB, fontSize: 26, color: ON_CANVAS },
-  dCard: { backgroundColor: CARD, borderRadius: r.xl, paddingHorizontal: sp.lg, marginTop: sp.lg, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  dRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: sp.md },
-  dRowDivider: { borderTopWidth: 1, borderTopColor: DIVIDER },
-  dRowIcon: { width: 24, alignItems: 'center' },
+  // Flat info container — no box; rows sit directly on the surface.
+  dCard: { marginTop: sp.lg },
+  dRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: 10 },
+  // Plain icon column (no chip background) — shared by the info rows and the manage rows.
+  rowIcon: { width: 24, alignItems: 'center' },
   dRowLabel: { fontFamily: F.body, fontSize: 12, color: palette.neutral[500] },
-  dRowValue: { fontFamily: F.bodyS, fontSize: 15, color: ON_CARD, marginTop: 2 },
+  dRowValue: { fontFamily: F.bodyB, fontSize: 16, color: ON_CARD, marginTop: 2 },
   // Copy-address affordance on the Where row (PLA-02) — 44px target, inline "Copied" swap.
   dCopyBtn: {
     minWidth: 44, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
@@ -1077,16 +1137,33 @@ const st = StyleSheet.create({
   },
   dCopiedTxt: { fontFamily: F.bodyS, fontSize: 12, color: palette.vert[300] },
 
+  /* action-required banner (Fresha idiom) */
+  banner: {
+    flexDirection: 'row', alignItems: 'center', gap: sp.sm,
+    marginTop: sp.md, paddingVertical: sp.md, paddingHorizontal: sp.md, borderRadius: r.lg,
+  },
+  bannerTxt: { flex: 1, fontFamily: F.bodyS, fontSize: 14, lineHeight: 19 },
+
+  /* flat info list — no box, no dividers, rows sitting on the canvas */
+  factList: { marginTop: sp.lg },
+
+  /* pinned footer (CVS idiom) — the contextual primary action, kept below the scroll */
+  footerBar: {
+    // Block container (NOT a row) so SessionCta's own row stretches full-width and its
+    // flex:1 buttons size correctly. SessionCta carries its own top margin; paddingBottom
+    // is applied inline with the safe-area inset.
+    paddingHorizontal: sp.lg, paddingTop: sp.xs,
+    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', backgroundColor: CANVAS,
+  },
+
   /* ----- manage group (per-session actions inside the detail sheet) ----- */
   manageTitle: {
     fontFamily: F.oswS, fontSize: 13, letterSpacing: 1, color: ON_CANVAS_2,
     marginTop: sp.xl, marginBottom: sp.sm,
   },
-  manageCard: {
-    backgroundColor: CARD, borderRadius: r.xl, paddingHorizontal: sp.lg,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
-  },
-  manageRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: 16 },
+  // Flat manage container — no box; rows sit directly on the surface.
+  manageCard: {},
+  manageRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: 10 },
   manageLabel: { flex: 1, fontFamily: F.bodyS, fontSize: 15 },
 
   /* ----- applications list + detail (C13) ----- */

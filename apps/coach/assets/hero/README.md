@@ -35,10 +35,17 @@ ffmpeg -y -ss 11.5 -t 12 -i source.mp4 \
 Plays muted + looping; never autoplays under `prefers-reduced-motion` (shows the still instead).
 
 ### `welcome.jpg` — video poster + reduced-motion still
-Senior man training with his coach, from
-[Pexels photo 6922177](https://www.pexels.com/photo/a-woman-training-an-elderly-man-6922177/)
-(**Pexels licence:** free, no attribution required), 1170×2532. Used as the video's first-paint poster
-and the full fallback when motion is reduced or `HERO_VIDEO` is `null`.
+A **real frame from `welcome.mp4`** (720×900, ~0.82 quality): a resident mid-punch in a red boxing
+glove — Deuxième Souffle's own footage, their rights (rule #1: real brand imagery, not stock). The
+loading still now matches the film exactly. Used as the video's first-paint poster and the full
+fallback when motion is reduced or `HERO_VIDEO` is `null`. Shared by every auth screen via
+[src/components/AuthHero.tsx](../../src/components/AuthHero.tsx).
 
-> Better long-term: replace the poster with a still pulled straight from `welcome.mp4` so the loading
-> frame matches the film exactly — e.g. `ffmpeg -ss 3 -i welcome.mp4 -frames:v 1 welcome.jpg`.
+Re-grab recipe (no ffmpeg needed — macOS AVFoundation via Swift; tune the `seconds:` for the frame):
+```bash
+# extracts a sharp frame at t=3.5s → /tmp/heroframe/sharp.jpg, then resize + replace:
+swift /tmp/grabframe.swift && sips -z 900 720 /tmp/heroframe/sharp.jpg && cp /tmp/heroframe/sharp.jpg welcome.jpg
+# (or, if ffmpeg is installed: ffmpeg -ss 3.5 -i welcome.mp4 -frames:v 1 -vf scale=720:900 welcome.jpg)
+```
+Previous poster was [Pexels 6922177](https://www.pexels.com/photo/a-woman-training-an-elderly-man-6922177/)
+(free licence) — replaced because the brand's own film is more authentic.

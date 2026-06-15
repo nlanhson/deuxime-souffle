@@ -16,7 +16,7 @@
 import React, { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 
 export type AccountStatus = 'signedOut' | 'pending' | 'active';
-export type OnboardingEntry = 'splash' | 'signup';
+export type OnboardingEntry = 'splash' | 'signup' | 'login';
 
 type AuthState = {
   status: AccountStatus;
@@ -36,8 +36,9 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AccountStatus>('signedOut');
   const [applicantName, setApplicantName] = useState<string | null>(null);
-  // Where the onboarding flow resumes when we re-enter it: 'splash' on a cold start / full sign-out,
-  // 'signup' when backing out of the pending screen (so the user lands on the Apply form, not splash).
+  // Where the onboarding flow resumes when we re-enter it: 'splash' on a cold start, 'login' after a
+  // manual log-out (a returning coach lands straight on Login, not the splash), and 'signup' when
+  // backing out of the pending screen (so the user lands on the Apply form, not splash).
   const [onboardingEntry, setOnboardingEntry] = useState<OnboardingEntry>('splash');
 
   const value = useMemo<AuthState>(
@@ -56,7 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       signOut: () => {
         setApplicantName(null);
-        setOnboardingEntry('splash');
+        // A manual log-out returns a known coach to the Login screen (not the splash beat).
+        setOnboardingEntry('login');
         setStatus('signedOut');
       },
       backToSignup: () => {

@@ -50,20 +50,20 @@ type ReviewStatus = 'pending' | 'validated' | 'changes';
 type Report = { id: string; place: string; date: string; participants: number; status: ReviewStatus };
 
 const REPORTS: Report[] = [
-  { id: 'r14', place: 'Bellevue Residence', date: 'Jun 8', participants: 9, status: 'pending' },
-  { id: 'r13', place: 'Riverside Care Home', date: 'Jun 7', participants: 6, status: 'validated' },
-  { id: 'r12', place: 'The Oaks', date: 'Jun 5', participants: 11, status: 'validated' },
-  { id: 'r11', place: 'The Cedars Residence', date: 'Jun 3', participants: 8, status: 'changes' },
-  { id: 'r10', place: 'Maple Court', date: 'Jun 2', participants: 10, status: 'validated' },
-  { id: 'r9', place: 'The Lindens Care Home', date: 'May 30', participants: 7, status: 'validated' },
-  { id: 'r8', place: 'Riverside Care Home', date: 'May 27', participants: 6, status: 'validated' },
-  { id: 'r7', place: 'The Oaks', date: 'May 24', participants: 12, status: 'validated' },
-  { id: 'r6', place: 'Maple Court', date: 'May 20', participants: 9, status: 'validated' },
-  { id: 'r5', place: 'Bellevue Residence', date: 'May 16', participants: 8, status: 'validated' },
-  { id: 'r4', place: 'The Cedars Residence', date: 'May 12', participants: 10, status: 'validated' },
-  { id: 'r3', place: 'Park Care Home', date: 'May 8', participants: 5, status: 'validated' },
-  { id: 'r2', place: 'The Lindens Care Home', date: 'May 5', participants: 7, status: 'validated' },
-  { id: 'r1', place: 'Maple Court', date: 'May 2', participants: 9, status: 'validated' },
+  { id: 'r14', place: 'Résidence Bellevue', date: '8 juin', participants: 9, status: 'pending' },
+  { id: 'r13', place: 'Résidence des Berges', date: '7 juin', participants: 6, status: 'validated' },
+  { id: 'r12', place: 'Résidence Les Chênes', date: '5 juin', participants: 11, status: 'validated' },
+  { id: 'r11', place: 'Résidence Les Cèdres', date: '3 juin', participants: 8, status: 'changes' },
+  { id: 'r10', place: 'Résidence Les Érables', date: '2 juin', participants: 10, status: 'validated' },
+  { id: 'r9', place: 'Résidence Les Tilleuls', date: '30 mai', participants: 7, status: 'validated' },
+  { id: 'r8', place: 'Résidence des Berges', date: '27 mai', participants: 6, status: 'validated' },
+  { id: 'r7', place: 'Résidence Les Chênes', date: '24 mai', participants: 12, status: 'validated' },
+  { id: 'r6', place: 'Résidence Les Érables', date: '20 mai', participants: 9, status: 'validated' },
+  { id: 'r5', place: 'Résidence Bellevue', date: '16 mai', participants: 8, status: 'validated' },
+  { id: 'r4', place: 'Résidence Les Cèdres', date: '12 mai', participants: 10, status: 'validated' },
+  { id: 'r3', place: 'Résidence du Parc', date: '8 mai', participants: 5, status: 'validated' },
+  { id: 'r2', place: 'Résidence Les Tilleuls', date: '5 mai', participants: 7, status: 'validated' },
+  { id: 'r1', place: 'Résidence Les Érables', date: '2 mai', participants: 9, status: 'validated' },
 ];
 
 const PAGE = 8; // pagination size — "Show more" reveals the next page

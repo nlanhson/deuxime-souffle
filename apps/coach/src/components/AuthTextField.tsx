@@ -27,7 +27,9 @@ const PLACEHOLDER = palette.neutral[500];
 const TXT = palette.neutral[50];
 const ON_2 = palette.neutral[300];
 const MUTED = palette.neutral[500];
-const F = { oswS: 'Oswald_600SemiBold', body: 'Inter_400Regular' };
+// Field labels use Inter (the body family, same as the input) — Oswald is a condensed display face
+// that reads cramped at label size. Matches the common form pattern (cf. Forest / ClickUp on Mobbin).
+const F = { label: 'Inter_600SemiBold', body: 'Inter_400Regular' };
 
 type Props = {
   label: string;
@@ -80,7 +82,7 @@ const st = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     marginTop: sp.md, marginBottom: sp.xs,
   },
-  label: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 0.5, color: ON_2 },
+  label: { fontFamily: F.label, fontSize: 13, letterSpacing: 0.2, color: ON_2 },
   optional: { fontFamily: F.body, fontSize: 12, color: MUTED },
   wrap: {
     flexDirection: 'row', alignItems: 'center', gap: sp.sm, minHeight: 54,

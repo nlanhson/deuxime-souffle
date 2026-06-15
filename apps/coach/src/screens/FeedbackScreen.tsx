@@ -43,28 +43,28 @@ type Feedback = { id: string; place: string; date: string; rating: number; comme
 
 const FEEDBACK: Feedback[] = [
   {
-    id: 'f6', place: 'Bellevue Residence', date: 'Jun 7', rating: 4.8,
-    comment: 'Residents were delighted. Karim adapts every exercise to each person, and the seated routine worked very well.',
+    id: 'f6', place: 'Résidence Bellevue', date: '7 juin', rating: 4.8,
+    comment: 'Les résidents étaient ravis. Karim adapte chaque exercice à chacun, et la routine en position assise a très bien fonctionné.',
   },
   {
-    id: 'f5', place: 'Riverside Care Home', date: 'Jun 7', rating: 4.6,
-    comment: 'Great energy, arrived early and set the room up himself.',
+    id: 'f5', place: 'Résidence des Berges', date: '7 juin', rating: 4.6,
+    comment: 'Beaucoup d’énergie, il est arrivé en avance et a installé la salle lui-même.',
   },
   {
-    id: 'f4', place: 'The Oaks', date: 'Jun 5', rating: 5.0,
-    comment: 'Best session this month. Mrs Petit joined for the first time since March.',
+    id: 'f4', place: 'Résidence Les Chênes', date: '5 juin', rating: 5.0,
+    comment: 'La meilleure séance du mois. Mme Petit a participé pour la première fois depuis mars.',
   },
   {
-    id: 'f3', place: 'Maple Court', date: 'Jun 2', rating: 4.7,
-    comment: 'Lovely balance work. A little more time for the cool-down next visit would be ideal.',
+    id: 'f3', place: 'Résidence Les Érables', date: '2 juin', rating: 4.7,
+    comment: 'Un beau travail d’équilibre. Un peu plus de temps pour le retour au calme à la prochaine visite serait idéal.',
   },
   {
-    id: 'f2', place: 'The Lindens Care Home', date: 'May 30', rating: 4.8,
-    comment: 'The group asks for him by name now. Clear instructions, very patient.',
+    id: 'f2', place: 'Résidence Les Tilleuls', date: '30 mai', rating: 4.8,
+    comment: 'Le groupe le demande désormais par son prénom. Des consignes claires, beaucoup de patience.',
   },
   {
-    id: 'f1', place: 'The Cedars Residence', date: 'May 28', rating: 4.9,
-    comment: 'Excellent session. The music quiz combined with movement was a hit.',
+    id: 'f1', place: 'Résidence Les Cèdres', date: '28 mai', rating: 4.9,
+    comment: 'Excellente séance. Le quiz musical associé au mouvement a beaucoup plu.',
   },
 ];
 

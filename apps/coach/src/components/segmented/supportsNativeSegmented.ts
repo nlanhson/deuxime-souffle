@@ -18,6 +18,21 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 /** backgroundColor + appearance are iOS 13+; below that, fall back to the JS pills. */
 export const MIN_IOS_FOR_NATIVE_SEGMENTED = 13;
 
+/** iOS 26 is where UISegmentedControl became a Liquid Glass control (sibling of the glass tab bar). */
+export const IOS_LIQUID_GLASS_MAJOR = 26;
+
+/**
+ * True on iOS 26+, where the native control renders as Liquid Glass. On glass, the system owns the
+ * track + selected-capsule material and its own label contrast — feeding it a custom backgroundColor
+ * or (dark) selectedSegmentTintColor suppresses the glass, so the sliding indicator shows no
+ * background. Call sites use this to drop colour overrides on glass and keep them on pre-26 / Android.
+ */
+export function isLiquidGlassIOS(): boolean {
+  if (Platform.OS !== 'ios') return false;
+  const major = parseInt(String(Platform.Version), 10);
+  return !Number.isNaN(major) && major >= IOS_LIQUID_GLASS_MAJOR;
+}
+
 export function supportsNativeSegmented(): boolean {
   // Web has no native segmented control — keep the branded pills there.
   if (Platform.OS === 'web') return false;

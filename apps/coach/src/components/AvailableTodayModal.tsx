@@ -20,7 +20,7 @@ const BORDER_INK = palette.neutral[700];
 const F = { oswR: 'Oswald_400Regular', oswS: 'Oswald_600SemiBold', oswB: 'Oswald_700Bold', body: 'Inter_400Regular', bodyS: 'Inter_600SemiBold' };
 
 // Rows need these display fields; the detail needs the rest (AvailDetailItem).
-type Item = AvailDetailItem & { dow: string; ds: string };
+type Item = AvailDetailItem & { dow: string; ds: string; pay: string };
 
 export function AvailableTodayModal({
   visible, onClose, items,
@@ -31,8 +31,8 @@ export function AvailableTodayModal({
     <Modal visible={visible} onRequestClose={onClose} animationType="slide" presentationStyle="pageSheet">
       <View style={{ flex: 1, backgroundColor: S.canvas }}>
         <View style={st.topbar}>
-          <Text style={st.title}>{c.allTitle}</Text>
-          <View style={{ flex: 1 }} />
+          {/* Title takes the remaining width (truncates) so the close button always keeps its slot. */}
+          <Text style={st.title} numberOfLines={2}>{c.allTitle}</Text>
           <Pressable onPress={onClose} hitSlop={8} style={st.close} accessibilityRole="button" accessibilityLabel={c.closeA11y}>
             <X size={22} color={S.textPrimary} />
           </Pressable>
@@ -58,6 +58,8 @@ export function AvailableTodayModal({
                 <Text style={st.nm} numberOfLines={1}>{a.nm}</Text>
                 <Text style={st.ds} numberOfLines={1}>{a.ds}</Text>
               </View>
+              {/* Session fee, trailing — matches the Home preview (Grab Driver pattern). */}
+              <Text style={st.pay}>{a.pay}</Text>
             </Pressable>
           ))}
         </ScrollView>
@@ -71,10 +73,10 @@ export function AvailableTodayModal({
 
 const st = StyleSheet.create({
   topbar: {
-    flexDirection: 'row', alignItems: 'center', gap: sp.sm,
+    flexDirection: 'row', alignItems: 'center', gap: sp.md,
     paddingHorizontal: sp.lg, paddingTop: sp.lg, paddingBottom: sp.md,
   },
-  title: { fontFamily: F.oswS, fontSize: 26, color: S.textPrimary },
+  title: { flex: 1, fontFamily: F.oswS, fontSize: 26, lineHeight: 30, color: S.textPrimary },
   close: {
     width: 44, height: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
     backgroundColor: S.surface,
@@ -90,4 +92,5 @@ const st = StyleSheet.create({
   end: { fontFamily: F.body, fontSize: 12, color: S.textSecondary, marginTop: 1 },
   nm: { fontFamily: F.bodyS, fontSize: 16, color: S.textPrimary },
   ds: { fontFamily: F.body, fontSize: 14, color: S.textSecondary, marginTop: 1 },
+  pay: { fontFamily: F.oswS, fontSize: 16, color: palette.vert[300], marginLeft: sp.sm },
 });

@@ -27,9 +27,11 @@ type Props = {
   style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
   disabled?: boolean;
+  /** Smaller height + label (still ≥44 touch target) for tighter CTA rows. */
+  compact?: boolean;
 };
 
-export function PrimaryButton({ label, onPress, style, accessibilityLabel, disabled }: Props) {
+export function PrimaryButton({ label, onPress, style, accessibilityLabel, disabled, compact }: Props) {
   return (
     <Pressable
       style={({ pressed }) => [st.wrap, style, disabled && { opacity: 0.5 }, pressed && !disabled && { opacity: 0.9 }]}
@@ -44,9 +46,9 @@ export function PrimaryButton({ label, onPress, style, accessibilityLabel, disab
         locations={CTA_LOCATIONS}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={st.btn}
+        style={[st.btn, compact && st.btnCompact]}
       >
-        <Text style={st.txt} numberOfLines={1}>{label}</Text>
+        <Text style={[st.txt, compact && st.txtCompact]} numberOfLines={1}>{label}</Text>
       </LinearGradient>
     </Pressable>
   );
@@ -58,11 +60,13 @@ const st = StyleSheet.create({
     shadowColor: palette.rouge[500], shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.45, shadowRadius: 12,
   },
   btn: {
-    minHeight: 44, borderRadius: r.pill, paddingHorizontal: sp.md,
+    minHeight: 52, borderRadius: r.pill, paddingHorizontal: sp.md,
     alignItems: 'center', justifyContent: 'center',
   },
+  btnCompact: { minHeight: 44, paddingHorizontal: sp.sm },
   txt: {
     fontFamily: 'Inter_600SemiBold', fontSize: 16,
     letterSpacing: 0.2, color: color.onAction,
   },
+  txtCompact: { fontSize: 15 },
 });

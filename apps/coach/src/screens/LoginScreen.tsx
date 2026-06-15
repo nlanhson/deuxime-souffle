@@ -3,17 +3,21 @@
  *
  * Email + password sign-in for an existing coach (a 30-day session and manual logout are handled by
  * the auth layer / Profile), plus Google OAuth (WBS: "Coach can log in via Google OAuth" — stubbed
- * here, real code wires the OAuth2 flow). A cross-link leads to registration ("Coach
- * self-registration … with admin validation"); Facebook stays gated on client sign-off. LAYOUT is a
- * synthesis pending the coach video + approved Figma.
+ * here, real code wires the OAuth2 flow). Cross-links lead to registration ("Coach self-registration
+ * … with admin validation") and the dedicated password-reset flow. Facebook stays gated on client
+ * sign-off.
+ *
+ * LAYOUT — a clean FULL PAGE on the ink canvas (no hero video here, by design: the brand film lives
+ * on the Welcome / "login options" screen; once the coach is on the focused log-in task the page is
+ * calm and content-first). Brand mark top-left, close top-right back to Welcome, then the form.
  *
  * PROTOTYPE: no backend yet, so a valid-looking email + any non-empty password signs in; real code
  * wires Supabase auth and surfaces the server's error in the same error slot. Surface = coach (ink).
  *
  * Form details that matter: visible labels (not placeholder-only), 44px+ targets, a password
  * show/hide toggle, autofill hints so password managers work, a red focus ring, and a single live
- * error region. Inputs come from the shared AuthTextField. Motion: one opacity entrance; reduced
- * motion makes it instant. The keyboard is kept clear of the fields via KeyboardAvoidingView.
+ * error region. Inputs come from the shared AuthTextField. Motion: one opacity+rise entrance;
+ * reduced motion makes it instant. The keyboard is kept clear of the fields via KeyboardAvoidingView.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -24,6 +28,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
 import { copy } from '../copy';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { SecondaryButton } from '../components/SecondaryButton';
 import { GoogleButton } from '../components/GoogleButton';
 import { AuthTextField } from '../components/AuthTextField';
 import { Logo } from '../components/Logo';
@@ -47,11 +52,13 @@ export function LoginScreen({
   onBack,
   onSuccess,
   onCreateAccount,
+  onForgot,
   reduced,
 }: {
   onBack: () => void;
   onSuccess: () => void;
   onCreateAccount: () => void;
+  onForgot: (email?: string) => void;
   reduced: boolean;
 }) {
   const c = copy.auth.login;
@@ -59,9 +66,7 @@ export function LoginScreen({
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
   const [error, setError] = useState(false);
-  const [forgotSent, setForgotSent] = useState(false);
   const passwordRef = useRef<TextInput>(null);
-  const emailRef = useRef<TextInput>(null);
 
   const enter = useRef(new Animated.Value(reduced ? 1 : 0)).current;
   useEffect(() => {
@@ -85,16 +90,6 @@ export function LoginScreen({
   const onEditField = (setter: (v: string) => void) => (v: string) => {
     setter(v);
     if (error) setError(false);
-    if (forgotSent) setForgotSent(false);
-  };
-
-  const onForgot = () => {
-    if (!emailValid) {
-      setError(true);
-      emailRef.current?.focus();
-      return;
-    }
-    setForgotSent(true);
   };
 
   const entranceStyle = {
@@ -127,9 +122,10 @@ export function LoginScreen({
           </View>
 
           <Animated.View style={entranceStyle}>
+            {/* Header: Oswald kicker over the Anton title. The Inter subtitle was dropped (it restated
+                "Welcome back" / "Log in"). Field labels below are Inter — see AuthTextField. */}
             <Text style={st.eyebrow}>{c.eyebrow}</Text>
             <Text style={st.title}>{c.title}</Text>
-            <Text style={st.subtitle}>{c.subtitle}</Text>
 
             {/* Google OAuth (stub) — same entry as on sign-up; a real flow signs the coach in. */}
             <View style={st.googleWrap}>
@@ -142,7 +138,6 @@ export function LoginScreen({
             </View>
 
             <AuthTextField
-              inputRef={emailRef}
               label={c.email.label}
               icon={Mail}
               value={email}
@@ -187,9 +182,9 @@ export function LoginScreen({
               }
             />
 
-            {/* Forgot password */}
+            {/* Forgot password — opens the dedicated reset flow, carrying any typed email across. */}
             <Pressable
-              onPress={onForgot}
+              onPress={() => onForgot(email.trim() || undefined)}
               hitSlop={8}
               style={({ pressed }) => [st.forgotBtn, pressed && { opacity: 0.6 }]}
               accessibilityRole="button"
@@ -198,16 +193,11 @@ export function LoginScreen({
               <Text style={st.forgotTxt}>{c.forgot}</Text>
             </Pressable>
 
-            {/* Error / confirmation — one live region */}
+            {/* Error — one live region */}
             {error ? (
               <View style={st.notice} accessibilityLiveRegion="polite" accessibilityRole="alert">
                 <TriangleAlert size={16} color={ERR} />
                 <Text style={st.noticeErr}>{c.error}</Text>
-              </View>
-            ) : forgotSent ? (
-              <View style={st.notice} accessibilityLiveRegion="polite" accessibilityRole="alert">
-                <Mail size={16} color={ON_2} />
-                <Text style={st.noticeInfo}>{c.forgotSent}</Text>
               </View>
             ) : null}
           </Animated.View>
@@ -215,19 +205,8 @@ export function LoginScreen({
           <View style={st.flex} />
 
           <PrimaryButton label={c.submit} onPress={submit} style={st.submit} accessibilityLabel={c.submit} />
-
-          <View style={st.altRow}>
-            <Text style={st.altTxt}>{c.noAccount}</Text>
-            <Pressable
-              onPress={onCreateAccount}
-              hitSlop={8}
-              style={({ pressed }) => [pressed && { opacity: 0.6 }]}
-              accessibilityRole="button"
-              accessibilityLabel={c.createAccount}
-            >
-              <Text style={st.altLink}>{c.createAccount}</Text>
-            </Pressable>
-          </View>
+          {/* Sign-up as a secondary (outline) button, paired under the primary Log in. */}
+          <SecondaryButton label={c.createAccount} onPress={onCreateAccount} style={st.createAccount} accessibilityLabel={c.createAccount} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -239,7 +218,7 @@ const st = StyleSheet.create({
   flex: { flex: 1 },
   scroll: { flexGrow: 1, paddingHorizontal: sp.lg, paddingTop: sp.sm, paddingBottom: sp.lg },
 
-  topbar: { flexDirection: 'row', alignItems: 'center', marginBottom: sp.lg },
+  topbar: { flexDirection: 'row', alignItems: 'center', marginBottom: sp.xl },
   closeBtn: {
     width: 44, height: 44, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center',
     backgroundColor: palette.neutral[800],
@@ -251,8 +230,7 @@ const st = StyleSheet.create({
     color: color.action, marginBottom: sp.sm,
   },
   // Anton: lineHeight ≥1.2× the size avoids the descender/cap clip.
-  title: { fontFamily: F.display, fontSize: 40, lineHeight: 48, color: S.textPrimary },
-  subtitle: { fontFamily: F.body, fontSize: 16, lineHeight: 24, color: ON_2, marginTop: sp.xs, marginBottom: sp.sm },
+  title: { fontFamily: F.display, fontSize: 40, lineHeight: 48, color: S.textPrimary, marginBottom: sp.sm },
 
   googleWrap: { marginTop: sp.md },
   divider: { flexDirection: 'row', alignItems: 'center', gap: sp.md, marginVertical: sp.md },
@@ -266,11 +244,7 @@ const st = StyleSheet.create({
 
   notice: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, marginTop: sp.sm },
   noticeErr: { flex: 1, fontFamily: F.body, fontSize: 14, lineHeight: 20, color: ERR },
-  noticeInfo: { flex: 1, fontFamily: F.body, fontSize: 14, lineHeight: 20, color: ON_2 },
 
   submit: { width: '100%', marginTop: sp.lg },
-
-  altRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: sp.xs, marginTop: sp.lg },
-  altTxt: { fontFamily: F.body, fontSize: 14, color: ON_2 },
-  altLink: { fontFamily: F.bodyS, fontSize: 14, color: color.action, textDecorationLine: 'underline' },
+  createAccount: { width: '100%', marginTop: sp.md },
 });

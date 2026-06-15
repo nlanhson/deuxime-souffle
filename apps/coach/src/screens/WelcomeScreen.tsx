@@ -18,7 +18,7 @@
  * poster only, opacity fade, no translate, no stagger.
  */
 import React, { useEffect, useRef } from 'react';
-import { Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { VideoView, useVideoPlayer } from 'expo-video';
@@ -26,6 +26,7 @@ import { VideoView, useVideoPlayer } from 'expo-video';
 import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
 import { copy } from '../copy';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { SecondaryButton } from '../components/SecondaryButton';
 import { Logo } from '../components/Logo';
 import { ease, dur } from '../lib/motion';
 
@@ -124,19 +125,7 @@ export function WelcomeScreen({ onLogin, onApply, reduced }: { onLogin: () => vo
 
           <Animated.View style={[rise(b), st.ctas]}>
             <PrimaryButton label={c.login} onPress={onLogin} style={st.loginBtn} />
-            <Pressable
-              onPress={onApply}
-              hitSlop={10}
-              style={({ pressed }) => [
-                st.applyBtn,
-                pressed && !reduced && { transform: [{ scale: 0.98 }] },
-                pressed && { opacity: 0.75 },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={c.applyA11y}
-            >
-              <Text style={st.applyTxt}>{c.apply}</Text>
-            </Pressable>
+            <SecondaryButton label={c.apply} onPress={onApply} style={st.applyBtn} accessibilityLabel={c.applyA11y} />
           </Animated.View>
         </View>
       </SafeAreaView>
@@ -171,7 +160,5 @@ const st = StyleSheet.create({
 
   ctas: { marginTop: sp.lg, gap: sp.md },
   loginBtn: { width: '100%' },
-  applyBtn: { alignSelf: 'center', minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: sp.md },
-  // Underlined so it reads as a link without relying on colour alone.
-  applyTxt: { fontFamily: F.bodyS, fontSize: 15, color: ON_2, textDecorationLine: 'underline' },
+  applyBtn: { width: '100%' },
 });

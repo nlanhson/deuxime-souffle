@@ -21,6 +21,9 @@ import type { SegmentedProps } from './types';
 
 export function Segmented<T extends string>(props: SegmentedProps<T>) {
   // The underline variant has no native UISegmentedControl analogue — always JS.
+  // Everything else uses the native control where available (incl. iOS 26's Liquid Glass), and the
+  // branded JS pills on web / Expo Go / pre-13 iOS. The require() defers loading the native module
+  // on the JS paths. The decision lives in ./supportsNativeSegmented.
   if (props.variant !== 'underline' && supportsNativeSegmented()) {
     const { NativeSegmented } = require('./NativeSegmented') as typeof import('./NativeSegmented');
     return <NativeSegmented {...props} />;

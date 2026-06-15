@@ -39,23 +39,35 @@ export type ActionModalProps = {
   secondaryLabel?: string;
   onSecondary?: () => void;
   closeA11y?: string;
+  // Optional full-width media at the very top (e.g. a map preview, Fresha pattern). When present it
+  // replaces the icon-chip row — the media IS the visual — and the close button overlays it.
+  media?: React.ReactNode;
 };
 
 export function ActionModal({
   visible, onClose, Icon, accentFg, accentBg, eyebrow, title, body,
-  steps, note, primaryLabel, onPrimary, secondaryLabel, onSecondary, closeA11y,
+  steps, note, primaryLabel, onPrimary, secondaryLabel, onSecondary, closeA11y, media,
 }: ActionModalProps) {
   const a11y = closeA11y ?? 'Close';
   return (
     <BottomSheet visible={visible} onClose={onClose} a11yLabel={a11y}>
-          <View style={st.top}>
-            <View style={st.icon}>
-              <Icon size={26} color={ON_CARD} />
+          {media ? (
+            <View style={st.media}>
+              {media}
+              <Pressable onPress={onClose} hitSlop={8} style={st.mediaClose} accessibilityRole="button" accessibilityLabel={a11y}>
+                <X size={20} color={ON_CARD} />
+              </Pressable>
             </View>
-            <Pressable onPress={onClose} hitSlop={8} style={st.close} accessibilityRole="button" accessibilityLabel={a11y}>
-              <X size={22} color={ON_CARD} />
-            </Pressable>
-          </View>
+          ) : (
+            <View style={st.top}>
+              <View style={st.icon}>
+                <Icon size={26} color={ON_CARD} />
+              </View>
+              <Pressable onPress={onClose} hitSlop={8} style={st.close} accessibilityRole="button" accessibilityLabel={a11y}>
+                <X size={22} color={ON_CARD} />
+              </Pressable>
+            </View>
+          )}
 
           {eyebrow ? <Text style={st.eyebrow}>{eyebrow}</Text> : null}
           <Text style={st.title}>{title}</Text>
@@ -102,6 +114,13 @@ export function ActionModal({
 }
 
 const st = StyleSheet.create({
+  // Media slot (e.g. map preview) — sits at the top with the close button overlaid top-right.
+  media: { position: 'relative', marginBottom: sp.xs },
+  mediaClose: {
+    position: 'absolute', top: sp.sm, right: sp.sm,
+    width: 36, height: 36, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
   top: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   // Lighter than the card (neutral-800) so the white glyph sits on a clearly distinct chip.
   icon: {

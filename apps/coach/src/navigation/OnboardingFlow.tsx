@@ -1,5 +1,5 @@
 /**
- * OnboardingFlow — the pre-auth phase machine: Splash → Welcome → Login.
+ * OnboardingFlow — the pre-auth phase machine: Splash → Welcome → Login (+ Sign up, Forgot password).
  *
  * Rendered by App when the user is not authenticated (the authenticated branch is RootTabs). It's
  * a tiny local state machine rather than a React Navigation stack — three linear screens don't
@@ -21,11 +21,12 @@ import { SplashScreen } from '../screens/SplashScreen';
 import { WelcomeScreen } from '../screens/WelcomeScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { SignUpScreen } from '../screens/SignUpScreen';
+import { ForgotPasswordScreen } from '../screens/ForgotPasswordScreen';
 import { ease, dur } from '../lib/motion';
 
 const S = surfaces.coach;
 
-type Phase = 'splash' | 'welcome' | 'login' | 'signup';
+type Phase = 'splash' | 'welcome' | 'login' | 'signup' | 'forgot';
 
 export function OnboardingFlow() {
   const reduced = useReducedMotion();
@@ -33,6 +34,8 @@ export function OnboardingFlow() {
   // Start at 'splash' on a cold start, or jump straight to 'signup' when returning from the
   // pending screen's back button. Read once at mount — this component remounts on each entry.
   const [phase, setPhase] = useState<Phase>(onboardingEntry);
+  // Carried from Login's "Forgot password?" so the reset screen can prefill the typed email.
+  const [forgotEmail, setForgotEmail] = useState('');
   const fade = useRef(new Animated.Value(1)).current;
   // Locks out a second tap while a fade is in flight, so we never start an overlapping transition
   // (no double-dip flicker) and the rendered phase can't desync from the opacity it's paired with.
@@ -71,7 +74,17 @@ export function OnboardingFlow() {
   else if (phase === 'welcome')
     screen = <WelcomeScreen reduced={reduced} onLogin={() => go('login')} onApply={() => go('signup')} />;
   else if (phase === 'login')
-    screen = <LoginScreen reduced={reduced} onBack={() => go('welcome')} onSuccess={signIn} onCreateAccount={() => go('signup')} />;
+    screen = (
+      <LoginScreen
+        reduced={reduced}
+        onBack={() => go('welcome')}
+        onSuccess={signIn}
+        onCreateAccount={() => go('signup')}
+        onForgot={(e) => { setForgotEmail(e ?? ''); go('forgot'); }}
+      />
+    );
+  else if (phase === 'forgot')
+    screen = <ForgotPasswordScreen reduced={reduced} initialEmail={forgotEmail} onBack={() => go('login')} onDone={() => go('login')} />;
   else screen = <SignUpScreen reduced={reduced} onBack={() => go('welcome')} onLogin={() => go('login')} onRegister={register} />;
 
   return (

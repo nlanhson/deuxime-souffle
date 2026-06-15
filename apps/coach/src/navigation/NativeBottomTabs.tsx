@@ -4,6 +4,7 @@
  * (see supportsNativeTabs). SF Symbol icons, ink theme, red active tint.
  */
 import { type ComponentType } from 'react';
+import { Platform } from 'react-native';
 import { createNativeBottomTabNavigator } from '@bottom-tabs/react-navigation';
 import { useBottomTabBarHeight } from 'react-native-bottom-tabs';
 
@@ -41,13 +42,20 @@ const NATIVE_TABS = TABS.map((t) => ({ ...t, component: withTabBarInset(t.compon
 // red — see JsBottomTabs.
 const NATIVE_ACTIVE_TINT = palette.rouge[600]; // #C32721 — pre-compensated for the iOS 26 glass wash
 
+// iOS 26 draws the tab bar as a floating Liquid Glass element and lets iOS render its own frosted
+// glass material as the background — exactly like the system tab bar in Apple's own apps. The catch
+// is that ANY override forces an OPAQUE UITabBarAppearance the SwiftUI glass bar then leaves unfilled
+// (clear): translucent={false} → configureWithOpaqueBackground; tabBarStyle.backgroundColor →
+// appearance.backgroundColor. So on iOS we pass NEITHER and keep the default glass. Android has no
+// Liquid Glass, so it keeps the solid ink bar.
+const ANDROID_BAR_STYLE = Platform.OS === 'android' ? { backgroundColor: coach.canvas } : undefined;
+
 export function NativeBottomTabs() {
   return (
     <Tabs.Navigator
       tabBarActiveTintColor={NATIVE_ACTIVE_TINT}
       tabBarInactiveTintColor={palette.neutral[500]}
-      tabBarStyle={{ backgroundColor: coach.canvas }}
-      translucent={false}
+      tabBarStyle={ANDROID_BAR_STYLE}
       hapticFeedbackEnabled
       labeled
     >

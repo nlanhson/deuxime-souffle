@@ -10,6 +10,10 @@
  * enforces code↔email pairing for invited coaches) and a consent gate. Submitting creates a
  * PENDING_APPROVAL account via the auth seam — the KYC-documents step lives on the pending screen.
  *
+ * LAYOUT — a clean FULL PAGE on the ink canvas, matching Login and Forgot password (no hero video
+ * here, by design: the brand film lives on the Welcome screen; the focused application form stays
+ * calm and content-first). Brand mark top-left, close top-right back to Welcome, then the form.
+ *
  * PROTOTYPE: no backend, so a valid-looking form submits straight to pending; Google OAuth2, the
  * INSEE/uniqueness checks, and the Google "profile completion" step are stubbed. Surface = coach
  * (ink). Motion: one opacity entrance, instant under reduced motion.
@@ -40,6 +44,7 @@ const ERR = palette.rouge[300];
 const F = {
   display: 'Anton_400Regular',
   oswS: 'Oswald_600SemiBold',
+  oswM: 'Oswald_500Medium',
   body: 'Inter_400Regular',
   bodyS: 'Inter_600SemiBold',
 };
@@ -459,7 +464,7 @@ const st = StyleSheet.create({
   divLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.10)' },
   divTxt: { fontFamily: F.body, fontSize: 13, color: palette.neutral[500] },
 
-  step: { fontFamily: F.oswS, fontSize: 15, letterSpacing: 0.5, color: S.textPrimary, marginTop: sp.xs },
+  step: { fontFamily: F.oswM, fontSize: 15, letterSpacing: 0.5, color: S.textPrimary, marginTop: sp.xs },
 
   fieldRow: { flexDirection: 'row', gap: sp.sm },
   eyeBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', marginRight: -sp.xs },

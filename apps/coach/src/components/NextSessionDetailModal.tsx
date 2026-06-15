@@ -5,13 +5,16 @@
  * available-session rows. This is an ASSIGNED session, so unlike the open-session detail it shows
  * the WBS confirmed-session fields in full: EHPAD name, time, address, AND contact person (the
  * on-site person to ask for on arrival). Primary = geolocated Check in, secondary = Directions.
+ *
+ * A SessionMap preview sits at the top (Fresha pattern) and taps through to directions.
  */
 import React from 'react';
 import { CalendarCheck } from '../icons';
 
-import { palette } from '../theme/theme';
+import { palette, radius as r } from '../theme/theme';
 import { copy } from '../copy';
 import { ActionModal } from './ActionModal';
+import { SessionMap } from './SessionMap';
 import { openDirections } from '../lib/openDirections';
 
 export function NextSessionDetailModal({ visible, onClose, onCheckIn }: { visible: boolean; onClose: () => void; onCheckIn?: () => void }) {
@@ -21,9 +24,10 @@ export function NextSessionDetailModal({ visible, onClose, onCheckIn }: { visibl
       visible={visible}
       onClose={onClose}
       Icon={CalendarCheck}
-      // Notification-center icon treatment: white glyph on a very dim wash (not the status accent).
+      // Notification-center icon treatment (only used when no media is shown).
       accentFg={palette.neutral[50]}
       accentBg="rgba(255,255,255,0.05)"
+      media={<SessionMap onPress={() => openDirections(c.address)} a11y={`${c.directions}: ${c.address}`} style={{ borderRadius: r.lg }} />}
       eyebrow={c.detailEyebrow}
       title={c.place}
       body={`${c.start} → ${c.end} · ${c.duration}\n${c.address}\n${c.unitLabel}: ${c.unit}`}

@@ -102,32 +102,32 @@ type Avail = {
 // read from this. Real code queries open sessions by date + locale. Names reused across screens
 // so the prototype reads as one world. The Cedars (June 12) is pre-seeded as already applied.
 const OPEN_BY_DAY: Record<number, Avail[]> = {
-  10: [{ dom: 10, time: '09:30', end: '10:30', dur: '1h', place: 'Riverside Care Home', address: '14 Quai Rambaud, Lyon 7th', loc: 'Lyon 7th · 4.1 km', km: 4.1, state: 'open', unit: 'Long-term care · Ground floor', access: 'Main entrance, 14 Quai Rambaud', contact: 'Ask for Sophie Bernard · Coordinator', sessionType: 'first' }],
+  10: [{ dom: 10, time: '09:30', end: '10:30', dur: '1h', place: 'Résidence des Berges', address: '14 Quai Rambaud, Lyon 7e', loc: 'Lyon 7e · 4.1 km', km: 4.1, state: 'open', unit: 'Soins longue durée · Rez-de-chaussée', access: 'Entrée principale, 14 Quai Rambaud', contact: 'Demandez Sophie Bernard · Coordinatrice', sessionType: 'first' }],
   11: [
-    { dom: 11, time: '10:00', end: '11:00', dur: '1h', place: 'Park Care Home', address: '8 Rue Léon Blum, Villeurbanne', loc: 'Villeurbanne · 3.1 km', km: 3.1, state: 'open', unit: 'Memory care · 2nd floor', access: 'Staff entrance, Rue Léon Blum (buzz APA)', contact: 'Ask for Marc Dubois · Activities lead', sessionType: 'regular' },
-    { dom: 11, time: '14:00', end: '15:00', dur: '1h', place: 'Maple Court', address: '27 Cours Gambetta, Lyon 6th', loc: 'Lyon 6th · 1.9 km', km: 1.9, state: 'open', unit: 'Assisted living · 1st floor', access: 'Visitor entrance, courtyard side', contact: 'Ask for Claire Petit · Coordinator', sessionType: 'regular' },
+    { dom: 11, time: '10:00', end: '11:00', dur: '1h', place: 'Résidence du Parc', address: '8 Rue Léon Blum, Villeurbanne', loc: 'Villeurbanne · 3.1 km', km: 3.1, state: 'open', unit: 'Unité protégée · 2e étage', access: 'Entrée du personnel, Rue Léon Blum (interphone APA)', contact: 'Demandez Marc Dubois · Responsable des activités', sessionType: 'regular' },
+    { dom: 11, time: '14:00', end: '15:00', dur: '1h', place: 'Résidence Les Érables', address: '27 Cours Gambetta, Lyon 6e', loc: 'Lyon 6e · 1.9 km', km: 1.9, state: 'open', unit: 'Résidence services · 1er étage', access: 'Entrée des visiteurs, côté cour', contact: 'Demandez Claire Petit · Coordinatrice', sessionType: 'regular' },
   ],
-  12: [{ dom: 12, time: '16:00', end: '17:00', dur: '1h', place: 'The Cedars Residence', address: '5 Avenue Jean Jaurès, Lyon 7th', loc: 'Lyon 7th · 4.8 km', km: 4.8, state: 'applied', unit: 'Memory care · Ground floor', access: 'Reception desk, ground floor', contact: 'Ask for Marie Laurent · Coordinator', sessionType: 'regular' }],
-  13: [{ dom: 13, time: '11:00', end: '12:00', dur: '1h', place: 'The Oaks', address: '19 Montée des Soldats, Caluire', loc: 'Caluire · 5.2 km', km: 5.2, state: 'open', unit: 'Long-term care · 3rd floor', access: 'Main entrance, sign in at the desk', contact: 'Ask for Julien Roy · Nurse manager', sessionType: 'first' }],
+  12: [{ dom: 12, time: '16:00', end: '17:00', dur: '1h', place: 'Résidence Les Cèdres', address: '5 Avenue Jean Jaurès, Lyon 7e', loc: 'Lyon 7e · 4.8 km', km: 4.8, state: 'applied', unit: 'Unité protégée · Rez-de-chaussée', access: 'Accueil, rez-de-chaussée', contact: 'Demandez Marie Laurent · Coordinatrice', sessionType: 'regular' }],
+  13: [{ dom: 13, time: '11:00', end: '12:00', dur: '1h', place: 'Résidence Les Chênes', address: '19 Montée des Soldats, Caluire', loc: 'Caluire · 5.2 km', km: 5.2, state: 'open', unit: 'Soins longue durée · 3e étage', access: 'Entrée principale, se présenter à l’accueil', contact: 'Demandez Julien Roy · Cadre de santé', sessionType: 'first' }],
   // A genuinely far session (~21 km) so the over-limit travel warning (PLA-06) is demonstrable —
   // ~54 min by car, past the coach's 45-min preference, but still applyable.
-  16: [{ dom: 16, time: '14:00', end: '15:00', dur: '1h', place: 'Greenfield Lodge', address: '22 Rue de la République, Meyzieu', loc: 'Meyzieu · 21.5 km', km: 21.5, state: 'open', unit: 'Long-term care · 2nd floor', access: 'Main gate, visitor parking', contact: 'Ask for Émilie Garnier · Coordinator', sessionType: 'regular' }],
+  16: [{ dom: 16, time: '14:00', end: '15:00', dur: '1h', place: 'Résidence des Prés', address: '22 Rue de la République, Meyzieu', loc: 'Meyzieu · 21.5 km', km: 21.5, state: 'open', unit: 'Soins longue durée · 2e étage', access: 'Portail principal, parking visiteurs', contact: 'Demandez Émilie Garnier · Coordinatrice', sessionType: 'regular' }],
   // further-out weeks (mock) so paging + the Month view have content to show
-  18: [{ dom: 18, time: '10:00', end: '11:00', dur: '1h', place: 'Park Care Home', address: '8 Rue Léon Blum, Villeurbanne', loc: 'Villeurbanne · 3.1 km', km: 3.1, state: 'open', unit: 'Memory care · 2nd floor', access: 'Staff entrance, Rue Léon Blum (buzz APA)', contact: 'Ask for Marc Dubois · Activities lead', sessionType: 'regular' }],
-  20: [{ dom: 20, time: '15:00', end: '16:00', dur: '1h', place: 'Riverside Care Home', address: '14 Quai Rambaud, Lyon 7th', loc: 'Lyon 7th · 4.1 km', km: 4.1, state: 'open', unit: 'Long-term care · Ground floor', access: 'Main entrance, 14 Quai Rambaud', contact: 'Ask for Sophie Bernard · Coordinator', sessionType: 'regular' }],
-  25: [{ dom: 25, time: '11:00', end: '12:00', dur: '1h', place: 'Maple Court', address: '27 Cours Gambetta, Lyon 6th', loc: 'Lyon 6th · 1.9 km', km: 1.9, state: 'open', unit: 'Assisted living · 1st floor', access: 'Visitor entrance, courtyard side', contact: 'Ask for Claire Petit · Coordinator', sessionType: 'regular' }],
+  18: [{ dom: 18, time: '10:00', end: '11:00', dur: '1h', place: 'Résidence du Parc', address: '8 Rue Léon Blum, Villeurbanne', loc: 'Villeurbanne · 3.1 km', km: 3.1, state: 'open', unit: 'Unité protégée · 2e étage', access: 'Entrée du personnel, Rue Léon Blum (interphone APA)', contact: 'Demandez Marc Dubois · Responsable des activités', sessionType: 'regular' }],
+  20: [{ dom: 20, time: '15:00', end: '16:00', dur: '1h', place: 'Résidence des Berges', address: '14 Quai Rambaud, Lyon 7e', loc: 'Lyon 7e · 4.1 km', km: 4.1, state: 'open', unit: 'Soins longue durée · Rez-de-chaussée', access: 'Entrée principale, 14 Quai Rambaud', contact: 'Demandez Sophie Bernard · Coordinatrice', sessionType: 'regular' }],
+  25: [{ dom: 25, time: '11:00', end: '12:00', dur: '1h', place: 'Résidence Les Érables', address: '27 Cours Gambetta, Lyon 6e', loc: 'Lyon 6e · 1.9 km', km: 1.9, state: 'open', unit: 'Résidence services · 1er étage', access: 'Entrée des visiteurs, côté cour', contact: 'Demandez Claire Petit · Coordinatrice', sessionType: 'regular' }],
 };
 const OPEN: Avail[] = Object.values(OPEN_BY_DAY).flat();
 const keyOf = (a: Avail) => `${a.dom}-${a.time}-${a.place}`;
 
 // June 2026 calendar maths. June 1 2026 is a Monday, so weekday index = (n-1) mod 7 (Mon-first).
 const TODAY = 9; // June 9 — the "today" marker
-const WEEKDAY_ABBR = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const MONTHS_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const WEEKDAY_ABBR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+const MONTHS_ABBR = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+const MONTHS_FULL = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const weekMonday = (offset: number) => new Date(2026, 5, 8 + offset * 7);
 const openOn = (dom: number) => OPEN_BY_DAY[dom] ?? [];
-const dayLabel = (dom: number) => `${WEEKDAY_ABBR[(dom - 1) % 7]} · June ${dom}`;
+const dayLabel = (dom: number) => `${WEEKDAY_ABBR[(dom - 1) % 7]} · ${dom} juin`;
 const dayA11y = (dom: number, load: number) =>
   `${dayLabel(dom)}, ${load === 0 ? copy.availableScreen.cal.a11yNone : `${load} ${copy.availableScreen.cal.a11ySessions}`}`;
 const firstOpenDom = Object.keys(OPEN_BY_DAY).map(Number).sort((a, b) => a - b)[0] ?? TODAY;
@@ -570,10 +570,8 @@ function MonthView({ days, lead, selected, onSelect, fade, x, pan }: {
                   <View style={[st.moNumWrap, on && st.moNumSel]}>
                     <Text style={[st.moNum, on && st.moNumSelText, !day.load && !day.today && !on && { color: S.textSecondary }, day.today && { color: palette.neutral[0] }]}>{day.n}</Text>
                   </View>
-                  {/* one dot per open session that day (capped at 3) — differentiates by count (PLA-05) */}
-                  <View style={st.moDotRow}>
-                    {Array.from({ length: Math.min(day.load, 3) }).map((_, i) => (<View key={i} style={st.loadDot} />))}
-                  </View>
+                  {/* a single dot marks days with open sessions, regardless of count (PLA-05) */}
+                  <View style={st.moDotRow}>{day.load ? <View style={st.loadDot} /> : null}</View>
                 </View>
               </Pressable>
             );
@@ -1205,7 +1203,7 @@ export function DisponiblesScreen() {
               ]}
               accessibilityLabel={copy.availableScreen.cal.toggleA11y}
               variant="pill"
-              theme={{ track: SUBTLE, selected: palette.neutral[900] }}
+              theme={{ track: SUBTLE, selected: palette.neutral[700] }}
               style={{ flex: 1 }}
             />
             <Pressable
@@ -1426,7 +1424,8 @@ const st = StyleSheet.create({
   dayNumSel: { backgroundColor: color.action },
   dayN: { fontFamily: F.oswM, fontSize: 20, color: ON_CANVAS },
   dayNSelText: { color: color.onAction },
-  load: { flexDirection: 'row', gap: 3, marginTop: 6, minHeight: 16, alignItems: 'center' },
+  load: { flexDirection: 'row', marginTop: 6, minHeight: 16, alignItems: 'center', justifyContent: 'center' },
+  // Month grid: a simple red dot marks days with open sessions (week strip uses the count pill).
   loadDot: { width: 5, height: 5, borderRadius: 999, backgroundColor: color.action },
   // Explicit per-day count pill (PLA-04) — red, compact, reads as a session tally.
   countPill: {
