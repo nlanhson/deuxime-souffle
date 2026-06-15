@@ -28,7 +28,8 @@
 .brand {
   font-family: var(--font-heading);
   font-weight: var(--weight-semibold);
-  font-size: var(--text-subheading);
+  /* Titre un cran plus présent face au picto réduit (48px). */
+  font-size: var(--text-h3);
   display: flex;
   flex-direction: column;
 }

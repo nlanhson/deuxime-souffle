@@ -9,6 +9,27 @@ Maintained as we go — every meaningful change and every decision lands here.
 
 ---
 
+## 2026-06-15 — Brand lockup proportions: smaller picto, larger title
+
+### Changes
+- **Sidebar**: picto 48→40px ([Sidebar.tsx](src/layout/Sidebar.tsx)); "Espace EHPAD" title 16→18px (`--text-body` → `--text-body-lg`, [Sidebar.module.css](src/layout/Sidebar.module.css)).
+- **Auth/login lockup**: picto 56→48px ([AuthLayout.tsx](src/screens/auth/AuthLayout.tsx)); brand title 20→24px (`--text-subheading` → `--text-h3`, [auth.module.css](src/screens/auth/auth.module.css)) — kept below the `h1` page title so hierarchy holds.
+
+### Decisions
+- **One type-scale step each, picto down ~15%.** Title leans on the brand wordmark, picto recedes to a supporting mark — per "logo a bit smaller, title a bit bigger". Mirrored across sidebar + login so the brand moment stays consistent.
+
+---
+
+## 2026-06-15 — Logo recolored to the official site picto (black)
+
+### Changes
+- **`Logo` default colour changed from brand-red (`--lc-rouge-500`) to `--color-text-primary`** ([src/components/Logo/index.tsx](src/components/Logo/index.tsx)) so the picto renders in ink-black on the light canvas — matching the picto the live site (deuxieme-souffle.com) ships as `picto-black-deuxiemesouffle.svg`. The path data was already byte-for-byte the official picto; only the fill was off. Affects the sidebar (size 48) and the auth/login screen (size 56), neither of which overrides `color`.
+
+### Decisions
+- **Use `--color-text-primary`, not a hard-coded `#000`.** It already resolves to near-black on light and flips to near-white on dark, so the logo stays correct in dark mode for free (previously it would have stayed red). Kept the "Espace EHPAD" wordmark label beside the picto rather than swapping in the site's full horizontal lockup — user chose "official picto + keep label".
+
+---
+
 ## 2026-06-14 — App-wide loading skeletons rebuilt to mirror real content (every screen) + responsive pass
 
 ### Changes

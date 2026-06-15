@@ -36,10 +36,10 @@
 
 /* Le nom de marque tient sur UNE seule ligne (avant : « Deuxième » / « Souffle »
    se cassait en deux + le descripteur = trois lignes dans le rail de 248px).
-   16px tient large ici ; la hiérarchie est portée par le poids 600 + le logo. */
+   18px : titre un cran plus présent face au picto réduit (40px). */
 .brandName {
   font-weight: var(--weight-semibold);
-  font-size: var(--text-body);
+  font-size: var(--text-body-lg);
   line-height: var(--lh-snug);
   letter-spacing: var(--ls-tight);
   white-space: nowrap;
