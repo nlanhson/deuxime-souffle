@@ -134,7 +134,7 @@ export function DataTable<T>({
                       type="button"
                       className={styles.sortBtn}
                       onClick={() => toggleSort(column.key)}
-                      aria-label={`${fr.a11y.sortBy(column.header)}${isSorted ? ` — ${sortDesc ? fr.a11y.sortDesc : fr.a11y.sortAsc}` : ''}`}
+                      aria-label={`${fr.a11y.sortBy(column.header)}${isSorted ? `, ${sortDesc ? fr.a11y.sortDesc : fr.a11y.sortAsc}` : ''}`}
                     >
                       {column.header}
                       <SortIcon className={styles.sortIcon} aria-hidden />

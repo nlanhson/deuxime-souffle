@@ -8,6 +8,18 @@
   letter-spacing: 0.02em;
   flex-shrink: 0;
   user-select: none;
+  overflow: hidden;
+}
+
+.avatar[data-photo] {
+  background: var(--lc-neutral-100);
+}
+
+.photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .avatar[data-size='sm'] {

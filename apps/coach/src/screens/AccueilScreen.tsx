@@ -17,6 +17,7 @@ import { copy } from '../copy';
 import { NotificationCenter } from '../components/NotificationCenter';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ProfileAvatar } from '../components/ProfileAvatar';
+import { COACH_PHOTO } from '../lib/coachProfile';
 import { AvailableDetailModal } from '../components/AvailableDetailModal';
 import { AvailableTodayModal } from '../components/AvailableTodayModal';
 import { NextSessionDetailModal } from '../components/NextSessionDetailModal';
@@ -620,7 +621,7 @@ export function AccueilScreen() {
             <View style={st.badgeDot} />
           </Pressable>
           <Pressable style={st.avatarWrap} hitSlop={6} onPress={() => setProfileOpen(true)} accessibilityLabel={copy.header.profileA11y}>
-            <ProfileAvatar size={42} />
+            <ProfileAvatar size={42} uri={COACH_PHOTO} />
           </Pressable>
         </View>
 

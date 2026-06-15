@@ -129,7 +129,7 @@ export function SessionDetailBody({
         <div className={styles.coachBlock}>
           {coach ? (
             <>
-              <Avatar firstName={coach.firstName} lastName={coach.lastName} decorative />
+              <Avatar firstName={coach.firstName} lastName={coach.lastName} src={coach.avatarUrl} decorative />
               <span>
                 <span className={styles.coachLabel}>{fr.sessions.detail.coach}</span>
                 {coach.firstName} {coach.lastName}
@@ -198,7 +198,7 @@ export function SessionDetailBody({
                     <dt>{fr.sessions.report.difficulties}</dt>
                     <dd>
                       {session.report.hadDifficulties ? fr.common.yes : fr.common.no}
-                      {session.report.difficultiesNote ? ` — ${session.report.difficultiesNote}` : ''}
+                      {session.report.difficultiesNote ? `. ${session.report.difficultiesNote}` : ''}
                     </dd>
                   </dl>
                   {session.report.evaluationSummary && <p>{session.report.evaluationSummary}</p>}

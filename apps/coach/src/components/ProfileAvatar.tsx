@@ -1,15 +1,25 @@
 /**
- * ProfileAvatar — the coach's account glyph: a soft-blue circle with a white person silhouette
- * (head + shoulders), the familiar "default account" icon. Built from plain Views (filled, not a
- * stroke icon) so it matches the solid reference exactly. `size` scales the whole glyph.
+ * ProfileAvatar — the coach's account avatar. When a real photo `uri` is provided it renders that
+ * human portrait (the default everywhere a coach is shown). Without one it falls back to a soft
+ * silhouette glyph: a neutral circle with a white person shape (head + shoulders), the familiar
+ * "default account" icon. `size` scales the whole glyph.
  */
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Image, StyleSheet } from 'react-native';
 
 const BG = '#4A4D54'; // dark neutral gray
 const FG = '#FFFFFF'; // white silhouette
 
-export function ProfileAvatar({ size = 48 }: { size?: number }) {
+export function ProfileAvatar({ size = 48, uri }: { size?: number; uri?: string | null }) {
+  if (uri) {
+    return (
+      <Image
+        source={{ uri }}
+        style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: BG }}
+        accessibilityIgnoresInvertColors
+      />
+    );
+  }
   return (
     <View
       style={[

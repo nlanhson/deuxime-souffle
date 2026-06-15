@@ -103,7 +103,7 @@ export function formatTimeRange(time: string, durationMin: number): string {
   const [h, m] = time.split(':');
   const startMin = Number(h ?? 0) * 60 + Number(m ?? 0);
   const endMin = startMin + durationMin;
-  return `${formatTime(time)} — ${clock12(Math.floor(endMin / 60) % 24, endMin % 60)}`;
+  return `${formatTime(time)} – ${clock12(Math.floor(endMin / 60) % 24, endMin % 60)}`;
 }
 
 /** `juin 2026` / `June 2026` */

@@ -40,13 +40,13 @@ export function buildRichSeed(): DB {
     addresses: {
       main: { line1: '12 rue des Tilleuls', postalCode: '69005', city: 'Lyon' },
       billing: {
-        line1: 'Groupe Harmonie Soins — Service comptabilité',
+        line1: 'Groupe Harmonie Soins, Service comptabilité',
         line2: '8 avenue Berthelot',
         postalCode: '69007',
         city: 'Lyon',
       },
       sessionLocation: {
-        line1: 'Salle polyvalente — 14 rue des Tilleuls',
+        line1: 'Salle polyvalente, 14 rue des Tilleuls',
         postalCode: '69005',
         city: 'Lyon',
       },
@@ -54,7 +54,7 @@ export function buildRichSeed(): DB {
     defaultSessionRate: 65,
     markers: ['Convention 2026', 'Tarif groupe'],
     standardSessions: [
-      { id: 'ss-1', label: 'Gym douce — résidents', weekday: 1, time: '10:30', durationMin: 60, unitType: 'UC' },
+      { id: 'ss-1', label: 'Gym douce résidents', weekday: 1, time: '10:30', durationMin: 60, unitType: 'UC' },
       { id: 'ss-2', label: 'Équilibre & mobilité', weekday: 3, time: '15:00', durationMin: 60, unitType: 'UP_UHR' },
       { id: 'ss-3', label: 'Atelier dos & posture', weekday: 4, time: '14:00', durationMin: 45, unitType: 'SOIGNANTS' },
     ],
@@ -69,6 +69,7 @@ export function buildRichSeed(): DB {
       civility: 'Mme',
       firstName: 'Sophie',
       lastName: 'Mercier',
+      avatarUrl: 'https://randomuser.me/api/portraits/women/68.jpg',
       email: 'sophie.mercier@les-tilleuls.fr',
       phone: '0612345678',
       type: 'principal',
@@ -81,6 +82,7 @@ export function buildRichSeed(): DB {
       civility: 'M',
       firstName: 'Thomas',
       lastName: 'Lefèvre',
+      avatarUrl: 'https://randomuser.me/api/portraits/men/75.jpg',
       email: 'thomas.lefevre@les-tilleuls.fr',
       phone: '0698765432',
       type: 'additionnel',
@@ -93,6 +95,7 @@ export function buildRichSeed(): DB {
       civility: 'Mme',
       firstName: 'Claire',
       lastName: 'Dubois',
+      avatarUrl: 'https://randomuser.me/api/portraits/women/65.jpg',
       email: 'claire.dubois@les-tilleuls.fr',
       phone: '0655443322',
       type: 'additionnel',
@@ -105,9 +108,9 @@ export function buildRichSeed(): DB {
   /* ---------- Coachs ---------- */
 
   const coaches: Coach[] = [
-    { id: 'k-karim', firstName: 'Karim', lastName: 'Belkacem', avgRatingFromFacility: 4.8 },
-    { id: 'k-julie', firstName: 'Julie', lastName: 'Renard', avgRatingFromFacility: 4.5 },
-    { id: 'k-marc', firstName: 'Marc', lastName: 'Petit', avgRatingFromFacility: 4.2 },
+    { id: 'k-karim', firstName: 'Karim', lastName: 'Belkacem', avatarUrl: 'https://randomuser.me/api/portraits/men/32.jpg', avgRatingFromFacility: 4.8 },
+    { id: 'k-julie', firstName: 'Julie', lastName: 'Renard', avatarUrl: 'https://randomuser.me/api/portraits/women/44.jpg', avgRatingFromFacility: 4.5 },
+    { id: 'k-marc', firstName: 'Marc', lastName: 'Petit', avatarUrl: 'https://randomuser.me/api/portraits/men/52.jpg', avgRatingFromFacility: 4.2 },
   ];
 
   /* ---------- Contrats — les 7 statuts ---------- */
@@ -124,7 +127,7 @@ export function buildRichSeed(): DB {
       endDate: d(+215),
       availabilityNotes: 'Éviter les heures de repas (12 h – 14 h).',
       excludedSlots: [
-        { id: 'ex-14-1', kind: 'demi_journee', part: 'journee', weekday: 2, label: 'Mercredi — toute la journée' },
+        { id: 'ex-14-1', kind: 'demi_journee', part: 'journee', weekday: 2, label: 'Mercredi : toute la journée' },
       ],
       generatedSessionCount: 34,
       completedSessionCount: 19,
@@ -147,7 +150,7 @@ export function buildRichSeed(): DB {
       endDate: d(+45),
       availabilityNotes: 'Résidents plus disponibles l’après-midi.',
       excludedSlots: [
-        { id: 'ex-09-1', kind: 'demi_journee', part: 'matin', weekday: 0, label: 'Lundi — matin' },
+        { id: 'ex-09-1', kind: 'demi_journee', part: 'matin', weekday: 0, label: 'Lundi : matin' },
       ],
       generatedSessionCount: 48,
       completedSessionCount: 44,
@@ -209,11 +212,11 @@ export function buildRichSeed(): DB {
       endDate: d(+385),
       availabilityNotes: 'Séances individuelles en chambre, le matin uniquement.',
       excludedSlots: [
-        { id: 'ex-18-1', kind: 'demi_journee', part: 'apres_midi', weekday: 0, label: 'Lundi — après-midi' },
-        { id: 'ex-18-2', kind: 'demi_journee', part: 'apres_midi', weekday: 1, label: 'Mardi — après-midi' },
-        { id: 'ex-18-3', kind: 'demi_journee', part: 'apres_midi', weekday: 2, label: 'Mercredi — après-midi' },
-        { id: 'ex-18-4', kind: 'demi_journee', part: 'apres_midi', weekday: 3, label: 'Jeudi — après-midi' },
-        { id: 'ex-18-5', kind: 'demi_journee', part: 'apres_midi', weekday: 4, label: 'Vendredi — après-midi' },
+        { id: 'ex-18-1', kind: 'demi_journee', part: 'apres_midi', weekday: 0, label: 'Lundi : après-midi' },
+        { id: 'ex-18-2', kind: 'demi_journee', part: 'apres_midi', weekday: 1, label: 'Mardi : après-midi' },
+        { id: 'ex-18-3', kind: 'demi_journee', part: 'apres_midi', weekday: 2, label: 'Mercredi : après-midi' },
+        { id: 'ex-18-4', kind: 'demi_journee', part: 'apres_midi', weekday: 3, label: 'Jeudi : après-midi' },
+        { id: 'ex-18-5', kind: 'demi_journee', part: 'apres_midi', weekday: 4, label: 'Vendredi : après-midi' },
       ],
       rejectionReason: 'Créneaux incompatibles avec la disponibilité du coach',
       generatedSessionCount: 0,
@@ -413,7 +416,7 @@ export function buildRichSeed(): DB {
   // Contrat UP/UHR — jeudis 15:00, Julie
   pushPast({ id: 's-up-p2', contractId: 'ct-2026-009', coachId: 'k-julie', weekday: 3, weeksBack: 2, time: '15:00', durationMin: 60, unitType: 'UP_UHR', report: { participants: 6, stars: 4, emoji: '🙂', summary: 'Atelier mobilité douce, résidents bien installés.' }, evaluation: { stars: 4, impression: 'bien', by: SOPHIE } });
   pushPast({ id: 's-up-p1', contractId: 'ct-2026-009', coachId: 'k-julie', weekday: 3, weeksBack: 1, time: '15:00', durationMin: 60, unitType: 'UP_UHR', report: { participants: 7, stars: 5, emoji: '😊', summary: 'Très bon moment, exercices sensoriels appréciés.' }, evaluation: { stars: 5, impression: 'tres_bien', comment: 'Julie est très douce avec les résidents de l’unité protégée.', by: SOPHIE } });
-  pushPast({ id: 's-up-p0', contractId: 'ct-2026-009', coachId: 'k-julie', weekday: 3, weeksBack: 0, time: '15:00', durationMin: 60, unitType: 'UP_UHR', report: { participants: 6, stars: 4, emoji: '😌', difficulties: 'Deux résidentes fatiguées en fin de séance — exercices terminés en position assise.', summary: 'Séance adaptée au rythme du jour, ambiance calme.' }, coachMessage: 'Pensez à réserver la salle polyvalente jeudi prochain : nous ferons un parcours d’équilibre.' });
+  pushPast({ id: 's-up-p0', contractId: 'ct-2026-009', coachId: 'k-julie', weekday: 3, weeksBack: 0, time: '15:00', durationMin: 60, unitType: 'UP_UHR', report: { participants: 6, stars: 4, emoji: '😌', difficulties: 'Deux résidentes fatiguées en fin de séance. Exercices terminés en position assise.', summary: 'Séance adaptée au rythme du jour, ambiance calme.' }, coachMessage: 'Pensez à réserver la salle polyvalente jeudi prochain : nous ferons un parcours d’équilibre.' });
 
   pushUpcoming('s-up-u0', 'ct-2026-009', 'k-julie', 3, 0, '15:00', 60, 'UP_UHR');
   pushUpcoming('s-up-u1', 'ct-2026-009', 'k-julie', 3, 1, '15:00', 60, 'UP_UHR');

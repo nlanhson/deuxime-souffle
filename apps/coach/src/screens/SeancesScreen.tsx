@@ -24,6 +24,7 @@ import { copy } from '../copy';
 import { NotificationCenter } from '../components/NotificationCenter';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ProfileAvatar } from '../components/ProfileAvatar';
+import { COACH_PHOTO } from '../lib/coachProfile';
 import { Segmented } from '../components/segmented';
 import { ActionModal } from '../components/ActionModal';
 import { OptionSheet } from '../components/OptionSheet';
@@ -410,7 +411,7 @@ type NoteEntry = { author: string; date: string; text: string };
 // Seed: prior notes (by other coaches / earlier sessions), keyed by session id. Unlisted = empty.
 const SEED_NOTES: Record<string, NoteEntry[]> = {
   u1: [
-    { author: 'Sophie Marchand', date: 'May 28', text: 'Mr Lambert prefers seated exercises — knee issue. Keep the warm-up short; the group responds well to music.' },
+    { author: 'Sophie Marchand', date: 'May 28', text: 'Mr Lambert prefers seated exercises due to a knee issue. Keep the warm-up short; the group responds well to music.' },
   ],
   p1: [
     { author: copy.sessions.notesModal.you, date: 'Jun 8', text: 'Two new residents joined the group. Bring extra resistance bands next time.' },
@@ -505,7 +506,7 @@ type SubmittedReport = {
 // Mock submitted reports, keyed by the session id of each `reportSent` session.
 const REPORTS: Record<string, SubmittedReport> = {
   p2: { submitted: 'Jun 8', review: 'validated', participants: 1, activities: ['Mobility & balance', 'Flexibility'], ready: true, engagement: 2, difficulty: 0, nextNotes: 'Keep the seated routine; resident responded well.' },
-  p3: { submitted: 'Jun 8', review: 'pending', participants: 7, activities: ['Strength', 'Cardio', 'Coordination'], flag: 'Heating was off in the activity room — quite cold.', ready: false, engagement: 3, difficulty: 2 },
+  p3: { submitted: 'Jun 8', review: 'pending', participants: 7, activities: ['Strength', 'Cardio', 'Coordination'], flag: 'Heating was off in the activity room, so it was quite cold.', ready: false, engagement: 3, difficulty: 2 },
 };
 
 const REVIEW_META: Record<ReviewStatus, { tone: keyof typeof INK; label: string; icon: LucideIcon }> = {
@@ -791,7 +792,7 @@ export function SeancesScreen() {
             <View style={st.badgeDot} />
           </Pressable>
           <Pressable style={st.avatarWrap} hitSlop={6} onPress={() => setProfileOpen(true)} accessibilityLabel={copy.header.profileA11y}>
-            <ProfileAvatar size={42} />
+            <ProfileAvatar size={42} uri={COACH_PHOTO} />
           </Pressable>
         </View>
 

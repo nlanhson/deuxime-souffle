@@ -69,7 +69,7 @@ export function ActionCard(props: ActionCardProps) {
       {...(disabled ? { title: disabledReason } : {})}
     >
       {inner}
-      {disabled && <span className="sr-only"> — {disabledReason}</span>}
+      {disabled && <span className="sr-only">, {disabledReason}</span>}
     </button>
   );
 }

@@ -76,7 +76,7 @@ export function ExclusionsStep({ data, dispatch }: { data: WizardData; dispatch:
                   type="button"
                   className={styles.exCell}
                   aria-pressed={blocked}
-                  aria-label={`${fr.weekdays[weekday]} ${part === 'matin' ? copy.morning : copy.afternoon} — ${blocked ? copy.blocked : copy.available}`}
+                  aria-label={`${fr.weekdays[weekday]} ${part === 'matin' ? copy.morning : copy.afternoon}, ${blocked ? copy.blocked : copy.available}`}
                   onClick={() => dispatch({ type: 'toggleWeekly', weekday, part })}
                 >
                   {blocked ? copy.blocked : copy.available}
@@ -112,7 +112,7 @@ export function ExclusionsStep({ data, dispatch }: { data: WizardData; dispatch:
         {data.specialPeriods.map((period) => (
           <div key={period.id} className={styles.periodRow}>
             <span>
-              <strong>{period.label}</strong> — {fr.contracts.wizard.exclusions.kinds[period.kind]} ·{' '}
+              <strong>{period.label}</strong> · {fr.contracts.wizard.exclusions.kinds[period.kind]} ·{' '}
               {formatDate(period.startDate)}
               {period.endDate ? ` → ${formatDate(period.endDate)}` : ''} · {fr.dayParts[period.part]}
             </span>

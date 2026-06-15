@@ -219,7 +219,7 @@ export default function EditContractScreen() {
             ? { minor: { availabilityNotes: notes }, minorLabel: `${copy.fields.notes} mises à jour` }
             : {}),
           ...(majorChanges.length > 0
-            ? { major: {}, majorLabel: `${fr.history.modification_majeure} — ${majorChanges.join(' ; ')}` }
+            ? { major: {}, majorLabel: `${fr.history.modification_majeure} : ${majorChanges.join(' ; ')}` }
             : {}),
         },
         by,
@@ -235,7 +235,7 @@ export default function EditContractScreen() {
     }
   };
 
-  const title = `${copy.title} — ${contract.reference}`;
+  const title = `${copy.title} : ${contract.reference}`;
 
   const stepEdit = (
     <>

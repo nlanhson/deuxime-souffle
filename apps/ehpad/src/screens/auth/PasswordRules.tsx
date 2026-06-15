@@ -37,7 +37,7 @@ export function PasswordRules({ password }: { password: string }) {
                 {row.label}
                 <span className="sr-only">
                   {' '}
-                  — {met ? fr.auth.passwordRules.ruleMet : fr.auth.passwordRules.ruleUnmet}
+                  · {met ? fr.auth.passwordRules.ruleMet : fr.auth.passwordRules.ruleUnmet}
                 </span>
               </span>
             </li>

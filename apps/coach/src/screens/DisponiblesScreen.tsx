@@ -36,6 +36,7 @@ import { copy } from '../copy';
 import { NotificationCenter } from '../components/NotificationCenter';
 import { Segmented } from '../components/segmented';
 import { ProfileAvatar } from '../components/ProfileAvatar';
+import { COACH_PHOTO } from '../lib/coachProfile';
 import { ProfileScreen } from './ProfileScreen';
 import { useTabBarInset } from '../navigation/tabBarInsets';
 import { useFirstLoad } from '../lib/useFirstLoad';
@@ -107,7 +108,7 @@ const OPEN_BY_DAY: Record<number, Avail[]> = {
     { dom: 11, time: '14:00', end: '15:00', dur: '1h', place: 'Maple Court', address: '27 Cours Gambetta, Lyon 6th', loc: 'Lyon 6th · 1.9 km', km: 1.9, state: 'open', unit: 'Assisted living · 1st floor', access: 'Visitor entrance, courtyard side', contact: 'Ask for Claire Petit · Coordinator', sessionType: 'regular' },
   ],
   12: [{ dom: 12, time: '16:00', end: '17:00', dur: '1h', place: 'The Cedars Residence', address: '5 Avenue Jean Jaurès, Lyon 7th', loc: 'Lyon 7th · 4.8 km', km: 4.8, state: 'applied', unit: 'Memory care · Ground floor', access: 'Reception desk, ground floor', contact: 'Ask for Marie Laurent · Coordinator', sessionType: 'regular' }],
-  13: [{ dom: 13, time: '11:00', end: '12:00', dur: '1h', place: 'The Oaks', address: '19 Montée des Soldats, Caluire', loc: 'Caluire · 5.2 km', km: 5.2, state: 'open', unit: 'Long-term care · 3rd floor', access: 'Main entrance — sign in at the desk', contact: 'Ask for Julien Roy · Nurse manager', sessionType: 'first' }],
+  13: [{ dom: 13, time: '11:00', end: '12:00', dur: '1h', place: 'The Oaks', address: '19 Montée des Soldats, Caluire', loc: 'Caluire · 5.2 km', km: 5.2, state: 'open', unit: 'Long-term care · 3rd floor', access: 'Main entrance, sign in at the desk', contact: 'Ask for Julien Roy · Nurse manager', sessionType: 'first' }],
   // A genuinely far session (~21 km) so the over-limit travel warning (PLA-06) is demonstrable —
   // ~54 min by car, past the coach's 45-min preference, but still applyable.
   16: [{ dom: 16, time: '14:00', end: '15:00', dur: '1h', place: 'Greenfield Lodge', address: '22 Rue de la République, Meyzieu', loc: 'Meyzieu · 21.5 km', km: 21.5, state: 'open', unit: 'Long-term care · 2nd floor', access: 'Main gate, visitor parking', contact: 'Ask for Émilie Garnier · Coordinator', sessionType: 'regular' }],
@@ -1160,7 +1161,7 @@ export function DisponiblesScreen() {
             <View style={st.badgeDot} />
           </Pressable>
           <Pressable style={st.avatarWrap} hitSlop={6} onPress={() => setProfileOpen(true)} accessibilityLabel={copy.header.profileA11y}>
-            <ProfileAvatar size={42} />
+            <ProfileAvatar size={42} uri={COACH_PHOTO} />
           </Pressable>
         </View>
 

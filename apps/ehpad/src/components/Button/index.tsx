@@ -49,7 +49,7 @@ export function Button({
         Icon && <Icon className={styles.icon} aria-hidden />
       )}
       <span>{children}</span>
-      {disabled && disabledReason && <span className="sr-only"> — {disabledReason}</span>}
+      {disabled && disabledReason && <span className="sr-only">, {disabledReason}</span>}
     </button>
   );
 }

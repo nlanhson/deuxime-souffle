@@ -94,7 +94,7 @@ export function AbsenceModal({
                 ))}
               </View>
               <Text style={st.stepTxt}>
-                {`${C.stepPrefix} ${stepIdx + 1} ${C.stepOf} ${STEPS.length} — ${C.steps[step]}`}
+                {`${C.stepPrefix} ${stepIdx + 1} ${C.stepOf} ${STEPS.length}: ${C.steps[step]}`}
               </Text>
             </View>
 

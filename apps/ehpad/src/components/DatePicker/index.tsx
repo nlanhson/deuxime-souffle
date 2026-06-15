@@ -155,7 +155,7 @@ export function DatePicker({
                   data-selected={isSelected || undefined}
                   disabled={blocked}
                   {...(blocked && reason ? { title: reason } : {})}
-                  aria-label={`${capitalize(formatDate(iso))}${blocked && reason ? ` — ${reason}` : ''}`}
+                  aria-label={`${capitalize(formatDate(iso))}${blocked && reason ? `, ${reason}` : ''}`}
                   {...(isSelected ? { 'aria-current': 'date' } : {})}
                   onClick={() => {
                     onChange(iso);

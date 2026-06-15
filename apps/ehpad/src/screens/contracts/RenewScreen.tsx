@@ -272,7 +272,7 @@ export default function RenewScreen() {
                 icon={milestone.passed ? CheckCircle2 : Clock3}
               />
               <span>
-                {copy.milestone(milestone.days)} — {capitalize(formatDate(milestone.date))}
+                {copy.milestone(milestone.days)} · {capitalize(formatDate(milestone.date))}
               </span>
             </li>
           ))}

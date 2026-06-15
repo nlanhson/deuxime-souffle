@@ -44,7 +44,7 @@ export default function ContactScreen() {
   const [requestType, setRequestType] = useState(prefillType);
   const [subject, setSubject] = useState(prefillSubject);
   const [message, setMessage] = useState(
-    contractRef ? `${fr.contracts.detail.title(contractRef)} — ` : '',
+    contractRef ? `${fr.contracts.detail.title(contractRef)} : ` : '',
   );
   const [replyPreference, setReplyPreference] = useState(prefillReply);
   const [subjectError, setSubjectError] = useState<string | null>(null);

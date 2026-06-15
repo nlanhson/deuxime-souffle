@@ -23,7 +23,8 @@
     },
     "plugins": [
       "react-native-bottom-tabs",
-      "expo-font"
+      "expo-font",
+      "expo-video"
     ],
     "web": {
       "favicon": "./assets/favicon.png"

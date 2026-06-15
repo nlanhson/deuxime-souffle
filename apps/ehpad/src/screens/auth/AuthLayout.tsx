@@ -17,11 +17,8 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
     <div className={styles.page}>
       <main className={styles.card}>
         <div className={styles.lockup}>
-          <Logo size={48} />
-          <p className={styles.brand}>
-            {fr.app.name}
-            <span className={styles.brandSub}>{fr.app.space}</span>
-          </p>
+          <Logo size={56} />
+          <p className={styles.brand}>{fr.app.space}</p>
         </div>
         <div className={styles.heading}>
           <h1 className={styles.title}>{title}</h1>

@@ -61,7 +61,7 @@ const ContactItem = ({ contact, onOpen }: { contact: Contact; onOpen: () => void
     .join(' · ');
   return (
     <button type="button" className={styles.person} onClick={onOpen}>
-      <Avatar firstName={contact.firstName} lastName={contact.lastName} size="sm" decorative />
+      <Avatar firstName={contact.firstName} lastName={contact.lastName} src={contact.avatarUrl} size="sm" decorative />
       <span className={styles.personMain}>
         <span className={styles.personName}>
           {fr.civility[contact.civility]} {contact.firstName} {contact.lastName}

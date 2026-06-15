@@ -101,7 +101,7 @@ export default function EvaluateScreen() {
         {fr.evaluations.form.sessionInfo}
       </h2>
       <div className={styles.recapRow}>
-        {coach && <Avatar firstName={coach.firstName} lastName={coach.lastName} size="sm" decorative />}
+        {coach && <Avatar firstName={coach.firstName} lastName={coach.lastName} src={coach.avatarUrl} size="sm" decorative />}
         <p className={styles.recapDate}>
           {capitalize(formatWeekdayDate(session.date))} · {formatTime(session.time)}
         </p>

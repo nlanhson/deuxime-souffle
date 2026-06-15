@@ -41,7 +41,7 @@ export function eventText(s: Copy, e: SessionEvent): string {
 /** Entrée de l'historique d'un contrat (libellé de base + détail optionnel). */
 export function historyText(s: Copy, h: ContractHistoryEntry): string {
   const base = s.history[h.kind];
-  return h.detailKey ? `${base} ${s.history[h.detailKey]}` : base;
+  return h.detailKey ? `${base} · ${s.history[h.detailKey]}` : base;
 }
 
 /** Titre + corps d'une notification, recomposés selon son type et ses paramètres. */

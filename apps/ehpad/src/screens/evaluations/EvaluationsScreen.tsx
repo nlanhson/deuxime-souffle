@@ -65,7 +65,7 @@ export default function EvaluationsScreen() {
 
         <div className={styles.entryCoach}>
           {coach ? (
-            <Avatar firstName={coach.firstName} lastName={coach.lastName} size="sm" decorative />
+            <Avatar firstName={coach.firstName} lastName={coach.lastName} src={coach.avatarUrl} size="sm" decorative />
           ) : (
             <span className={styles.entryCoachIcon}>
               <User aria-hidden />
@@ -96,7 +96,7 @@ export default function EvaluationsScreen() {
             renderCard(
               session,
               <StatusChip spec={evaluationChip(false)} />,
-              `${fr.evaluations.evaluate} — ${fr.evaluations.sessionOf(
+              `${fr.evaluations.evaluate} : ${fr.evaluations.sessionOf(
                 formatDate(session.date),
                 formatTime(session.time),
               )}`,
@@ -124,7 +124,7 @@ export default function EvaluationsScreen() {
               session.evaluation ? (
                 <RatingDisplay value={session.evaluation.stars} size="sm" showText={false} />
               ) : null,
-              `${fr.evaluations.viewEvaluation} — ${fr.evaluations.sessionOf(
+              `${fr.evaluations.viewEvaluation} : ${fr.evaluations.sessionOf(
                 formatDate(session.date),
                 formatTime(session.time),
               )}`,

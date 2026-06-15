@@ -129,7 +129,7 @@ export function PlanSessionModal({ open, onClose, contracts, initialContractId, 
             }}
             options={actives.map((c) => ({
               value: c.id,
-              label: `${c.reference} — ${c.units.map((u) => fr.units[u]).join(', ')}`,
+              label: `${c.reference} · ${c.units.map((u) => fr.units[u]).join(', ')}`,
             }))}
             placeholder={fr.dashboard.plan.contractPlaceholder}
             error={contractError}

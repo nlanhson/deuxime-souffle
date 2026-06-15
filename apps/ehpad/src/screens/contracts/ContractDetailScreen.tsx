@@ -297,7 +297,7 @@ export default function ContractDetailScreen() {
             <>
               {participatingCoaches.map((coach) => (
                 <div key={coach.id} className={styles.coachRow}>
-                  <Avatar firstName={coach.firstName} lastName={coach.lastName} decorative />
+                  <Avatar firstName={coach.firstName} lastName={coach.lastName} src={coach.avatarUrl} decorative />
                   <span className={styles.coachName}>
                     {coach.firstName} {coach.lastName}
                     <span className={styles.coachHint}>{fr.contracts.detail.avgFromFacility}</span>

@@ -159,7 +159,7 @@ export function Calendar({
       : capitalize(formatMonthYear(cursor));
 
   const eventAria = (s: Session) =>
-    `${fr.calendar.sessionLink(formatDate(s.date), formatTime(s.time))} — ${coachName(s.coachId)} — ${unitLabel(s.unitType)}${s.id === nextSessionId ? ` — ${fr.calendar.nextSession}` : ''}`;
+    `${fr.calendar.sessionLink(formatDate(s.date), formatTime(s.time))}, ${coachName(s.coachId)}, ${unitLabel(s.unitType)}${s.id === nextSessionId ? `, ${fr.calendar.nextSession}` : ''}`;
 
   /* Clic sur une séance : si l'appelant fournit onSessionSelect (accueil), on
      ouvre l'aperçu modal au lieu de naviguer — tout en gardant le <Link> (donc
@@ -199,7 +199,7 @@ export function Calendar({
               data-today={isToday(date) || undefined}
             >
               <span className={styles.dayNumber}>
-                {isToday(date) && <span className="sr-only">{fr.calendar.today} — </span>}
+                {isToday(date) && <span className="sr-only">{fr.calendar.today}, </span>}
                 {date.getDate()}
               </span>
               {shown.map((s) => (
@@ -287,7 +287,7 @@ export function Calendar({
                   {fr.weekdaysShort[(date.getDay() + 6) % 7]}
                 </span>
                 <span className={styles.wtDayNum}>
-                  {isToday(date) && <span className="sr-only">{fr.calendar.today} — </span>}
+                  {isToday(date) && <span className="sr-only">{fr.calendar.today}, </span>}
                   {date.getDate()}
                 </span>
               </div>
