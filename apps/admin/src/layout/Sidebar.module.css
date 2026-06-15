@@ -1,0 +1,134 @@
+/* White rail with a hairline right border (EHPAD idiom). The active item is the
+   one place red leads on this surface — soft red veil + red ink + left bar. */
+.sidebar {
+  width: 248px;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border-subtle);
+  padding: var(--space-lg) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+/* ---- Brand ---- */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0 var(--space-sm);
+}
+.logo {
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+.brandText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-family: var(--font-heading);
+}
+.brandName {
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--ls-tight);
+  white-space: nowrap;
+  color: var(--color-text-primary);
+}
+.brandTag {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+}
+
+/* ---- Nav ---- */
+.nav {
+  flex: 1;
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 48px;
+  padding: 0 var(--space-sm) 0 var(--space-md);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-body);
+}
+.link:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+/* Active: soft red veil + red ink + 600 + left bar — "you are here" carried by
+   three cues (fill, weight, bar), not colour alone (NavLink sets aria-current). */
+.linkActive,
+.linkActive:hover {
+  background: var(--color-selected-soft);
+  color: var(--color-selected-ink);
+  font-weight: var(--weight-semibold);
+}
+.linkActive::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+}
+
+.icon {
+  flex-shrink: 0;
+}
+.label {
+  flex: 1;
+}
+
+/* Pending-queue badge — accent pill (alert → red, on-spec). */
+.badge {
+  flex-shrink: 0;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-on-action);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+}
+
+/* ---- Footer ---- */
+.footer {
+  padding: var(--space-md) var(--space-sm) 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+.version {
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+}

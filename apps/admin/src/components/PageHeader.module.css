@@ -1,0 +1,33 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  /* Constant breathing room under the header on every page (24px). */
+  margin-bottom: var(--space-lg);
+}
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+.title {
+  font-size: clamp(var(--text-h2), 4vw, var(--text-h1));
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--ls-tight);
+  color: var(--color-text-primary);
+}
+.subtitle {
+  color: var(--color-text-secondary);
+  max-width: 64ch;
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+}
+.actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}

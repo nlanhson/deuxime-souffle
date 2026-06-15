@@ -1,0 +1,23 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-md);
+}
+.cap {
+  padding: var(--space-lg);
+}
+.capTitle {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--space-xs);
+}
+.capDetail {
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--lh-body);
+}
+.source {
+  margin-top: var(--space-xl);
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+}

@@ -1,0 +1,67 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+.label {
+  font-family: var(--font-heading);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+}
+.icon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+/* The 32/700 KPI tier (house style). */
+.value {
+  font-size: var(--text-h2); /* 32px */
+  font-weight: var(--weight-display); /* 700 */
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+.lead {
+  color: var(--color-data-lead); /* gold — key operational metric */
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  min-height: 18px;
+}
+.trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+}
+.trend_up {
+  color: var(--color-progress);
+}
+.trend_down {
+  color: var(--color-danger);
+}
+.trend_flat {
+  color: var(--color-text-secondary);
+}
+.hint {
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+}

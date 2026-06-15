@@ -1,0 +1,185 @@
+/* Le Club — Deuxième Souffle · Design Tokens (web / React)
+ * Generated from tokens.json. Import once at the app root.
+ * Tiers: --lc-{global} -> --color-{semantic} -> [data-surface] theme override.
+ * Body >= 16px, targets >= 44px, contrast AA. */
+
+:root {
+  /* ---- Global: brand ramps ---- */
+  --lc-rouge-50:#FDECEA; --lc-rouge-100:#FACFCB; --lc-rouge-200:#F4A8A1; --lc-rouge-300:#EE7B72;
+  --lc-rouge-400:#E85248; --lc-rouge-500:#E1322B; --lc-rouge-600:#C32721; --lc-rouge-700:#9E1E19;
+  --lc-rouge-800:#771613; --lc-rouge-900:#4F0E0C;
+
+  --lc-or-50:#FEF9E0; --lc-or-100:#FDEFB0; --lc-or-200:#FBE27A; --lc-or-300:#F8D544;
+  --lc-or-400:#F5CB1F; --lc-or-500:#F2C200; --lc-or-600:#CCA300; --lc-or-700:#9E7E00;
+  --lc-or-800:#6E5800; --lc-or-900:#463800;
+
+  /* bleu-25 : « papier bleuté » — fond de page de la surface EHPAD (cran tonal
+     sous les cartes blanches, dans l'esprit Doctolib : calme, jamais gris morne). */
+  --lc-bleu-25:#F5F7FB;
+  --lc-bleu-50:#ECF0F8; --lc-bleu-100:#CDD8EC; --lc-bleu-200:#A6B7DB; --lc-bleu-300:#7B93C7;
+  --lc-bleu-400:#4F6DAE; --lc-bleu-500:#2F4F92; --lc-bleu-600:#1F3B73; --lc-bleu-700:#182E5A;
+  --lc-bleu-800:#122242; --lc-bleu-900:#0B152A;
+
+  --lc-vert-50:#E8F7EF; --lc-vert-100:#C2EAD4; --lc-vert-200:#93D9B5; --lc-vert-300:#62C795;
+  --lc-vert-400:#41B47E; --lc-vert-500:#2F9E6B; --lc-vert-600:#268158; --lc-vert-700:#1D6444;
+  --lc-vert-800:#154A32; --lc-vert-900:#0D2F20;
+
+  /* Rose — hors rampes de marque, dédié à la catégorie calendaire « Personnel
+     soignant » : un vrai rose (pas le saumon de la rampe rouge). */
+  --lc-rose-100:#FCE7F3; --lc-rose-600:#DB2777; --lc-rose-800:#9D174D;
+
+  /* Bout chaud (0–200) = « papier » de marque pour les surfaces claires.
+     Bout sombre (300–900) = gris vrai-neutre, aligné sur la source canonique (theme.ts)
+     et sur l'app coach — texte/bordures nets, plus de taupe (cohésion de marque). */
+  --lc-neutral-0:#FFFFFF; --lc-neutral-50:#FAFAFA; --lc-neutral-100:#F2F2F2; --lc-neutral-200:#E5E5E5;
+  /* 250 : palier intermédiaire pour le bord des champs — plus doux que le 300
+     (trop net/dur au repos), mais encore plus présent que le liseré des cartes (200). */
+  --lc-neutral-250:#D4D4D4;
+  --lc-neutral-300:#BBBBBB; --lc-neutral-400:#9C9C9C; --lc-neutral-500:#818181;
+  /* 550 : gris « estompé » le plus clair qui tient AA (≥ 4,5:1) sur blanc —
+     le 500 (#818181, 3,9:1) ne suffit pas pour du texte. */
+  --lc-neutral-550:#6A6A6A; --lc-neutral-600:#646464;
+  --lc-neutral-700:#484848; --lc-neutral-800:#2B2B2B; --lc-neutral-900:#171717;
+
+  --lc-gradient-movement: linear-gradient(135deg, #E1322B 0%, #F2C200 100%);
+
+  /* Dégradé d'action signature (identique à l'app coach › PrimaryButton) :
+     le rouge tient 0→70 %, puis braise orangée dans le coin bas-droit. */
+  --lc-cta-ember:#F5821F;
+  /* Tient clair de la braise — fond doux pour pastille/chip orange (ex. icône
+     « Prochaine séance »), pendant chaud des *-soft existants. */
+  --lc-cta-ember-soft:#FDEBDC;
+  --gradient-cta: linear-gradient(135deg, var(--lc-rouge-500) 0%, var(--lc-rouge-500) 70%, var(--lc-cta-ember) 100%);
+
+  /* ---- Semantic: shared alias layer ---- */
+  --color-action:           var(--lc-rouge-500);
+  --color-action-hover:     var(--lc-rouge-600);
+  --color-action-active:    var(--lc-rouge-700);
+  --color-action-disabled:  var(--lc-neutral-300);
+  --color-on-action:        var(--lc-neutral-0);
+
+  --color-reward:           var(--lc-or-500);
+  --color-reward-strong:    var(--lc-or-600);
+  --color-on-reward:        var(--lc-neutral-900);
+
+  --color-info:             var(--lc-bleu-600);
+  --color-info-soft:        var(--lc-bleu-100);
+  --color-progress:         var(--lc-vert-500);
+  --color-progress-strong:  var(--lc-vert-600);
+  --color-progress-soft:    var(--lc-vert-100);
+
+  --color-danger:           var(--lc-rouge-700);
+  --color-danger-soft:      var(--lc-rouge-50);
+  --color-warning:          var(--lc-or-600);
+  --color-warning-soft:     var(--lc-or-50);
+
+  --color-text-primary:     var(--lc-neutral-900);
+  --color-text-secondary:   var(--lc-neutral-600);
+  --color-text-muted:       var(--lc-neutral-550); /* AA sur blanc et papier bleuté */
+  --color-text-on-ink:      var(--lc-neutral-50);
+
+  --color-border-subtle:    var(--lc-neutral-200);
+  --color-border-field:     var(--lc-neutral-250); /* bord des champs de saisie — net mais pas dur */
+  --color-border-strong:    var(--lc-neutral-300);
+
+  /* surface defaults (admin/ehpad white baseline) */
+  --color-canvas:           var(--lc-neutral-0);
+  --color-surface:          var(--lc-neutral-0);
+  --color-surface-ink:      var(--lc-neutral-900);
+  /* États interactifs des surfaces — alias sémantiques (fin du --lc-neutral-100
+     posé en dur dans les composants : un seul endroit pour régler le survol). */
+  --color-surface-hover:    var(--lc-neutral-100);
+  --color-surface-pressed:  var(--lc-neutral-200);
+  /* Voile des superpositions (tiroir mobile, modales) — aligné sur neutral-900. */
+  --color-scrim:            rgba(23, 23, 23, 0.5);
+
+  /* ---- Typography ----
+     Police unique : tout en Inter (choix client). La hiérarchie tient au POIDS et
+     à la TAILLE, pas à la famille. display/heading sont des alias sémantiques →
+     Inter, pour ne pas réécrire les références var(--font-*) des composants. */
+  --font-display: "Inter", system-ui, sans-serif;
+  --font-heading: "Inter", system-ui, sans-serif;
+  --font-body:    "Inter", system-ui, sans-serif;
+
+  /* Poids — Inter chargé en 400/500/600/700 ; les grands nombres « display » en 700. */
+  --weight-display:700; --weight-regular:400; --weight-medium:500;
+  --weight-semibold:600; --weight-bold:700;
+
+  --text-caption:12px; --text-body-sm:14px; --text-body:16px; --text-body-lg:18px;
+  --text-subheading:20px; --text-h3:24px; --text-h2:32px; --text-h1:40px;
+  --text-display:48px; --text-display-xl:64px;
+
+  --lh-tight:1.0; --lh-heading:1.15; --lh-snug:1.25; --lh-body:1.5; --lh-relaxed:1.6;
+  --ls-tight:-0.01em; --ls-normal:0; --ls-label:0.06em;
+
+  /* ---- Spacing (4px base) ---- */
+  --space-xs:4px; --space-sm:8px; --space-md:16px; --space-lg:24px;
+  --space-xl:32px; --space-2xl:48px; --space-3xl:64px;
+
+  /* ---- Radius ---- */
+  --radius-sm:8px; --radius-md:12px; --radius-lg:16px; --radius-xl:24px; --radius-2xl:32px; --radius-pill:999px;
+
+  /* ---- Sizing ---- */
+  --touch-target-min:44px;
+
+  /* ---- Elevation (base d'ombre alignée sur neutral-900 #171717) ---- */
+  --elevation-1:0 1px 2px rgba(23,23,23,.05), 0 1px 3px rgba(23,23,23,.08);
+  --elevation-2:0 4px 12px rgba(23,23,23,.08);
+  --elevation-3:0 12px 32px rgba(23,23,23,.14);
+  /* Halo du CTA rouge — dosage « apaisé » côté EHPAD : présent mais discret
+     (l'app coach garde son halo fort ; ici le rouge doit rester rare et calme). */
+  --elevation-glow-action:0 1px 2px rgba(225,50,43,.18), 0 4px 14px rgba(225,50,43,.22);
+
+  /* Chevron du <select> natif — même tracé que l'icône lucide ChevronDown
+     (les autres champs en lucide) ; teinte neutral-600 fixée ici, seul endroit
+     où le hex brut est admis (un data-URI ne lit pas les variables CSS). */
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23646464' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  /* ---- Motion ---- */
+  --duration-fast:120ms; --duration-base:200ms; --duration-slow:320ms;
+  --ease-standard:cubic-bezier(0.2,0,0,1);
+  --ease-decelerate:cubic-bezier(0,0,0,1);
+  --ease-spring:cubic-bezier(0.2,0.8,0.2,1);
+}
+
+/* ============ Surface themes — "une base, trois intensités" ============ */
+
+/* Coach: ink canvas, red everywhere (mobile RN mirrors these values). */
+[data-surface="coach"] {
+  --color-canvas:        var(--lc-neutral-900);
+  --color-surface:       var(--lc-neutral-800);
+  --color-surface-raised:var(--lc-neutral-0);
+  --color-text-primary:  var(--lc-neutral-50);
+  --color-text-secondary:var(--lc-neutral-300);
+  --color-accent:        var(--color-action);
+}
+
+/* Admin: white canvas, red rare (active item + alerts), KPIs in gold. */
+[data-surface="admin"] {
+  --color-canvas:        var(--lc-neutral-0);
+  --color-surface:       var(--lc-neutral-0);
+  --color-text-primary:  var(--lc-neutral-900);
+  --color-accent:        var(--color-action);
+  --color-data-lead:     var(--lc-or-500);
+  /* Active nav / selected segment — soft red veil + red ink (admin's accent),
+     mirrors the EHPAD selected-state idiom (which is blue on its surface). */
+  --color-selected-soft: var(--lc-rouge-50);
+  --color-selected-ink:  var(--lc-rouge-700);
+}
+
+/* EHPAD: tout blanc (canvas, chrome et cartes) — la structure tient aux liserés
+   fins. Rouge quasi absent ; bleu + vert mènent (info / santé). */
+[data-surface="ehpad"] {
+  --color-canvas:           var(--lc-neutral-0);
+  --color-surface:          var(--lc-neutral-0);
+  --color-text-primary:     var(--lc-neutral-900);
+  --color-accent:           var(--color-info);
+  --color-accent-secondary: var(--color-progress);
+  /* Sélection courante (nav, segment actif) — voile bleu très doux + encre bleue. */
+  --color-selected-soft:    var(--lc-bleu-50);
+  --color-selected-ink:     var(--lc-bleu-800);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --duration-fast:0ms; --duration-base:0ms; --duration-slow:0ms; }
+}

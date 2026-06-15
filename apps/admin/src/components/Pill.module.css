@@ -1,0 +1,41 @@
+/* Status pill — same treatment as the EHPAD Chip: pill, heading font, 14px floor,
+   soft tinted fill + matching ink. Colour is always paired with text (never alone). */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body-sm);
+  letter-spacing: var(--ls-normal);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.neutral {
+  background: var(--lc-neutral-100);
+  color: var(--color-text-secondary);
+}
+.info {
+  background: var(--color-info-soft);
+  color: var(--lc-bleu-800);
+}
+.progress {
+  background: var(--lc-vert-50);
+  color: var(--lc-vert-700);
+}
+.warning {
+  background: var(--color-warning-soft);
+  color: var(--lc-or-800);
+}
+.danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+.reward {
+  background: var(--lc-or-50);
+  color: var(--color-reward-strong);
+}

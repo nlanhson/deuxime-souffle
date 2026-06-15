@@ -1,0 +1,147 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  border-radius: var(--radius-pill); /* pill — shared with the coach/EHPAD apps */
+  border: 1px solid transparent;
+  font-family: var(--font-body); /* Inter, normal case (no caps) */
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    filter var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.button[data-size='lg'] {
+  min-height: 52px;
+  padding: 0 var(--space-lg);
+}
+
+.button[data-size='md'] {
+  min-height: var(--touch-target-min);
+  padding: 0 var(--space-md);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.button:disabled:not([aria-busy='true']) {
+  cursor: not-allowed;
+  background: var(--lc-neutral-200);
+  color: var(--color-text-muted);
+  border-color: transparent;
+  box-shadow: none;
+  filter: none;
+}
+
+.button:disabled[aria-busy='true'] {
+  cursor: progress;
+  opacity: 0.85;
+}
+
+/* Primary CTA — red→ember gradient + soft glow (the shared signature). One per view. */
+.button[data-variant='primary'] {
+  background: var(--gradient-cta);
+  color: var(--color-on-action);
+  box-shadow: var(--elevation-glow-action);
+}
+
+.button[data-variant='primary']:hover:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+.button[data-variant='primary']:active:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+/* Solid accent (red on the admin surface) — when an outline isn't enough. */
+.button[data-variant='accent'] {
+  background: var(--color-accent);
+  color: var(--color-on-action);
+}
+
+.button[data-variant='accent']:hover:not(:disabled) {
+  background: var(--color-action-active);
+}
+
+/* The default button: transparent, strong border, ink text. */
+.button[data-variant='secondary'] {
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+}
+
+.button[data-variant='secondary']:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+}
+
+/* Ghost: accent text, no fill — the accent already reads as "interactive". */
+.button[data-variant='ghost'] {
+  background: none;
+  color: var(--color-accent);
+  text-decoration: none;
+  text-underline-offset: 3px;
+}
+
+.button[data-variant='ghost']:hover:not(:disabled),
+.button[data-variant='ghost']:focus-visible:not(:disabled) {
+  color: var(--color-action-active);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+}
+
+/* Destructive: dark-red outline + explicit verb. */
+.button[data-variant='danger'] {
+  background: var(--color-surface);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.button[data-variant='danger']:hover:not(:disabled) {
+  background: var(--color-danger-soft);
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid currentcolor;
+  border-top-color: transparent;
+  animation: button-spin 720ms linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button:active:not(:disabled) {
+    transform: none;
+  }
+  .spinner {
+    animation: none;
+    border-top-color: currentcolor;
+    opacity: 0.6;
+  }
+}
+
+@keyframes button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
