@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavigationContainer, DarkTheme, type Theme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, type Theme } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { Animated, View } from 'react-native';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
@@ -8,30 +8,33 @@ import { Oswald_400Regular, Oswald_500Medium, Oswald_600SemiBold, Oswald_700Bold
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 
 import { RootTabs } from './src/navigation/RootTabs';
+import { BadgeCelebrationHost } from './src/components/BadgeCelebration';
 import { OnboardingFlow } from './src/navigation/OnboardingFlow';
 import { PendingApprovalScreen } from './src/screens/PendingApprovalScreen';
+import { AcceptedScreen } from './src/screens/AcceptedScreen';
 import { AuthProvider, useAuth } from './src/auth/AuthContext';
+import { LocaleProvider } from './src/i18n';
 import { surfaces, color, palette } from './src/theme/theme';
 import { useReducedMotion } from './src/lib/useReducedMotion';
 import { ease, dur } from './src/lib/motion';
 
 const coach = surfaces.coach;
 
-// Le Club — coach (ink) navigation theme.
-const LeClubDark: Theme = {
-  ...DarkTheme,
+// Le Mouvement — coach (paper) navigation theme.
+const LeClubLight: Theme = {
+  ...DefaultTheme,
   colors: {
-    ...DarkTheme.colors,
+    ...DefaultTheme.colors,
     primary: color.action,
     background: coach.canvas,
     card: coach.canvas,
     text: coach.textPrimary,
-    border: palette.neutral[800],
+    border: palette.neutral[200],
     notification: color.action,
   },
 };
 
-type BranchKey = 'loading' | 'signedOut' | 'pending' | 'signedIn';
+type BranchKey = 'loading' | 'signedOut' | 'pending' | 'approved' | 'signedIn';
 
 function renderBranch(key: BranchKey) {
   switch (key) {
@@ -43,10 +46,14 @@ function renderBranch(key: BranchKey) {
       return <OnboardingFlow />;
     case 'pending':
       return <PendingApprovalScreen />; // PENDING_APPROVAL — app locked here
+    case 'approved':
+      return <AcceptedScreen />; // AUTH-07 — the welcome beat before the app
     case 'signedIn':
       return (
-        <NavigationContainer theme={LeClubDark}>
+        <NavigationContainer theme={LeClubLight}>
           <RootTabs />
+          {/* Badge unlock celebration — one host, overlays the whole signed-in app via a Modal. */}
+          <BadgeCelebrationHost />
         </NavigationContainer>
       );
   }
@@ -68,6 +75,8 @@ function Gate({ fontsLoaded }: { fontsLoaded: boolean }) {
     ? 'signedOut'
     : status === 'pending'
     ? 'pending'
+    : status === 'approved'
+    ? 'approved'
     : 'signedIn';
 
   const [shown, setShown] = useState<BranchKey>(target);
@@ -111,10 +120,12 @@ export default function App() {
     // (each is its own UIViewController, laid out edge-to-edge), so every tab rendered with a
     // zero top inset (status bar over content) and a collapsed height.
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-      <StatusBar style="light" />
-      <AuthProvider>
-        <Gate fontsLoaded={fontsLoaded} />
-      </AuthProvider>
+      <StatusBar style="dark" />
+      <LocaleProvider>
+        <AuthProvider>
+          <Gate fontsLoaded={fontsLoaded} />
+        </AuthProvider>
+      </LocaleProvider>
     </SafeAreaProvider>
   );
 }

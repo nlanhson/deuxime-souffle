@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { CheckCircle2, Info, OctagonX, TriangleAlert } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useStrings } from '@/i18n';
 import styles from './InlineAlert.module.css';
 
@@ -13,6 +14,8 @@ interface InlineAlertProps {
   action?: ReactNode | undefined;
   /** Pleine largeur, coller en tête de page (bannière factures en retard…). */
   banner?: boolean | undefined;
+  /** Remplace l'icône par défaut de la variante (ex. ampoule pour un conseil / aide). */
+  icon?: LucideIcon | undefined;
   /** Déplace le focus sur l'alerte à son apparition — pour les erreurs de
    *  soumission, afin qu'elles ne passent pas inaperçues (lectorat âgé / clavier).
    *  À réserver aux erreurs déclenchées par une action, jamais aux états de page. */
@@ -23,10 +26,10 @@ const ICONS = { info: Info, success: CheckCircle2, warning: TriangleAlert, dange
 
 /** Message persistant en contexte. L'icône + le mot désambiguïsent toujours la
  *  couleur — le danger utilise le rouge sombre + ⊗ + le mot « Erreur ». */
-export function InlineAlert({ variant, title, children, action, banner, autoFocus }: InlineAlertProps) {
+export function InlineAlert({ variant, title, children, action, banner, icon, autoFocus }: InlineAlertProps) {
   const fr = useStrings();
   const ref = useRef<HTMLDivElement>(null);
-  const Icon = ICONS[variant];
+  const Icon = icon ?? ICONS[variant];
   const role = variant === 'info' || variant === 'success' ? 'status' : 'alert';
   const heading = variant === 'danger' ? (title ?? fr.common.error) : title;
 

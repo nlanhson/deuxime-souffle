@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { TriangleAlert } from 'lucide-react';
+import { CalendarClock, Hourglass, Timer, TriangleAlert, Wallet } from 'lucide-react';
 import { useStrings } from '@/i18n';
 import * as api from '@/data/api';
 import { useDataVersion } from '@/context/DataContext';
@@ -190,6 +190,7 @@ export default function InvoicesScreen() {
           <div className={styles.statBand}>
             {Array.from({ length: 4 }, (_, i) => (
               <div key={i} className={styles.stat}>
+                <Skeleton height={28} width={28} radius="var(--radius-sm)" />
                 <Skeleton height={12} width="60%" radius="var(--radius-pill)" />
                 <Skeleton height={28} width="75%" radius="var(--radius-md)" />
               </div>
@@ -241,14 +242,23 @@ export default function InvoicesScreen() {
               impayé ouvre la bande = la réponse à « dois-je quelque chose ? ». */}
           <div className={styles.statBand}>
             <div className={styles.stat}>
+              <span className={styles.statIcon} data-accent="red" aria-hidden>
+                <Wallet />
+              </span>
               <p className={styles.statEyebrow}>{fr.invoices.kpi.unpaid}</p>
               <p className={styles.statNumber}>{formatEuro(computed.unpaidTotal)}</p>
             </div>
             <div className={styles.stat}>
+              <span className={styles.statIcon} data-accent="gold" aria-hidden>
+                <Hourglass />
+              </span>
               <p className={styles.statEyebrow}>{fr.invoices.kpi.awaiting}</p>
               <p className={styles.statNumber}>{computed.awaiting}</p>
             </div>
             <div className={styles.stat}>
+              <span className={styles.statIcon} data-accent="blue" aria-hidden>
+                <Timer />
+              </span>
               <p className={styles.statEyebrow}>{fr.invoices.kpi.avgDelay}</p>
               <p className={styles.statNumber}>
                 {computed.avgDelay ?? '—'}
@@ -258,6 +268,9 @@ export default function InvoicesScreen() {
               </p>
             </div>
             <div className={styles.stat}>
+              <span className={styles.statIcon} data-accent="green" aria-hidden>
+                <CalendarClock />
+              </span>
               <p className={styles.statEyebrow}>{fr.invoices.kpi.nextDue}</p>
               <p className={styles.statNumber}>
                 {computed.nextDue ? formatDate(computed.nextDue.dueDate) : fr.invoices.kpi.none}

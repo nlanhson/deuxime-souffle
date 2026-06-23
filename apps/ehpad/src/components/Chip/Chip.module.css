@@ -45,12 +45,21 @@
   color: var(--lc-or-800);
 }
 
+
 /* « En attente » : remplissage doux sans bordure, comme les autres puces (fond
    teinté clair + encre foncée assortie). Bleu très clair = « à venir / en file »,
    cohérent avec le système (bleu = informatif, vert = actif, ambre = attention). */
 .chip[data-variant='pending'] {
   background: var(--lc-bleu-50);
   color: var(--lc-bleu-700);
+}
+
+/* « En révision » (modification en cours d'examen) : même famille bleue qu'« En
+   attente » mais d'un cran plus soutenu (bleu-100 / bleu-800) pour se distinguer
+   au premier coup d'œil — la teinte ET le pictogramme (loupe) diffèrent. */
+.chip[data-variant='review'] {
+  background: var(--lc-bleu-100);
+  color: var(--lc-bleu-800);
 }
 
 .chip[data-variant='neutral'] {

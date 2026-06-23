@@ -16,6 +16,9 @@ export type ContractStatus =
 export type InvoiceStatus = 'en_attente' | 'en_retard' | 'payee';
 export type Frequency = 'hebdo' | 'bihebdo' | 'bimensuel' | 'mensuel' | 'ponctuel';
 export type SessionType = 'collective' | 'individuelle';
+/** DT-E3 — créneaux de disponibilité par type d'établissement :
+ *  EHPAD (matin 11 h–12 h, après-midi 14 h–17 h) vs structures souples (9 h–19 h). */
+export type AvailabilityProfile = 'ehpad' | 'etendu';
 
 export interface Address {
   line1: string;
@@ -118,6 +121,11 @@ export interface Contract {
   sessionType: SessionType;
   startDate: string;
   endDate: string;
+  /** DT-E5 — contrat « sans fin » (reconduction tacite). endDate garde une
+   *  échéance nominale pour la génération des séances, mais l'UI lit ce drapeau. */
+  openEnded?: boolean;
+  /** DT-E3 — profil de disponibilité prédéfini selon le type d'établissement. */
+  availabilityProfile?: AvailabilityProfile;
   availabilityNotes?: string;
   excludedSlots: ExcludedSlot[]; // CON-02
   rejectionReason?: string; // CON-06
@@ -269,8 +277,12 @@ export interface WizardData {
   weeklyExclusions: WeeklyExclusion[];
   specialPeriods: SpecialPeriod[];
   planningNotes: string;
+  /** DT-E3 — profil de disponibilité (défaut selon le type d'établissement). */
+  availabilityProfile: AvailabilityProfile;
   startDate: string | null;
   endDate: string | null;
+  /** DT-E5 — « contrat sans fin » : pas de date de fin (reconduction tacite). */
+  openEnded: boolean;
   selectedSlotId: string | null;
   removedSlotIds: string[];
 }

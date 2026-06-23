@@ -8,8 +8,9 @@
  *    "updated progressively after each completed session"
  *  · invoice/payment history grouped by month+year (sessions, amount, status, per-period export)
  *  · download the monthly financial summary as a PDF
- * Out of scope for V1: coach invoice *upload* (coaches email DS) — deliberately absent.
- * Per the WBS, this is an ACTIVITY REPORT, not an invoice.
+ *  · submit the coach's own invoice for the month — a file (the PDF received by e-mail) or a photo
+ * The payment HISTORY remains an ACTIVITY REPORT (not an invoice); the submit-invoice card is the
+ * separate channel for the coach to send DS their actual invoice.
  *
  * Surface = coach (locked DARK): ink canvas, dark cards, light in-card text — same vocabulary
  * as Accueil/Séances. The signature rouge→or gradient is reserved here for the earned/expected
@@ -20,35 +21,38 @@ import { Modal, View, Text, ScrollView, Pressable, StyleSheet } from 'react-nati
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   X, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Download,
-  Star, MapPin, Check, Hourglass, Clock, Banknote, type LucideIcon,
+  Star, MapPin, Check, Hourglass, Clock, Banknote,
+  FileText, Camera, CheckCircle2, Receipt, type LucideIcon,
 } from '../icons';
 
 import { palette, color, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
 import { copy } from '../copy';
 import { useFirstLoad } from '../lib/useFirstLoad';
 import { Reveal } from '../components/Reveal';
+import { OptionSheet, type SheetOption } from '../components/OptionSheet';
 import { RevenusSkeleton } from './skeletons';
 
 const S = surfaces.coach;                     // ink canvas / dark cards / light card text
-const BORDER_INK = palette.neutral[700];      // dividers / hairlines on ink
-const TRACK = palette.neutral[700];           // progress meter track
+const BORDER_INK = palette.neutral[200];      // dividers / hairlines on ink
+const TRACK = palette.neutral[200];           // progress meter track
 const MOVEMENT = [palette.rouge[500], palette.or[500]] as const; // signature gradient, 135°
 
 /* Home's raised-surface texture — a slight top-lit vertical gradient + a very dim white hairline,
    so cards read as raised glass. Copied from Accueil so the two screens feel like one family. */
-const RAISED_BORDER = 'rgba(255,255,255,0.07)';
+const RAISED_BORDER = 'rgba(24,23,21,0.07)';
 
 /* On-ink status colours — the semantic status tokens are tuned for light surfaces, so (as in
    Accueil/Séances) we reach into the global ramp for the ink variants. SPEC §4 proposes
    promoting these to coach-theme tokens. Used for both the trend chip and payment status. */
 const INK = {
-  ok:      { fg: palette.vert[300], bg: 'rgba(47,158,107,0.16)' },   // paid / trend up
-  pending: { fg: palette.or[300], bg: 'rgba(242,194,0,0.13)' },      // awaiting payment
-  info:    { fg: palette.bleu[200], bg: 'rgba(166,183,219,0.14)' },  // in progress (current month)
-  down:    { fg: palette.rouge[300], bg: 'rgba(225,50,43,0.14)' },   // trend down
+  ok:      { fg: palette.vert[700], bg: 'rgba(47,158,107,0.16)' },   // paid / trend up
+  pending: { fg: palette.or[800], bg: 'rgba(242,194,0,0.13)' },      // awaiting payment
+  info:    { fg: palette.bleu[700], bg: 'rgba(166,183,219,0.14)' },  // in progress (current month)
+  down:    { fg: palette.rouge[600], bg: 'rgba(225,50,43,0.14)' },   // trend down
 };
 
 const F = {
+  display: 'Anton_400Regular', // hero money totals (shared with Home) — Anton brand display face
   oswR: 'Oswald_400Regular',
   oswM: 'Oswald_500Medium',
   oswS: 'Oswald_600SemiBold',
@@ -127,6 +131,29 @@ const HISTORY: Period[] = [
 // € grouping — placeholder (en-US "1,260"); production formats with fr-FR from locale.
 const eur = (n: number) => n.toLocaleString('en-US');
 
+/* 3-month rolling revenue forecast (DT-15) — DS books sessions ~3 months ahead, so the coach's
+ * near-term income is largely projectable. M = current month (réalisé + prévu); M+1 / M+2 are
+ * projected-only. Independent of the month stepper (always the next 3 months from "now"). June
+ * matches the MONTHS data above (840 € earned + 1 260 € projected = 2 100 € expected). */
+const FORECAST = [
+  { key: 'jun', label: 'juin', earned: 840, projected: 1260 },
+  { key: 'jul', label: 'juil.', earned: 0, projected: 1890 },
+  { key: 'aug', label: 'août', earned: 0, projected: 1610 },
+];
+const FORECAST_MAX = Math.max(...FORECAST.map((f) => f.earned + f.projected)); // tallest bar = full track
+const FORECAST_BAR_H = 120;
+// Hero + average (Mint/Quicken pattern): the big 3-month total anchors the section; the average
+// drives both the dashed reference line in the chart and the summary line below it.
+const FORECAST_TOTAL = FORECAST.reduce((s, f) => s + f.earned + f.projected, 0);
+const FORECAST_AVG = Math.round(FORECAST_TOTAL / FORECAST.length);
+// Where the average reference line sits within the bar track (Quicken's average line, brand-styled).
+const FORECAST_AVG_H = Math.round((FORECAST_AVG / FORECAST_MAX) * FORECAST_BAR_H);
+const FORECAST_CAP = 6; // rounded bar tip
+// Forecast bars use the brand orange ("braise/ember" from ehpad/admin): solid = réalisé (banked),
+// light tint = prévu (projected). Same-hue solid/light split = Quicken's actual-vs-projected read.
+const EMBER = '#F5821F';
+const EMBER_SOFT = '#FBC089';
+
 /* ---------- small building blocks ---------- */
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -170,7 +197,7 @@ function Rating({ value }: { value: number | null }) {
   }
   return (
     <View style={st.ratingRow}>
-      <Star size={13} color={palette.or[400]} fill={palette.or[400]} />
+      <Star size={13} color={palette.or[800]} fill={palette.or[800]} />
       <Text style={st.ratingVal}>{value.toFixed(1)}</Text>
     </View>
   );
@@ -228,6 +255,20 @@ export function RevenusScreen({ visible, onClose }: { visible: boolean; onClose:
   const c = copy.earnings.screen;
   const loading = useFirstLoad('revenus', { active: visible, ms: 550 });
 
+  // Submitted invoices, keyed by month — coaches send their own invoice to DS (a file received by
+  // e-mail, or a photo). Mock-only: no real picker is wired; selecting a source records the method.
+  const [invoices, setInvoices] = React.useState<Record<string, 'file' | 'photo'>>({});
+  const [sourceOpen, setSourceOpen] = React.useState(false);
+  const submittedVia = invoices[m.key];
+  const ic = c.invoice;
+  const sourceOptions: SheetOption[] = [
+    { key: 'file', label: ic.fromFile, icon: FileText },
+    { key: 'photo', label: ic.fromPhoto, icon: Camera },
+    { key: 'library', label: ic.fromLibrary, icon: Receipt },
+  ];
+  const submitInvoice = (sourceKey: string) =>
+    setInvoices((prev) => ({ ...prev, [m.key]: sourceKey === 'file' ? 'file' : 'photo' }));
+
   const expected = m.earned + m.projected;                 // total the month is on track for
   const pct = expected > 0 ? Math.min(1, m.earned / expected) : 1;
   const up = m.trendPct >= 0;
@@ -237,8 +278,8 @@ export function RevenusScreen({ visible, onClose }: { visible: boolean; onClose:
   return (
     <Modal visible={visible} onRequestClose={onClose} animationType="slide" presentationStyle="pageSheet">
       <View style={{ flex: 1, backgroundColor: S.canvas }}>
-        {/* ===== Top bar — period + title left, close right. Opened from Home's "Earnings"
-             button (Revenus is no longer a tab — the WBS coach nav is 3 tabs). ===== */}
+        {/* ===== Top bar — period + title left, close right (cream, per request). Opened from
+             Home's "Earnings" button (Revenus is no longer a tab — coach nav is 3 tabs). ===== */}
         <View style={st.topbar}>
           <View style={{ flex: 1 }}>
             <Eyebrow>{c.eyebrow}</Eyebrow>
@@ -286,6 +327,13 @@ export function RevenusScreen({ visible, onClose }: { visible: boolean; onClose:
             <Text style={st.amountCur}>€</Text>
           </View>
 
+          {/* Supporting subline (DoorDash idiom) — mirrors Home's earnings card: the quiet
+              "projected to come" context sits under the big figure. Current month only (past
+              months are fully realised → no projection to preview). */}
+          {m.projected > 0 ? (
+            <Text style={st.heroSub}>{eur(m.projected)} € {c.projectedLabel}</Text>
+          ) : null}
+
           {/* earned → expected meter; gradient fill = realised share of the month */}
           <View style={st.meterTrack} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
             <LinearGradient
@@ -295,11 +343,12 @@ export function RevenusScreen({ visible, onClose }: { visible: boolean; onClose:
               style={[st.meterFill, { width: `${Math.round(pct * 100)}%` }]}
             />
           </View>
+          {/* On-bar endpoint labels (Monarch idiom, mirrors Home) — the filled part = Gagné (left),
+              the full track = attendu total (right). Projected moved up to the subline above. Past
+              months are fully realised → drop the left label (the bar is full). */}
           <View style={st.meterLegend}>
-            {/* Current month: "X € projected to come" on the left. Past months are fully
-                realised (no projection) → just the total, so we drop the redundant left label. */}
             {m.projected > 0 ? (
-              <Text style={st.metaLight}>{eur(m.projected)} € {c.projectedLabel}</Text>
+              <Text style={st.metaLight}>{copy.earnings.earned}</Text>
             ) : (
               <View />
             )}
@@ -312,7 +361,8 @@ export function RevenusScreen({ visible, onClose }: { visible: boolean; onClose:
           </Pressable>
         </LinearGradient>
 
-        {/* ===== Monthly breakdown — sessions · hours worked/scheduled · default rate ===== */}
+        {/* ===== Monthly breakdown — sessions · hours worked/scheduled. The hourly-rate tile was
+            removed (DT-05): the coach's rate is back-office-managed and never displayed. ===== */}
         <View style={st.statsRow}>
           <StatTile label={c.stat.sessions} value={String(m.completed)} unit={c.stat.sessionsUnit} />
           <StatTile
@@ -320,7 +370,135 @@ export function RevenusScreen({ visible, onClose }: { visible: boolean; onClose:
             value={`${m.hoursWorked}h`}
             unit={`${c.stat.scheduledPrefix} ${m.hoursScheduled}h ${c.stat.scheduledSuffix}`}
           />
-          <StatTile label={c.stat.rate} value={`${m.rate}€`} unit={c.stat.rateUnit} />
+        </View>
+
+        {/* ===== Submit my invoice (per month) — coaches send their own invoice to DS, either as a
+             file (the PDF received by e-mail) or a photo. One button opens a source sheet; once
+             sent, the card flips to a confirmation for the selected month. ===== */}
+        <View style={st.invoiceCard}>
+          {submittedVia ? (
+            <>
+              <View style={st.invoiceHead}>
+                <View style={[st.invoiceIcon, { backgroundColor: INK.ok.bg }]}>
+                  <CheckCircle2 size={20} color={INK.ok.fg} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={st.invoiceTitle}>{ic.submittedTitle}</Text>
+                  <Text style={st.invoiceSub} numberOfLines={1}>
+                    {m.label} · {ic.via[submittedVia]}
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => setSourceOpen(true)}
+                  hitSlop={8}
+                  style={({ pressed }) => [st.replaceBtn, pressed && { opacity: 0.7 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={ic.replaceA11y}
+                >
+                  <Text style={st.replaceTxt}>{ic.replace}</Text>
+                </Pressable>
+              </View>
+              <Text style={st.invoiceNote}>{ic.submittedNote}</Text>
+            </>
+          ) : (
+            <>
+              <View style={st.invoiceHead}>
+                <View style={[st.invoiceIcon, { backgroundColor: palette.neutral[200] }]}>
+                  <Receipt size={20} color={S.textPrimary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={st.invoiceTitle}>{ic.title}</Text>
+                  <Text style={st.invoiceNote}>{ic.note}</Text>
+                </View>
+              </View>
+              <Pressable
+                onPress={() => setSourceOpen(true)}
+                style={({ pressed }) => [st.invoiceBtn, pressed && { opacity: 0.85 }]}
+                accessibilityRole="button"
+                accessibilityLabel={ic.ctaA11y}
+              >
+                <FileText size={16} color={S.textPrimary} style={{ marginRight: 8 }} />
+                <Text style={st.invoiceBtnTxt}>{ic.cta}</Text>
+              </Pressable>
+            </>
+          )}
+        </View>
+
+        {/* ===== 3-month rolling revenue forecast (DT-15) — DS books ~3 months ahead, so the coach
+             can anticipate cash flow. Current month = réalisé + prévu (stacked); next two = projected.
+             Independent of the month stepper (always the next 3 months from now). ===== */}
+        <View style={st.section}>
+          <View style={st.secHead}>
+            <SectionTitle>{c.forecastTitle}</SectionTitle>
+          </View>
+          <Text style={st.sectionNote}>{c.forecastNote}</Text>
+
+          {/* Hero figure — the 3-month projected total, the number the coach is really here for
+              (Mint/Quicken lead with the big amount before the chart). */}
+          <View style={st.forecastHero}>
+            <Text style={st.forecastHeroLabel}>{c.forecastHeroLabel}</Text>
+            <View style={st.amountRow}>
+              <Text style={st.forecastHeroApprox}>≈ </Text>
+              <Text style={st.forecastHeroAmt}>{eur(FORECAST_TOTAL)}</Text>
+              <Text style={st.forecastHeroCur}>€</Text>
+            </View>
+          </View>
+
+          {/* Quicken-style column chart, flipped to rise from a baseline (income, not expense):
+              red→orange brand bars, the current month stacking réalisé (red) under prévu (orange);
+              a dashed average line crosses the columns. Amounts at the tips, months below. */}
+          <View style={st.forecastChart}>
+            {/* amounts at the bar tips */}
+            <View style={st.fRow} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              {FORECAST.map((f) => (
+                <Text key={f.key} style={st.forecastAmt}>{eur(f.earned + f.projected)} €</Text>
+              ))}
+            </View>
+            {/* bars + dashed average line + baseline axis */}
+            <View
+              style={st.barsRow}
+              accessible
+              accessibilityLabel={`${c.forecastA11y}. ${FORECAST.map((f) => `${f.label}, ${eur(f.earned + f.projected)} euros`).join('. ')}. ${c.forecastAvgLabel} ${eur(FORECAST_AVG)} euros ${c.forecastAvgUnit}.`}
+            >
+              {FORECAST.map((f) => {
+                const projH = Math.round((f.projected / FORECAST_MAX) * FORECAST_BAR_H);
+                const earnedH = Math.round((f.earned / FORECAST_MAX) * FORECAST_BAR_H);
+                return (
+                  <View key={f.key} style={st.barCell}>
+                    {projH > 0 ? <View style={[st.segProj, st.capTop, { height: projH }]} /> : null}
+                    {earnedH > 0 ? <View style={[st.segEarned, projH === 0 && st.capTop, { height: earnedH }]} /> : null}
+                  </View>
+                );
+              })}
+              <View pointerEvents="none" style={[st.avgLine, { bottom: FORECAST_AVG_H }]} />
+              <View pointerEvents="none" style={st.axis} />
+            </View>
+            {/* month labels */}
+            <View style={st.fRow} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              {FORECAST.map((f) => (
+                <Text key={f.key} style={st.forecastLbl}>{f.label}</Text>
+              ))}
+            </View>
+          </View>
+
+          {/* bar legend (red = réalisé, orange = prévu) */}
+          <View style={st.forecastLegend}>
+            <View style={st.legendItem}>
+              <View style={[st.legendSwatch, { backgroundColor: EMBER }]} />
+              <Text style={st.legendTxt}>{c.forecastEarned}</Text>
+            </View>
+            <View style={st.legendItem}>
+              <View style={[st.legendSwatch, { backgroundColor: EMBER_SOFT }]} />
+              <Text style={st.legendTxt}>{c.forecastProjected}</Text>
+            </View>
+          </View>
+
+          {/* Quicken-style average line key — the dashed marker echoes the chart's reference line. */}
+          <View style={st.avgSummary}>
+            <View style={st.avgDash} />
+            <Text style={st.avgSummaryLabel}>{c.forecastAvgLabel}</Text>
+            <Text style={st.avgSummaryVal}>{eur(FORECAST_AVG)} € {c.forecastAvgUnit}</Text>
+          </View>
         </View>
 
         {/* ===== Sessions contributing to this month ===== */}
@@ -335,7 +513,7 @@ export function RevenusScreen({ visible, onClose }: { visible: boolean; onClose:
                 <View style={{ flex: 1 }}>
                   <Text style={st.sessionPlace} numberOfLines={1}>{s.place}</Text>
                   <View style={st.sessionMeta}>
-                    <MapPin size={13} color={palette.neutral[400]} />
+                    <MapPin size={13} color={palette.neutral[500]} />
                     <Text style={st.sessionDate}>{s.date}</Text>
                     <View style={st.metaSep} />
                     <Rating value={s.rating} />
@@ -377,6 +555,17 @@ export function RevenusScreen({ visible, onClose }: { visible: boolean; onClose:
         </View>
         </ScrollView>
         </Reveal>
+
+        {/* Source picker for the invoice — file (e-mail/files) or photo. */}
+        <OptionSheet
+          visible={sourceOpen}
+          onClose={() => setSourceOpen(false)}
+          title={ic.sheetTitle}
+          help={ic.sheetHelp}
+          options={sourceOptions}
+          onSelect={submitInvoice}
+          closeA11y={ic.sheetCloseA11y}
+        />
       </View>
     </Modal>
   );
@@ -387,7 +576,7 @@ export function RevenusScreen({ visible, onClose }: { visible: boolean; onClose:
    inside the dark CARDS the text is the same light ramp (the cards are ink too). */
 const st = StyleSheet.create({
   eyebrow: {
-    fontFamily: F.body, fontSize: 13,
+    fontFamily: F.oswS, fontSize: 13, // Oswald — matches the header eyebrow on every other screen
     letterSpacing: 1, color: S.textSecondary,
   },
   // Section heading — same voice as Accueil's secTitle (Oswald, lightly tracked).
@@ -405,7 +594,7 @@ const st = StyleSheet.create({
     width: 44, height: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
     backgroundColor: S.surface,
   },
-  title: { fontFamily: F.bodyS, fontSize: 28, lineHeight: 32, color: S.textPrimary, marginTop: 2 },
+  title: { fontFamily: F.oswS, fontSize: 28, lineHeight: 32, color: S.textPrimary, marginTop: 2 }, // Oswald — matches every other screen's title
   iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   badgeDot: {
     position: 'absolute', top: 10, right: 10, width: 9, height: 9, borderRadius: 999,
@@ -434,9 +623,14 @@ const st = StyleSheet.create({
   },
   heroHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: sp.sm },
   amountRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4, marginTop: sp.sm },
-  // Oswald bold for money figures (Anton is now reserved for time only).
-  amountBig: { fontFamily: F.oswB, fontSize: 52, lineHeight: 64, color: S.textPrimary },
+  // Anton for the hero money total — the brand display face carries the big figures (DS decision
+  // 2026-06-18), shared with Home's "This month" hero. Supporting money (stats, per-session, bar
+  // tips) stays Oswald. The € is a quiet Oswald unit. includeFontPadding:false keeps the tall Anton
+  // glyphs off the line-box edges and baseline-aligned with the €.
+  amountBig: { fontFamily: F.display, fontSize: 56, lineHeight: 68, letterSpacing: 0.5, color: S.textPrimary, includeFontPadding: false },
   amountCur: { fontFamily: F.oswB, fontSize: 30, color: S.textSecondary },
+  // Supporting subline under the hero figure (DoorDash idiom, mirrors Home's earnings card).
+  heroSub: { fontFamily: F.body, fontSize: 13, color: S.textSecondary, marginTop: 4 },
 
   /* earned → expected meter */
   meterTrack: { height: 10, borderRadius: 999, backgroundColor: TRACK, overflow: 'hidden', marginTop: sp.sm },
@@ -448,7 +642,7 @@ const st = StyleSheet.create({
   /* export button — outline secondary (the gradient stays reserved for the progress meter) */
   exportBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    minHeight: 44, borderRadius: r.pill, marginTop: sp.lg,
+    minHeight: 44, borderRadius: r.button, marginTop: sp.lg,
     borderWidth: 1.5, borderColor: palette.neutral[600],
   },
   exportTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: S.textPrimary },
@@ -460,7 +654,62 @@ const st = StyleSheet.create({
   statTile: { flex: 1 },
   statLabel: { fontFamily: F.body, fontSize: 13, color: S.textSecondary },
   statValue: { fontFamily: F.oswB, fontSize: 28, lineHeight: 32, color: S.textPrimary, marginTop: 6 },
-  statUnit: { fontFamily: F.body, fontSize: 12, lineHeight: 15, color: S.textSecondary, marginTop: 6 },
+  statUnit: { fontFamily: F.body, fontSize: 13, lineHeight: 15, color: S.textSecondary, marginTop: 6 },
+
+  /* submit-invoice card — flat bordered card (house style: shadow reserved for overlays). The
+     outline CTA matches the hero's export button; the gradient stays reserved for the meter. */
+  invoiceCard: {
+    marginTop: sp.xl, borderRadius: r.xl, padding: sp.lg,
+    backgroundColor: S.surface, borderWidth: 1, borderColor: BORDER_INK,
+  },
+  invoiceHead: { flexDirection: 'row', alignItems: 'center', gap: sp.md },
+  invoiceIcon: { width: 40, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  invoiceTitle: { fontFamily: F.bodyS, fontSize: 17, color: S.textPrimary },
+  invoiceSub: { fontFamily: F.body, fontSize: 13, color: S.textSecondary, marginTop: 3 },
+  invoiceNote: { fontFamily: F.body, fontSize: 13, lineHeight: 18, color: S.textSecondary, marginTop: 4 },
+  invoiceBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    minHeight: 44, borderRadius: r.button, marginTop: sp.md,
+    borderWidth: 1.5, borderColor: palette.neutral[600],
+  },
+  invoiceBtnTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: S.textPrimary },
+  replaceBtn: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
+  replaceTxt: { fontFamily: F.bodyS, fontSize: 14, color: palette.bleu[700] }, // bleu = interactive
+
+  /* 3-month forecast (DT-15) — gold bars on the cream canvas: solid gold = réalisé, light gold =
+     prévu. A faint track gives a max reference; each bar fills it from the bottom. Amounts align at
+     the top, month labels at the bottom, so the three read as a clean little column chart. */
+  // Hero figure above the chart — the 3-month projected total (Mint/Quicken lead-with-the-number).
+  forecastHero: { marginTop: sp.sm },
+  forecastHeroLabel: { fontFamily: F.body, fontSize: 13, letterSpacing: 0.4, color: S.textSecondary },
+  forecastHeroApprox: { fontFamily: F.oswM, fontSize: 24, color: S.textSecondary, alignSelf: 'flex-end', marginBottom: 6 },
+  // 3-month total — the screen's other hero figure → Anton, matching the month-earned hero above.
+  forecastHeroAmt: { fontFamily: F.display, fontSize: 42, lineHeight: 51, letterSpacing: 0.5, color: S.textPrimary, includeFontPadding: false },
+  forecastHeroCur: { fontFamily: F.oswB, fontSize: 24, color: S.textSecondary },
+  /* 3-month forecast (DT-15) — Quicken-style column chart, flipped to rise from a baseline axis.
+     Red→orange brand bars: solid red = réalisé (banked), orange = prévu (projected). A dashed
+     average line crosses the columns. Amounts align at the tips, month labels at the bottom. */
+  forecastChart: { marginTop: sp.lg },
+  fRow: { flexDirection: 'row' },
+  forecastAmt: { flex: 1, textAlign: 'center', fontFamily: F.oswB, fontSize: 16, color: S.textPrimary, marginBottom: 8 },
+  barsRow: { flexDirection: 'row', height: FORECAST_BAR_H, alignItems: 'flex-end', position: 'relative' },
+  barCell: { flex: 1, height: FORECAST_BAR_H, alignItems: 'center', justifyContent: 'flex-end' },
+  segProj: { width: 46, backgroundColor: EMBER_SOFT },
+  segEarned: { width: 46, backgroundColor: EMBER },
+  capTop: { borderTopLeftRadius: FORECAST_CAP, borderTopRightRadius: FORECAST_CAP },
+  // Dashed average reference line + the baseline axis the bars stand on.
+  avgLine: { position: 'absolute', left: sp.sm, right: sp.sm, height: 0, borderTopWidth: 1.5, borderColor: palette.neutral[600], borderStyle: 'dashed', zIndex: 2 },
+  axis: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 1.5, borderRadius: 999, backgroundColor: palette.neutral[300] },
+  forecastLbl: { flex: 1, textAlign: 'center', fontFamily: F.body, fontSize: 13, color: S.textSecondary, marginTop: 8 },
+  forecastLegend: { flexDirection: 'row', justifyContent: 'center', gap: sp.lg, marginTop: sp.md },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendSwatch: { width: 12, height: 12, borderRadius: 3 },
+  legendTxt: { fontFamily: F.body, fontSize: 13, color: S.textSecondary },
+  // Quicken-style average summary — the dashed marker echoes the chart's reference line.
+  avgSummary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: sp.sm },
+  avgDash: { width: 16, height: 0, borderTopWidth: 1.5, borderColor: palette.neutral[600], borderStyle: 'dashed' },
+  avgSummaryLabel: { fontFamily: F.body, fontSize: 13, color: S.textSecondary },
+  avgSummaryVal: { fontFamily: F.bodyS, fontSize: 13, color: S.textPrimary },
 
   /* sections */
   section: { marginTop: sp.xl },
@@ -474,18 +723,18 @@ const st = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: 5, paddingHorizontal: 10, borderRadius: r.pill,
   },
-  chipTxt: { fontFamily: F.body, fontSize: 12 },
+  chipTxt: { fontFamily: F.body, fontSize: 13 },
 
   /* session rows */
   sessionRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: sp.md },
   rowDivider: { borderTopWidth: 1, borderTopColor: BORDER_INK },
   sessionPlace: { fontFamily: F.bodyS, fontSize: 17, color: S.textPrimary },
   sessionMeta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  sessionDate: { fontFamily: F.body, fontSize: 13, color: palette.neutral[300] },
+  sessionDate: { fontFamily: F.body, fontSize: 13, color: palette.neutral[600] },
   metaSep: { width: 3, height: 3, borderRadius: 999, backgroundColor: palette.neutral[500] },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  ratingVal: { fontFamily: F.bodyS, fontSize: 13, color: palette.or[300] },
-  ratingNone: { fontFamily: F.body, fontSize: 13, color: palette.neutral[400] },
+  ratingVal: { fontFamily: F.bodyS, fontSize: 13, color: palette.or[800] }, // DT-20: AA gold on light
+  ratingNone: { fontFamily: F.body, fontSize: 13, color: palette.neutral[600] },
   sessionAmount: { fontFamily: F.oswB, fontSize: 18, color: S.textPrimary },
 
   /* payment-history rows */
@@ -494,7 +743,7 @@ const st = StyleSheet.create({
   histSub: { fontFamily: F.body, fontSize: 14, color: S.textSecondary, marginTop: 2 },
   dlBtn: {
     width: 44, height: 44, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: palette.neutral[700],
+    backgroundColor: palette.neutral[200],
   },
   dlBtnGhost: { width: 44, height: 44 },
 });

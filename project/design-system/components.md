@@ -1,4 +1,4 @@
-# Le Club — Component Specs (deepened set)
+# Le Mouvement — Component Specs (deepened set)
 
 Companion to [`README.md` §5](README.md#L96), which specs the **expressive** starter set
 (Button, Chip/Badge, StatCard, ProgressBar, Medal). This doc specs the **workhorse**

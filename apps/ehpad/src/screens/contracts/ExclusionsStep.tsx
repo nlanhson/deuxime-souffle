@@ -1,15 +1,31 @@
 import { useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Check, Pencil, Plus, RotateCcw, Trash2, X } from 'lucide-react';
 import { useStrings } from '@/i18n';
 import { useToast } from '@/context/ToastContext';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatTime } from '@/lib/format';
 import { Button, DatePicker, RadioGroup, Select, Textarea, TextField } from '@/components';
-import type { SpecialPeriod, WizardData } from '@/types/models';
+import type { AvailabilityProfile, SpecialPeriod, WizardData } from '@/types/models';
 import styles from './contracts.module.css';
+
+/** Jours ouvrés cliquables (lun→ven) ; les week-ends sont prédéfinis indisponibles. */
+const WORK_DAYS = [0, 1, 2, 3, 4];
+
+/** DT-E3 — créneaux de séance par type d'établissement. EHPAD : matin court +
+ *  après-midi resserré ; structures souples : journée étendue. Heures brutes
+ *  rendues via `formatTime` (12 h am/pm, comme tout l'app EHPAD). */
+export const PROFILE_RANGES: Record<
+  AvailabilityProfile,
+  { morning: [string, string]; afternoon: [string, string] }
+> = {
+  ehpad: { morning: ['11:00', '12:00'], afternoon: ['14:00', '17:00'] },
+  etendu: { morning: ['09:00', '13:00'], afternoon: ['13:00', '19:00'] },
+};
+export const rangeText = (r: [string, string]) => `${formatTime(r[0])}–${formatTime(r[1])}`;
 
 type Dispatch = (action:
   | { type: 'patch'; patch: Partial<WizardData> }
   | { type: 'toggleWeekly'; weekday: number; part: 'matin' | 'apres_midi' }
+  | { type: 'blockRow'; part: 'matin' | 'apres_midi'; blocked: boolean }
   | { type: 'preset'; preset: 'wednesday' | 'mornings' | 'monfri' }
   | { type: 'resetExclusions' }
   | { type: 'addPeriod'; period: SpecialPeriod }
@@ -50,48 +66,44 @@ export function ExclusionsStep({ data, dispatch }: { data: WizardData; dispatch:
     showToast({ message: copy.periodSaved });
   };
 
+  const ranges = PROFILE_RANGES[data.availabilityProfile];
+
   return (
     <>
-      <h3 className={styles.summaryTitle}>{copy.title}</h3>
-      <p className={styles.muted}>{copy.intro}</p>
+      <h3 className={styles.stepTitle}>{fr.contracts.wizard.indisposTitle}</h3>
+      <p className={styles.stepIntro}>{fr.contracts.wizard.indisposIntro}</p>
 
-      {/* Grille hebdomadaire jour × matin/après-midi */}
-      <div className={styles.exGrid} role="group" aria-label={copy.gridCaption}>
-        <span aria-hidden />
-        {fr.weekdaysShort.map((day) => (
-          <span key={day} className={styles.exHead} aria-hidden>
-            {day}
-          </span>
-        ))}
-        {(['matin', 'apres_midi'] as const).map((part) => (
-          <div key={part} className={styles.exRowGroup}>
-            <span className={styles.exRowLabel}>
-              {part === 'matin' ? copy.morning : copy.afternoon}
-            </span>
-            {Array.from({ length: 7 }, (_, weekday) => {
-              const blocked = isBlocked(weekday, part);
-              return (
-                <button
-                  key={weekday}
-                  type="button"
-                  className={styles.exCell}
-                  aria-pressed={blocked}
-                  aria-label={`${fr.weekdays[weekday]} ${part === 'matin' ? copy.morning : copy.afternoon}, ${blocked ? copy.blocked : copy.available}`}
-                  onClick={() => dispatch({ type: 'toggleWeekly', weekday, part })}
-                >
-                  {blocked ? copy.blocked : copy.available}
-                </button>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+      {/* 1 — Plage horaire de l'établissement (DT-E3) : les créneaux de la grille en découlent. */}
+      <section className={styles.indisposSection}>
+        <h4 className={styles.sectionNumTitle}>{copy.section1}</h4>
+        <div className={styles.profileBlock}>
+          <RadioGroup<AvailabilityProfile>
+            legend={copy.profileTitle}
+            value={data.availabilityProfile}
+            onChange={(availabilityProfile) =>
+              dispatch({ type: 'patch', patch: { availabilityProfile } })
+            }
+            options={[
+              {
+                value: 'ehpad',
+                label: `${copy.profileEhpad} · ${copy.morning} ${rangeText(PROFILE_RANGES.ehpad.morning)} · ${copy.afternoon} ${rangeText(PROFILE_RANGES.ehpad.afternoon)}`,
+              },
+              {
+                value: 'etendu',
+                label: `${copy.profileEtendu} · ${formatTime('09:00')}–${formatTime('19:00')}`,
+              },
+            ]}
+          />
+          <p className={styles.mutedIntro}>{copy.profileIntro}</p>
+        </div>
+      </section>
 
-      {/* Raccourcis */}
-      <div>
-        <p className={styles.groupLabel}>
-          {copy.presets}
-        </p>
+      {/* 2 — Jours et demi-journées indisponibles : grille verte ✓ / rouge ✗,
+          week-ends prédéfinis, raccourcis (dont réinitialiser). */}
+      <section className={styles.indisposSection}>
+        <h4 className={styles.sectionNumTitle}>{copy.section2}</h4>
+        <p className={styles.mutedIntro}>{copy.section2Hint}</p>
+
         <div className={styles.presetRow}>
           <Button size="md" onClick={() => dispatch({ type: 'preset', preset: 'wednesday' })}>
             {copy.presetWednesday}
@@ -102,12 +114,105 @@ export function ExclusionsStep({ data, dispatch }: { data: WizardData; dispatch:
           <Button size="md" onClick={() => dispatch({ type: 'preset', preset: 'monfri' })}>
             {copy.presetMonFri}
           </Button>
+          <Button
+            size="md"
+            variant="ghost"
+            icon={RotateCcw}
+            onClick={() => {
+              dispatch({ type: 'resetExclusions' });
+              showToast({ message: copy.resetDone, kind: 'neutral' });
+            }}
+          >
+            {copy.presetReset}
+          </Button>
         </div>
-      </div>
 
-      {/* Périodes spéciales */}
-      <div>
-        <h4 className={styles.summaryTitle}>{copy.specialTitle}</h4>
+        <div className={styles.exGrid} role="group" aria-label={copy.gridCaption}>
+          <span aria-hidden />
+          {fr.weekdaysShort.map((day) => (
+            <span key={day} className={styles.exHead} aria-hidden>
+              {day}
+            </span>
+          ))}
+          {(['matin', 'apres_midi'] as const).map((part) => {
+            const partLabel = part === 'matin' ? copy.morning : copy.afternoon;
+            const allBlocked = WORK_DAYS.every((d) => isBlocked(d, part));
+            return (
+              <div key={part} className={styles.exRowGroup}>
+                <span className={styles.exRowLabel}>
+                  {/* Coche « tout bloquer » de la rangée (matin / après-midi des jours ouvrés). */}
+                  <label className={styles.blockRowCheck}>
+                    <input
+                      type="checkbox"
+                      className={styles.blockRowInput}
+                      checked={allBlocked}
+                      onChange={(e) => dispatch({ type: 'blockRow', part, blocked: e.target.checked })}
+                      aria-label={copy.blockRowAria(partLabel.toLowerCase())}
+                    />
+                    <span className={styles.blockRowBox} aria-hidden>
+                      <Check size={13} />
+                    </span>
+                  </label>
+                  <span className={styles.exRowLabelText}>
+                    {partLabel}
+                    <span className={styles.exRowRange}>
+                      {rangeText(part === 'matin' ? ranges.morning : ranges.afternoon)}
+                    </span>
+                  </span>
+                </span>
+                {Array.from({ length: 7 }, (_, weekday) => {
+                  if (!WORK_DAYS.includes(weekday)) {
+                    // Week-end : prédéfini indisponible, non interactif.
+                    return (
+                      <span
+                        key={weekday}
+                        className={styles.exCell}
+                        data-weekend
+                        role="img"
+                        title={copy.weekend}
+                        aria-label={`${fr.weekdays[weekday]} ${partLabel}, ${copy.weekend}`}
+                      >
+                        <X className={styles.exCellIcon} aria-hidden />
+                      </span>
+                    );
+                  }
+                  const blocked = isBlocked(weekday, part);
+                  return (
+                    <button
+                      key={weekday}
+                      type="button"
+                      className={styles.exCell}
+                      data-blocked={blocked || undefined}
+                      aria-pressed={blocked}
+                      aria-label={`${fr.weekdays[weekday]} ${partLabel}, ${blocked ? copy.blocked : copy.available}`}
+                      onClick={() => dispatch({ type: 'toggleWeekly', weekday, part })}
+                    >
+                      {blocked ? (
+                        <X className={styles.exCellIcon} aria-hidden />
+                      ) : (
+                        <Check className={styles.exCellIcon} aria-hidden />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+        <p className={styles.blockRowHint}>{copy.blockRowHint}</p>
+      </section>
+
+      {/* Note libre (facultatif) — placée entre la grille et les périodes (maquette). */}
+      <Textarea
+        label={copy.notesLabel}
+        value={data.planningNotes}
+        onChange={(planningNotes) => dispatch({ type: 'patch', patch: { planningNotes } })}
+        helper={copy.notesHelp}
+      />
+
+      {/* 3 — Périodes spéciales sur 12 mois (facultatif) */}
+      <section className={styles.indisposSection}>
+        <h4 className={styles.sectionNumTitle}>{copy.section3}</h4>
         <p className={styles.mutedIntro}>{copy.specialIntro}</p>
         {data.specialPeriods.map((period) => (
           <div key={period.id} className={styles.periodRow}>
@@ -219,21 +324,7 @@ export function ExclusionsStep({ data, dispatch }: { data: WizardData; dispatch:
             </div>
           </div>
         )}
-      </div>
-
-      <Button size="md" variant="ghost" onClick={() => {
-        dispatch({ type: 'resetExclusions' });
-        showToast({ message: copy.resetDone, kind: 'neutral' });
-      }}>
-        {copy.resetAll}
-      </Button>
-
-      <Textarea
-        label={`${copy.notesLabel}`}
-        value={data.planningNotes}
-        onChange={(planningNotes) => dispatch({ type: 'patch', patch: { planningNotes } })}
-        helper={copy.notesHelp}
-      />
+      </section>
 
       {/* Récapitulatif avant de continuer */}
       <div>

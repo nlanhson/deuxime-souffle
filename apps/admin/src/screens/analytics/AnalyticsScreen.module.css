@@ -1,0 +1,151 @@
+/* Period filter, right-aligned at the top of the Analytics tab body. */
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.tableCard {
+  padding: var(--space-lg);
+}
+.blockTitle {
+  font-size: var(--text-subheading);
+  font-weight: var(--weight-bold);
+  margin-bottom: var(--space-md);
+}
+.strong {
+  font-weight: var(--weight-semibold);
+}
+
+/* ---- Pricing ---- */
+.pricing {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: var(--space-xl);
+  align-items: center;
+}
+.pricingLead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  align-items: flex-start;
+}
+.pricingValue {
+  font-size: var(--text-h2);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-data-lead, var(--lc-or-600));
+  line-height: 1;
+}
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.barRow {
+  display: grid;
+  grid-template-columns: 140px 1fr auto;
+  align-items: center;
+  gap: var(--space-md);
+}
+.barLabel {
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+.barTrack {
+  height: 14px;
+  border-radius: var(--radius-pill);
+  background: var(--lc-neutral-100);
+  overflow: hidden;
+}
+.barFill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-info);
+}
+.barCount {
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  min-width: 3ch;
+  text-align: end;
+}
+
+/* ---- Groups ---- */
+.groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-md);
+}
+.groupCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  align-items: flex-start;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+}
+.groupRevenue {
+  font-size: var(--text-h3);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Top lists ---- */
+.topList {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.topRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+.topRow:first-child {
+  border-top: none;
+}
+.rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  background: var(--lc-neutral-100);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.topName {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+}
+.topRating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-body-sm);
+  font-variant-numeric: tabular-nums;
+}
+.star {
+  color: var(--lc-or-500);
+  fill: var(--lc-or-500);
+}
+
+@media (max-width: 720px) {
+  .pricing {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+  .barRow {
+    grid-template-columns: 110px 1fr auto;
+  }
+}

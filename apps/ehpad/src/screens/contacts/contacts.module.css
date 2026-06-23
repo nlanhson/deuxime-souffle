@@ -145,6 +145,34 @@
   color: var(--color-text-primary);
 }
 
+/* Annuaire « vrai site » : photo en tête, texte (fonction → nom → autres rôles)
+   à droite. Le visage mène, la pastille d'icône générique disparaît. */
+.identity {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
+
+.identityText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+/* « Contact principal » : libellé doré (or-800 = AA sur blanc) + petite étoile. */
+.leadLabelPrincipal {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--lc-or-800);
+}
+
+.principalStar {
+  width: 14px;
+  height: 14px;
+}
+
 .name {
   font-family: var(--font-heading);
   font-weight: var(--weight-semibold);

@@ -1,0 +1,78 @@
+{
+  "projectId": "bb5f11e1-1c80-4e88-b502-ed6c7fa6da1f",
+  "shape": "package",
+  "pkg": "coach",
+  "globalName": "CoachDS",
+  "srcDir": "src",
+  "buildCmd": "node apps/coach/.ds-dist/build-all.mjs",
+  "docsDir": "../../.design-sync/docs",
+  "extraFonts": [
+    ".ds-dist/fonts.css"
+  ],
+  "componentSrcMap": {
+    "AbsenceModal": "src/components/AbsenceModal.tsx",
+    "ActionModal": "src/components/ActionModal.tsx",
+    "AuthTextField": "src/components/AuthTextField.tsx",
+    "AvailableDetailModal": "src/components/AvailableDetailModal.tsx",
+    "AvailableTodayModal": "src/components/AvailableTodayModal.tsx",
+    "BlankScreen": "src/components/BlankScreen.tsx",
+    "BottomSheet": "src/components/BottomSheet.tsx",
+    "CalendarLegend": "src/components/CalendarLegend.tsx",
+    "CancelModal": "src/components/CancelModal.tsx",
+    "CheckInModal": "src/components/CheckInModal.tsx",
+    "FieldEditSheet": "src/components/FieldEditSheet.tsx",
+    "GoogleButton": "src/components/GoogleButton.tsx",
+    "GoogleMark": "src/components/GoogleMark.tsx",
+    "GradientFill": "src/components/GradientFill.tsx",
+    "HalfDayScheduleSheet": "src/components/HalfDayScheduleSheet.tsx",
+    "InkHeader": "src/components/InkHeader.tsx",
+    "LevelCard": "src/components/LevelCard.tsx",
+    "Logo": "src/components/Logo.tsx",
+    "MultiSelectSheet": "src/components/MultiSelectSheet.tsx",
+    "NextSessionDetailModal": "src/components/NextSessionDetailModal.tsx",
+    "NotificationCenter": "src/components/NotificationCenter.tsx",
+    "OptionSheet": "src/components/OptionSheet.tsx",
+    "PrimaryButton": "src/components/PrimaryButton.tsx",
+    "ProfileAvatar": "src/components/ProfileAvatar.tsx",
+    "Reveal": "src/components/Reveal.tsx",
+    "ScoreCard": "src/components/ScoreCard.tsx",
+    "SecondaryButton": "src/components/SecondaryButton.tsx",
+    "Segmented": "src/components/segmented/Segmented.tsx",
+    "SelectField": "src/components/SelectField.tsx",
+    "SessionMap": "src/components/SessionMap.tsx",
+    "Skeleton": "src/components/Skeleton.tsx",
+    "SkeletonCircle": "src/components/Skeleton.tsx",
+    "SkeletonProvider": null,
+    "SliderSheet": "src/components/SliderSheet.tsx",
+    "StepProgress": "src/components/StepProgress.tsx"
+  },
+  "overrides": {
+    "NotificationCenter": {
+      "cardMode": "single",
+      "primaryStory": "Open"
+    },
+    "BlankScreen": {
+      "cardMode": "single",
+      "primaryStory": "Default"
+    },
+    "Segmented": {
+      "cardMode": "column"
+    },
+    "SelectField": {
+      "cardMode": "column"
+    },
+    "StepProgress": {
+      "cardMode": "column"
+    },
+    "Reveal": {
+      "cardMode": "column"
+    },
+    "Skeleton": {
+      "cardMode": "column"
+    },
+    "SkeletonCircle": {
+      "cardMode": "column"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}

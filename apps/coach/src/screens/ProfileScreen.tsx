@@ -1,769 +1,478 @@
 /**
- * Coach · Profile (C06) — the coach's personal space.
+ * Coach · Profil — the 4th bottom-nav tab. ONE combined surface: the coach's identity AND their
+ * progression (the tier ladder + matching score). The user asked to fold the whole gamification
+ * page into the profile, so there's no longer a separate "Progression" screen or a level-card modal —
+ * it all lives here, one scroll.
  *
- * Opened from the header avatar (locked IA: Profil lives top-right, NOT in the bottom nav),
- * so — like the Notification center — it is presented as an iOS pageSheet modal (slides up,
- * swipe-to-dismiss) rather than a tab/route. It is the HUB that gathers everything that isn't
- * a day-to-day task:
- *   · identity + account status (WBS E01 — Active / Pending / Rejected)
- *   · Availability & travel preferences (PLA-08 / S18) — the section the matching algorithm
- *     (E05) depends on; the IA decision moved C15 under Profil, with a staleness nudge here
- *     (and, separately, on Home) when it goes old.
- *   · Goals & rate — desired monthly volume + flexibility, default hourly rate
- *   · My documents — CV, URSSAF certificate, insurance, APA diploma (account-validation set)
- *   · Account — personal info, Google Calendar sync (OAuth2), change password
- *   · Support — help, contact us, app version
- *   · Log out (E01: 30-day session, manual logout)
+ * Layout — "Proud identity on an ink stage" (calm cream body below):
+ *  • INK HERO (bleeds under the status bar): an identity row (photo — tap to change · name · role ·
+ *    Active status · a Settings GEAR top-right → SettingsScreen), then the tier centrepiece — a big
+ *    rouge→or medal in the current rung's glyph, the Anton TIER NAME, the meter toward the next rung
+ *    and a streak chip.
+ *  • CREAM BODY: a NEXT-TIER spotlight, the rung COLLECTION preview (→ the full Médailles page), the
+ *    stat band, the coach score, and the how-to + recognition note.
+ *  • A one-shot first-load CHOREOGRAPHY (medal spring, meters sweeping from 0, tiles staggering in)
+ *    that vanishes ENTIRELY under Reduce Motion. The ink hero scrolls with the page; the status bar
+ *    flips light→dark as the hero scrolls past. Recognition only — none of it affects pay (DT-06).
  *
- * EVERY row is functional: profile data lives in component state, so edits reflect live. Quick
- * choices/confirms use the shared BottomSheet (OptionSheet / ActionModal); multi-field edits use
- * the keyboard-safe FieldEditSheet. Editing or confirming availability resets the staleness clock
- * (the matching-freshness loop). Photo pick + document upload are mocked — no native picker is
- * wired in the prototype (real code adds expo-image-picker / a document picker + the backend).
- *
- * Per the client mismatch review (2026-06): gamification is now IN (GAME-01/02 — the
- * Progression & activity section links to Badges & level), alongside report history (SESS-05),
- * facility feedback (SESS-06) and the delete-account request (AUTH-14). Availability follows
- * PLA-08/09: half-day schedule, 10–90 min travel-time slider, Car + Two-wheel vehicle transport,
- * primary + secondary departure addresses. Field lists trace to the brief; the LAYOUT is a
- * reasoned synthesis pending the coach video + approved Figma. UI text comes from ../copy (the
- * localization seam).
- *
- * Surface = coach. Scheme-robust like Séances/Disponibles: reads the scheme off the token and
- * uses only tokens valid in both variants + the palette. Content cards are the dark "ink
- * component"; text inside them is light.
+ * Everything that isn't identity or progression — availability, goals, documents, account, language,
+ * support, log out — sits behind the gear (SettingsScreen). Photo pick is mocked. UI text from ../i18n.
  */
 import React from 'react';
-import { Modal, View, Text, Image, ScrollView, Pressable, StyleSheet, Linking } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
-  X, ChevronRight, CalendarClock, Clock, Car, Bike, Footprints, MapPin, Map, CalendarX, Target, Wallet,
-  FileText, ScrollText, ShieldCheck, GraduationCap, User, CalendarCheck, KeyRound,
-  CircleHelp, Mail, CheckCircle2, LogOut, Camera, Edit3, Trophy, ClipboardList, MessageSquare,
-  Trash2, type LucideIcon,
-} from '../icons';
+  View, Text, Image, ScrollView, StyleSheet, Animated, Pressable, useWindowDimensions,
+  type NativeScrollEvent, type NativeSyntheticEvent,
+} from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect } from '@react-navigation/native';
+import { setStatusBarStyle } from 'expo-status-bar';
 
+import {
+  Settings, Camera, CheckCircle2, X, Flame, Users, CalendarDays, Trophy, ChevronRight,
+  type LucideIcon,
+} from '../icons';
 import { palette, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
-import { copy } from '../copy';
-import { PrimaryButton } from '../components/PrimaryButton';
-import { ProfileAvatar } from '../components/ProfileAvatar';
-import { COACH_PHOTO } from '../lib/coachProfile';
-import { ActionModal } from '../components/ActionModal';
-import { OptionSheet, type SheetOption } from '../components/OptionSheet';
-import { FieldEditSheet, type EditField, type EditChoice } from '../components/FieldEditSheet';
-import { SliderSheet } from '../components/SliderSheet';
-import { HalfDayScheduleSheet, type HalfDayValue } from '../components/HalfDayScheduleSheet';
-import { BadgesScreen } from './BadgesScreen';
-import { ReportHistoryScreen } from './ReportHistoryScreen';
-import { FeedbackScreen } from './FeedbackScreen';
-import { useAuth } from '../auth/AuthContext';
+import { ease, dur } from '../lib/motion';
+import { useCopy } from '../i18n';
 import { useFirstLoad } from '../lib/useFirstLoad';
+import { useReducedMotion } from '../lib/useReducedMotion';
+import { useChoreography } from '../lib/useChoreography';
 import { Reveal } from '../components/Reveal';
-import { ProfileSkeleton } from './skeletons';
+import { BadgesSkeleton } from './skeletons';
+import { ScoreCard } from '../components/ScoreCard';
+import { InkHeader } from '../components/InkHeader';
+import { HeroMedal } from '../components/HeroMedal';
+import { AnimatedMeterFill } from '../components/AnimatedMeterFill';
+import { EarnedTile, LockedTile, type Anim } from '../components/BadgeTiles';
+import { OptionSheet, type SheetOption } from '../components/OptionSheet';
+import { ProfileAvatar } from '../components/ProfileAvatar';
+import { COACH_PHOTO, COACH_NAME } from '../lib/coachProfile';
+import { MedaillesScreen } from './MedaillesScreen';
+import { SettingsScreen } from './SettingsScreen';
+import { useTabBarInset } from '../navigation/tabBarInsets';
+import {
+  TIERS, TIER_COUNT, STREAK, RESIDENTS,
+  currentTier, nextTier, sessionsToNext, tierProgress, isTierReached,
+} from '../lib/gamification';
+import { useCompletedSessions } from '../lib/badgeCelebration';
 
 const S = surfaces.coach;
-const isDark = S.colorScheme === 'dark';
-const CANVAS = S.canvas;
-const SUBTLE = isDark ? palette.neutral[800] : palette.neutral[100];
+const INK = S.ink;
 const ON_CANVAS = S.textPrimary;
 const ON_CANVAS_2 = S.textSecondary;
-const ON_CARD = palette.neutral[50];
-const ON_CARD_2 = palette.neutral[300];
-const ON_CARD_3 = palette.neutral[500];
-
-/* On-ink tones (semantic status tokens are tuned for light surfaces — same approach as the
-   other coach screens). */
-const INK = {
-  ok:      { fg: palette.vert[300], bg: 'rgba(47,158,107,0.16)' }, // active / verified / connected
-  pending: { fg: palette.or[300], bg: 'rgba(242,194,0,0.13)' },    // document pending / stale nudge
-};
+const ON_CARD = palette.neutral[900];
+const ON_CARD_2 = palette.neutral[600];
+const HAIR = 'rgba(24,23,21,0.07)';
+const GOLD = palette.or[300];          // bright gold — FILLS / gold-on-ink foreground
+const GOLD_FG = palette.or[800];       // dark gold — gold FOREGROUNDS on paper (AA)
+const GOLD_WASH = 'rgba(242,194,0,0.13)';
+const GAP_FG = palette.rouge[600];     // the "engine" red — the actionable gap (AA on white)
+const INK_TRACK = 'rgba(255,255,255,0.14)';
+const INK_RAISED = 'rgba(255,255,255,0.06)';
+const OK_INK = { fg: palette.vert[300], bg: 'rgba(47,158,107,0.18)' }; // Active chip, on ink
 
 const F = {
+  display: 'Anton_400Regular',
   oswS: 'Oswald_600SemiBold',
+  oswB: 'Oswald_700Bold',
   body: 'Inter_400Regular',
   bodyS: 'Inter_600SemiBold',
+  bodyB: 'Inter_700Bold',
 };
 
 // No native image picker is wired in the prototype, so "Choose a photo" re-applies the coach's
-// real portrait. Real code replaces this with expo-image-picker → upload → the returned URL
-// (PRD §5 "avatars"). Shared with the header avatars via COACH_PHOTO.
+// real portrait. Real code replaces this with expo-image-picker → upload → the returned URL.
 const DEMO_PHOTO = COACH_PHOTO;
 
-const STALE_AFTER_DAYS = 3;
+/* ---------- entrance wrapper (opacity + tiny rise; native driver, separate from meter fills) ---------- */
 
-type DocKey = 'cv' | 'urssaf' | 'insurance' | 'diploma';
-type DocStatus = 'verified' | 'pending';
-type FieldKind = 'vehicle' | 'departure' | 'areas' | 'unavailability' | 'rate' | 'target' | 'personal' | 'password';
-type SheetKind =
-  | 'avatar' | 'schedule' | 'transport' | 'travel' | 'field'
-  | 'confirmAvail' | 'gcal' | 'doc' | 'logout' | 'about' | 'delete' | 'deleteDone';
-
-// Travel-time slider bounds (WBS PLA-08: slider, 10–90 minutes).
-const TRAVEL = { min: 10, max: 90, step: 5 };
-
-// Format the half-day slots for the row value: full day → "Mon"; one half → "Mon (am)".
-// The (am)/(pm) tags are data formatting (like dates/km), composed in-component.
-function formatSlots(slots: HalfDayValue, order: readonly string[], notSet: string): string {
-  const parts = order
-    .map((d) => {
-      const s = slots[d];
-      if (!s || (!s.am && !s.pm)) return null;
-      if (s.am && s.pm) return d;
-      return `${d} (${s.am ? 'matin' : 'aprèm'})`;
-    })
-    .filter(Boolean);
-  return parts.length ? parts.join(' · ') : notSet;
+function Entrance({ delay, anim, style, children }: { delay: number; anim: Anim; style?: any; children: React.ReactNode }) {
+  const v = React.useRef(new Animated.Value(anim.animate ? 0 : 1)).current;
+  const started = React.useRef(false);
+  React.useEffect(() => {
+    if (!anim.animate || started.current || !anim.play) return;
+    started.current = true;
+    Animated.timing(v, { toValue: 1, duration: dur.base, delay, easing: ease.out, useNativeDriver: true }).start();
+  }, [anim.animate, anim.play, delay, v]);
+  React.useEffect(() => { if (!anim.animate) v.setValue(1); }, [anim.animate, v]);
+  const translateY = v.interpolate({ inputRange: [0, 1], outputRange: [6, 0] });
+  return <Animated.View style={[style, { opacity: v, transform: [{ translateY }] }]}>{children}</Animated.View>;
 }
 
-type ProfileData = {
-  name: string;
-  email: string;
-  phone: string;
-  photoUrl: string | null;
-  gcalConnected: boolean;
-  updatedDaysAgo: number;
-  deleteRequested: boolean;
-  av: {
-    slots: HalfDayValue;
-    travelMin: number;
-    transport: string;
-    /** Primary first; an optional secondary departure point follows (PLA-08). */
-    departures: string[];
-    areas: string;
-    unavailability: string;
-  };
-  goals: { target: string; flexibility: string; rate: string };
-  docs: Record<DocKey, DocStatus>;
-};
+/* ---------- stat tile ---------- */
 
-const INITIAL: ProfileData = {
-  name: 'Karim Benali',
-  email: 'karim.benali@email.com',
-  phone: '+33 6 12 34 56 78',
-  photoUrl: COACH_PHOTO,
-  gcalConnected: true,
-  updatedDaysAgo: 6,
-  deleteRequested: false,
-  av: {
-    slots: {
-      Lun: { am: true, pm: true },
-      Mar: { am: true, pm: true },
-      Mer: { am: true, pm: false },
-      Jeu: { am: true, pm: true },
-      Ven: { am: false, pm: true },
-      Sam: { am: false, pm: false },
-      Dim: { am: false, pm: false },
-    },
-    travelMin: 45,
-    transport: 'Voiture',
-    departures: ['12 rue de la République, Lyon 2e'],
-    areas: 'Lyon 3e · 6e · 7e · Villeurbanne',
-    unavailability: 'Aucune à venir',
-  },
-  goals: { target: '40', flexibility: 'Flexible', rate: '35' },
-  docs: { cv: 'verified', urssaf: 'verified', insurance: 'verified', diploma: 'verified' },
-};
-
-/* ---------- small building blocks ---------- */
-
-function Eyebrow({ children }: { children: React.ReactNode }) {
-  return <Text style={st.eyebrow}>{children}</Text>;
-}
-
-function Row({
-  icon: Icon, label, value, chip, first, onPress, tint,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value?: string;
-  chip?: React.ReactNode;
-  first?: boolean;
-  onPress?: () => void;
-  /** Label + icon colour override — the destructive rows (delete account), never colour alone. */
-  tint?: string;
-}) {
-  const a11y = value ? `${label}, ${value}` : label;
+function StatTile({ Icon, value, label, gold }: { Icon: LucideIcon; value: string | number; label: string; gold?: boolean }) {
   return (
-    <Pressable
-      style={({ pressed }) => [st.row, !first && st.rowDivider, pressed && { opacity: 0.85 }]}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={a11y}
-    >
-      <View style={st.rowIcon}>
-        <Icon size={18} color={tint ?? ON_CARD_2} />
+    <View style={st.statTile} accessible accessibilityLabel={`${value} ${label}`}>
+      <View style={[st.statChip, { backgroundColor: gold ? GOLD_WASH : palette.neutral[100] }]}>
+        <Icon size={16} color={gold ? GOLD_FG : ON_CARD_2} />
       </View>
-      {chip != null ? (
-        // Chip rows: the label grows and WRAPS to a 2nd line if long, so it never overlaps the
-        // chip; the chip + chevron keep their natural width, pinned right.
-        <>
-          <Text style={[st.rowLabel, st.rowLabelGrow, tint != null && { color: tint }]} numberOfLines={2}>{label}</Text>
-          <View style={st.rowChipRight}>
-            {chip}
-            <ChevronRight size={18} color={ON_CARD_3} />
-          </View>
-        </>
-      ) : (
-        // Value rows: short label; the (often long) value shrinks/ellipsizes on the right.
-        <>
-          <Text style={[st.rowLabel, tint != null && { color: tint }]} numberOfLines={2}>{label}</Text>
-          <View style={st.rowRight}>
-            {value ? <Text style={st.rowValue} numberOfLines={1}>{value}</Text> : null}
-            <ChevronRight size={18} color={ON_CARD_3} />
-          </View>
-        </>
-      )}
-    </Pressable>
-  );
-}
-
-function StatusChip({ tone, icon: Icon, label }: { tone: keyof typeof INK; icon: LucideIcon; label: string }) {
-  const t = INK[tone];
-  return (
-    <View style={[st.chip, { backgroundColor: t.bg }]}>
-      <Icon size={12} color={t.fg} />
-      {/* No numberOfLines — the chip must measure at full width so the label (not the chip) wraps. */}
-      <Text style={[st.chipTxt, { color: t.fg }]}>{label}</Text>
-    </View>
-  );
-}
-
-// Raised gradient card wrapper (the canonical heroCard idiom — gradient overlay + hairline).
-function Card({ children }: { children: React.ReactNode }) {
-  return (
-    <View style={st.card}>
-      <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
-      {children}
+      <Text style={st.statNum}>{value}</Text>
+      <Text style={st.statLabel} numberOfLines={2}>{label}</Text>
     </View>
   );
 }
 
 /* ---------- screen ---------- */
 
-export function ProfileScreen({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const c = copy.profile;
-  const { signOut } = useAuth();
-  // Log out only AFTER this page-sheet has finished dismissing: signOut() unmounts the whole
-  // signed-in branch, and tearing the tree down mid-dismiss leaves the native iOS sheet stuck on
-  // screen (so logout appeared to do nothing / landed on a blank screen). On logout we dismiss the
-  // sheet first, then sign out — fired by whichever lands first, the Modal's onDismiss or a timeout
-  // fallback (onDismiss can be flaky), guarded so it runs exactly once.
-  const pendingLogout = React.useRef(false);
-  const finishLogout = React.useCallback(() => {
-    if (!pendingLogout.current) return;
-    pendingLogout.current = false;
-    signOut();
-  }, [signOut]);
+export function ProfileScreen() {
+  const copy = useCopy();
+  const g = copy.game;          // gamification copy
+  const pc = copy.profile;      // identity + settings copy
+  const tabBarInset = useTabBarInset();
+  const { width, height } = useWindowDimensions();
+  const loading = useFirstLoad('profile');
+  const reduced = useReducedMotion();
+  const anim = useChoreography(loading, reduced);
+  const insets = useSafeAreaInsets();
 
-  const [p, setP] = React.useState<ProfileData>(INITIAL);
-  const [sheet, setSheet] = React.useState<SheetKind | null>(null);
-  const [fieldKind, setFieldKind] = React.useState<FieldKind>('departure');
-  const [docKey, setDocKey] = React.useState<DocKey>('cv');
-  // Progression & activity destinations (GAME-01/02, SESS-05/06) — full pageSheet modals.
-  const [badgesOpen, setBadgesOpen] = React.useState(false);
-  const [reportsOpen, setReportsOpen] = React.useState(false);
-  const [feedbackOpen, setFeedbackOpen] = React.useState(false);
-  const loading = useFirstLoad('profile', { active: visible, ms: 550 });
-
-  const close = () => setSheet(null);
-  const openField = (f: FieldKind) => { setFieldKind(f); setSheet('field'); };
-  const openDoc = (d: DocKey) => { setDocKey(d); setSheet('doc'); };
-
-  // Editing OR confirming availability resets the freshness clock (clears the stale nudge).
-  const markFresh = () => setP((s) => ({ ...s, updatedDaysAgo: 0 }));
-  const editAv = (patch: Partial<ProfileData['av']>) =>
-    setP((s) => ({ ...s, av: { ...s.av, ...patch }, updatedDaysAgo: 0 }));
-
-  const stale = p.updatedDaysAgo > STALE_AFTER_DAYS;
-  const ago =
-    p.updatedDaysAgo === 0
-      ? `${c.availability.updatedPrefix} ${c.availability.justNow}`
-      : `${c.availability.updatedPrefix} il y a ${p.updatedDaysAgo} ${p.updatedDaysAgo === 1 ? c.availability.dayAgo : c.availability.daysAgo}`;
-
-  const DOC_META: Record<DocKey, { label: string; Icon: LucideIcon }> = {
-    cv: { label: c.documents.cv, Icon: FileText },
-    urssaf: { label: c.documents.urssaf, Icon: ScrollText },
-    insurance: { label: c.documents.insurance, Icon: ShieldCheck },
-    diploma: { label: c.documents.diploma, Icon: GraduationCap },
-  };
-
-  const docChip = (k: DocKey) =>
-    p.docs[k] === 'verified'
-      ? <StatusChip tone="ok" icon={CheckCircle2} label={c.documents.status.verified} />
-      : <StatusChip tone="pending" icon={Clock} label={c.documents.status.pending} />;
-
-  // Compose the FieldEditSheet props for whichever field row was tapped.
-  const e = c.edit;
-  // Transport is a free string: one of the named modes, or a custom vehicle typed via "Other".
-  const NAMED_TRANSPORT = [e.transport.car, e.transport.twoWheel, e.transport.walking] as string[];
-  const isCustomTransport = !NAMED_TRANSPORT.includes(p.av.transport);
-  const fieldSheet: { title: string; fields: EditField[]; choice?: EditChoice; validate?: (v: Record<string, string>) => string | null; onSave: (v: Record<string, string>, ch?: string) => void } = (() => {
-    switch (fieldKind) {
-      case 'vehicle':
-        return { title: e.vehicle.title, fields: [{ key: 'v', label: e.vehicle.label, value: isCustomTransport ? p.av.transport : '', placeholder: e.vehicle.placeholder, autoCapitalize: 'sentences' }], onSave: (v) => editAv({ transport: v.v.trim() || e.transport.car }) };
-      case 'departure':
-        // Primary + optional secondary (PLA-08 "Departure addresses").
-        return {
-          title: e.departure.title,
-          fields: [
-            { key: 'primary', label: e.departure.primaryLabel, value: p.av.departures[0] ?? '', help: e.departure.help, autoCapitalize: 'words' },
-            { key: 'secondary', label: `${e.departure.secondaryLabel} (${e.departure.secondaryOptional})`, value: p.av.departures[1] ?? '', autoCapitalize: 'words' },
-          ],
-          onSave: (v) => {
-            const primary = v.primary.trim() || p.av.departures[0] || '';
-            const secondary = v.secondary.trim();
-            editAv({ departures: secondary ? [primary, secondary] : [primary] });
-          },
-        };
-      case 'areas':
-        return { title: e.areas.title, fields: [{ key: 'v', label: e.areas.label, value: p.av.areas, help: e.areas.help, autoCapitalize: 'words' }], onSave: (v) => editAv({ areas: v.v.trim() || p.av.areas }) };
-      case 'unavailability':
-        return { title: e.unavailability.title, fields: [{ key: 'v', label: e.unavailability.label, value: p.av.unavailability, help: e.unavailability.help, autoCapitalize: 'sentences' }], onSave: (v) => editAv({ unavailability: v.v.trim() || 'Aucune à venir' }) };
-      case 'rate':
-        return { title: e.rate.title, fields: [{ key: 'v', label: e.rate.label, value: p.goals.rate, keyboardType: 'number-pad' }], onSave: (v) => setP((s) => ({ ...s, goals: { ...s.goals, rate: v.v.trim() || s.goals.rate } })) };
-      case 'target':
-        return {
-          title: e.target.title,
-          fields: [{ key: 'v', label: e.target.label, value: p.goals.target, keyboardType: 'number-pad', help: e.target.help }],
-          choice: { label: e.target.flexibilityLabel, options: [e.target.strict, e.target.flexible], value: p.goals.flexibility },
-          onSave: (v, ch) => setP((s) => ({ ...s, goals: { ...s.goals, target: v.v.trim() || s.goals.target, flexibility: ch ?? s.goals.flexibility } })),
-        };
-      case 'personal':
-        return {
-          title: e.personal.title,
-          fields: [
-            { key: 'name', label: e.personal.name, value: p.name, autoCapitalize: 'words' },
-            { key: 'email', label: e.personal.email, value: p.email, keyboardType: 'email-address', autoCapitalize: 'none' },
-            { key: 'phone', label: e.personal.phone, value: p.phone, keyboardType: 'phone-pad' },
-          ],
-          onSave: (v) => setP((s) => ({ ...s, name: v.name.trim() || s.name, email: v.email.trim() || s.email, phone: v.phone.trim() || s.phone })),
-        };
-      case 'password':
-        return {
-          title: c.password.title,
-          fields: [
-            { key: 'cur', label: c.password.current, value: '', secureTextEntry: true, autoCapitalize: 'none' },
-            { key: 'next', label: c.password.next, value: '', secureTextEntry: true, autoCapitalize: 'none', help: c.password.help },
-            { key: 'conf', label: c.password.confirm, value: '', secureTextEntry: true, autoCapitalize: 'none' },
-          ],
-          validate: (v) => {
-            if (!v.cur || !v.next || !v.conf) return c.password.missing;
-            if (v.next.length < 8) return c.password.tooShort;
-            if (v.next !== v.conf) return c.password.mismatch;
-            return null;
-          },
-          onSave: () => {}, // prototype: no backend — validation + close is the feedback
-        };
-    }
-  })();
-
-  // Contact / help open the device's mail app / browser (RN Linking, like openDirections).
-  const openHelp = () => { Linking.openURL(c.links.helpUrl).catch(() => {}); };
-  const openContact = () => {
-    const url = `mailto:${c.links.contactEmail}?subject=${encodeURIComponent(c.links.contactSubject)}`;
-    Linking.openURL(url).catch(() => {});
-  };
-
+  // Identity / settings local state.
+  const [photoUrl, setPhotoUrl] = React.useState<string | null>(COACH_PHOTO);
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [avatarOpen, setAvatarOpen] = React.useState(false);
   const avatarOptions: SheetOption[] = [
-    { key: 'choose', label: c.avatarSheet.choose, icon: Camera },
-    ...(p.photoUrl ? [{ key: 'remove', label: c.avatarSheet.remove, icon: X, destructive: true } as SheetOption] : []),
+    { key: 'choose', label: pc.avatarSheet.choose, icon: Camera },
+    ...(photoUrl ? [{ key: 'remove', label: pc.avatarSheet.remove, icon: X, destructive: true } as SheetOption] : []),
   ];
 
-  const docStatus = p.docs[docKey];
+  // Status-bar polarity tracks the scrolling ink hero: LIGHT glyphs while the dark band sits behind
+  // the status bar, flipping to DARK once it scrolls past (cream behind). Reverts to dark on blur.
+  const heroH = React.useRef(0);
+  const barLight = React.useRef(true);
+  const focused = React.useRef(false);
+  const onScroll = React.useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const light = e.nativeEvent.contentOffset.y < heroH.current - insets.top - 2;
+    if (light !== barLight.current) {
+      barLight.current = light;
+      if (focused.current) setStatusBarStyle(light ? 'light' : 'dark');
+    }
+  }, [insets.top]);
+  useFocusEffect(React.useCallback(() => {
+    focused.current = true;
+    setStatusBarStyle(barLight.current ? 'light' : 'dark');
+    return () => { focused.current = false; setStatusBarStyle('dark'); };
+  }, []));
+
+  // Live ladder — everything derives from the lifetime session count.
+  const completed = useCompletedSessions();
+  const cur = currentTier(completed);
+  const nxt = nextTier(completed);
+  const earned = TIERS.filter((t) => isTierReached(t.key, completed));
+  const locked = TIERS.filter((t) => !isTierReached(t.key, completed));
+  const total = TIER_COUNT;
+
+  const curName = cur ? g.tiers[cur.key].name : '—';
+  const CurIcon = cur ? cur.icon : TIERS[0].icon;
+
+  const remaining = sessionsToNext(completed);
+  const heroReadout = nxt ? `${completed} / ${nxt.threshold}` : g.maxedReadout;
+  const heroCaption = nxt
+    ? `${remaining} ${remaining <= 1 ? g.toNextOne : g.toNextN} ${g.tiers[nxt.key].name}`
+    : g.maxedCaption;
+
+  // Small-device guard (iPhone SE): shrink the hero so it doesn't eat the viewport.
+  const small = height < 700 || width < 360;
+  const medalSize = small ? 88 : 104;
+  const nameSize = small ? 38 : 46;
+
+  const collectedTxt = g.collected.replace('{n}', String(earned.length)).replace('{total}', String(total));
+
+  const [medaillesOpen, setMedaillesOpen] = React.useState(false);
+  const preview = (earned.length ? earned.slice(-4) : locked.slice(0, 4));
+
+  // Medal spring (scale only — opacity is owned by Reveal's content fade, never doubled).
+  const medalScale = React.useRef(new Animated.Value(anim.animate ? 0.9 : 1)).current;
+  React.useEffect(() => {
+    if (!anim.animate || !anim.play) return;
+    Animated.spring(medalScale, { toValue: 1, speed: 12, bounciness: 9, delay: 90, useNativeDriver: true }).start();
+  }, [anim.animate, anim.play, medalScale]);
+  React.useEffect(() => { if (!anim.animate) medalScale.setValue(1); }, [anim.animate, medalScale]);
 
   return (
-    <Modal
-      visible={visible}
-      onRequestClose={onClose}
-      onDismiss={finishLogout}
-      animationType="slide"
-      presentationStyle="pageSheet"
-    >
-      <View style={{ flex: 1, backgroundColor: CANVAS }}>
-        {/* ===== Top bar — eyebrow + title left, close right ===== */}
-        <View style={st.topbar}>
-          <View style={{ flex: 1 }}>
-            <Eyebrow>{c.eyebrow}</Eyebrow>
-            <Text style={st.title} numberOfLines={1}>{c.title}</Text>
-          </View>
-          <Pressable onPress={onClose} hitSlop={8} style={st.closeBtn} accessibilityRole="button" accessibilityLabel={c.closeA11y}>
-            <X size={22} color={ON_CANVAS} />
-          </Pressable>
-        </View>
+    <SafeAreaView style={st.fill} edges={['left', 'right']}>
+      <Reveal loading={loading} skeleton={<BadgesSkeleton />}>
+        <ScrollView
+          style={st.fill}
+          contentContainerStyle={{ paddingBottom: sp['2xl'] + tabBarInset }}
+          showsVerticalScrollIndicator={false}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+        >
+          {/* ===== INK HERO — identity + tier, scrolls with the page ===== */}
+          <View onLayout={(e) => { heroH.current = e.nativeEvent.layout.height; }}>
+          <InkHeader variant="tab">
+            {/* Identity row — photo (tap to change) · name + role + status · Settings gear */}
+            <View style={st.idRow}>
+              <Pressable
+                style={st.avatarWrap}
+                onPress={() => setAvatarOpen(true)}
+                accessibilityRole="button"
+                accessibilityLabel={`${pc.editPhotoA11y}, ${COACH_NAME}`}
+              >
+                {photoUrl ? (
+                  <Image source={{ uri: photoUrl }} style={st.avatar} accessibilityIgnoresInvertColors />
+                ) : (
+                  <ProfileAvatar size={60} />
+                )}
+                <View style={st.camBadge}>
+                  <Camera size={13} color={ON_CARD} />
+                </View>
+              </Pressable>
 
-        <Reveal loading={loading} skeleton={<ProfileSkeleton />}>
-        <ScrollView contentContainerStyle={{ paddingHorizontal: sp.lg, paddingBottom: sp['2xl'] }} showsVerticalScrollIndicator={false}>
-          {/* ===== Identity — photo or the shared ProfileAvatar glyph; camera badge = editable ===== */}
-          <View style={st.identity}>
-            <Pressable
-              style={st.avatarWrap}
-              onPress={() => setSheet('avatar')}
-              accessibilityRole="button"
-              accessibilityLabel={`${c.editPhotoA11y}, ${p.name}`}
-            >
-              {p.photoUrl ? (
-                <Image source={{ uri: p.photoUrl }} style={st.avatar} />
-              ) : (
-                <ProfileAvatar size={84} />
-              )}
-              <View style={st.camBadge}>
-                <Camera size={15} color={ON_CARD} />
+              <View style={st.idText}>
+                <Text style={st.idName} numberOfLines={1}>{COACH_NAME}</Text>
+                <Text style={st.idRole} numberOfLines={1}>{pc.role}</Text>
+                <View style={st.idChip} accessible accessibilityLabel={pc.status.active}>
+                  <CheckCircle2 size={12} color={OK_INK.fg} />
+                  <Text style={st.idChipTxt}>{pc.status.active}</Text>
+                </View>
               </View>
-            </Pressable>
-            <Text style={st.name} numberOfLines={1}>{p.name}</Text>
-            <Text style={st.role}>{c.role}</Text>
-            <View style={st.statusWrap}>
-              <StatusChip tone="ok" icon={CheckCircle2} label={c.status.active} />
+
+              <Pressable
+                onPress={() => setSettingsOpen(true)}
+                hitSlop={8}
+                style={({ pressed }) => [st.gearBtn, pressed && { opacity: 0.7 }]}
+                accessibilityRole="button"
+                accessibilityLabel={pc.openSettingsA11y}
+              >
+                <Settings size={20} color={INK.textPrimary} />
+              </Pressable>
             </View>
+
+            {/* Tier centrepiece */}
+            <View style={st.heroCenter}>
+              <Animated.View style={[st.halo, { transform: [{ scale: medalScale }] }]}>
+                <HeroMedal Icon={CurIcon} ringSize={medalSize} iconSize={Math.round(medalSize * 0.38)} />
+              </Animated.View>
+
+              <Text style={st.heroKicker}>{g.tierPrefix}</Text>
+              <View accessible accessibilityLabel={`${g.tierPrefix} ${curName}, ${completed} ${g.totalSuffix}`}>
+                <Text
+                  style={[st.heroNumeral, { fontSize: nameSize, lineHeight: nameSize + 6 }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  importantForAccessibility="no"
+                >
+                  {curName}
+                </Text>
+              </View>
+              <Text style={st.heroSubtitle}>{`${completed} ${g.totalSuffix}`}</Text>
+            </View>
+
+            <AnimatedMeterFill
+              frac={tierProgress(completed)}
+              play={anim.play}
+              animate={anim.animate}
+              height={12}
+              trackColor={INK_TRACK}
+              a11yValue={nxt ? { min: 0, max: nxt.threshold, now: completed } : { min: 0, max: total, now: total }}
+              style={{ marginTop: sp.md }}
+            />
+            <View style={st.heroMeterRow}>
+              <Text style={st.heroReadout}>{heroReadout}</Text>
+              <View style={st.streakChip} accessible accessibilityLabel={`${STREAK} ${copy.header.streakLabel}`}>
+                <Flame size={14} color={GOLD} />
+                <Text style={st.streakTxt}>{`×${STREAK}`}</Text>
+              </View>
+            </View>
+            <Text style={st.heroCaption}>{heroCaption}</Text>
+          </InkHeader>
           </View>
 
-          {/* ===== Availability & travel preferences (C15 / PLA-08) ===== */}
-          <View style={st.sectionHead}>
-            <Eyebrow>{c.availability.eyebrow}</Eyebrow>
-            <Text style={[st.updated, stale && { color: INK.pending.fg }]}>{ago}</Text>
-          </View>
-          {stale ? (
-            <Pressable style={st.nudge} onPress={() => setSheet('confirmAvail')} accessibilityRole="button" accessibilityLabel={c.availability.staleNudge}>
-              <CalendarClock size={16} color={INK.pending.fg} />
-              <Text style={st.nudgeTxt}>{c.availability.staleNudge}</Text>
+          {/* ===== CREAM BODY ===== */}
+          <View style={st.body}>
+            {/* Next-tier spotlight — the rung you're about to unlock, turning pride into a concrete step. */}
+            {nxt ? (() => {
+              const target = nxt.threshold;
+              const current = Math.min(completed, target);
+              const left = target - completed;
+              const gap = left <= 1 ? g.gapOne : g.gapN.replace('{n}', String(left));
+              return (
+                <Entrance delay={220} anim={anim}>
+                  <View style={st.spotlight} accessible accessibilityLabel={`${g.nextTierEyebrow}: ${g.tiers[nxt.key].name}, ${gap}, ${current} ${g.ofTarget} ${target}`}>
+                    <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
+                    <HeroMedal Icon={nxt.icon} ringSize={56} ring={5} iconSize={24} innerColor={palette.neutral[100]} iconColor={palette.neutral[500]} />
+                    <View style={st.spotlightBody}>
+                      <Text style={st.spotlightEyebrow}>{g.nextTierEyebrow}</Text>
+                      <Text style={st.spotlightName} numberOfLines={1}>{g.tiers[nxt.key].name}</Text>
+                      <Text style={st.spotlightGap}>{gap}</Text>
+                      <View style={st.spotlightMeterRow}>
+                        <AnimatedMeterFill frac={current / target} play={anim.play} animate={anim.animate} height={6} style={{ flex: 1 }} a11yValue={{ min: 0, max: target, now: current }} />
+                        <Text style={st.spotlightCount}>{`${current} / ${target}`}</Text>
+                      </View>
+                    </View>
+                  </View>
+                </Entrance>
+              );
+            })() : null}
+
+            {/* Collection PREVIEW — a few rungs + "Voir tout" into the full ladder page. */}
+            <Pressable
+              style={({ pressed }) => [st.secLinkRow, pressed && { opacity: 0.6 }]}
+              onPress={() => setMedaillesOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel={`${g.collectionTitle}, ${collectedTxt}, ${g.seeAll}`}
+            >
+              <Text style={st.secTitle}>{g.collectionTitle}</Text>
+              <View style={st.secChip}>
+                <Text style={st.secChipTxt}>{`${earned.length}/${total}`}</Text>
+              </View>
+              <View style={{ flex: 1 }} />
+              <Text style={st.seeAll}>{g.seeAll}</Text>
+              <ChevronRight size={18} color={ON_CARD_2} />
             </Pressable>
-          ) : null}
-          <Card>
-            <Row first icon={CalendarClock} label={c.availability.schedule} value={formatSlots(p.av.slots, e.schedule.weekdays, e.schedule.notSet)} onPress={() => setSheet('schedule')} />
-            <Row icon={Clock} label={c.availability.travel} value={`≤ ${p.av.travelMin} min`} onPress={() => setSheet('travel')} />
-            <Row icon={Car} label={c.availability.transport} value={p.av.transport} onPress={() => setSheet('transport')} />
-            <Row icon={MapPin} label={c.availability.departure} value={p.av.departures.join(' · ')} onPress={() => openField('departure')} />
-            <Row icon={Map} label={c.availability.areas} value={p.av.areas} onPress={() => openField('areas')} />
-            <Row icon={CalendarX} label={c.availability.unavailability} value={p.av.unavailability} onPress={() => openField('unavailability')} />
-          </Card>
-          <PrimaryButton label={c.availability.cta} style={st.cta} onPress={() => setSheet('confirmAvail')} accessibilityLabel={c.availability.cta} />
+            <View style={st.grid}>
+              {preview.map((t, i) => (
+                <Entrance key={t.key} delay={320 + i * 70} anim={anim} style={st.slot}>
+                  {isTierReached(t.key, completed) ? (
+                    <EarnedTile tier={t} name={g.tiers[t.key].name} desc={g.tiers[t.key].desc} reachedLabel={g.reachedLabel} />
+                  ) : (
+                    <LockedTile tier={t} name={g.tiers[t.key].name} desc={g.tiers[t.key].desc} sessions={completed} anim={anim} ofTarget={g.ofTarget} lockedA11y={g.lockedA11y} />
+                  )}
+                </Entrance>
+              ))}
+            </View>
 
-          {/* ===== Goals & rate ===== */}
-          <View style={st.sectionHead}><Eyebrow>{c.goals.eyebrow}</Eyebrow></View>
-          <Card>
-            <Row first icon={Target} label={c.goals.target} value={`${p.goals.target} séances · ${p.goals.flexibility}`} onPress={() => openField('target')} />
-            <Row icon={Wallet} label={c.goals.rate} value={`${p.goals.rate} € / heure`} onPress={() => openField('rate')} />
-          </Card>
+            {/* Stat band — supporting context (calm, no count-ups). */}
+            <View style={st.statBand}>
+              <StatTile Icon={Flame} value={`×${STREAK}`} label={copy.header.streakLabel} gold />
+              <StatTile Icon={Users} value={RESIDENTS} label={copy.header.residentsLabel} />
+              <StatTile Icon={CalendarDays} value={completed} label={g.totalSuffix} />
+            </View>
 
-          {/* ===== Progression & activity (GAME-01/02 · SESS-05 · SESS-06) ===== */}
-          <View style={st.sectionHead}><Eyebrow>{c.activity.eyebrow}</Eyebrow></View>
-          <Card>
-            <Row first icon={Trophy} label={c.activity.badges} value={c.activity.badgesValue} onPress={() => setBadgesOpen(true)} />
-            <Row icon={ClipboardList} label={c.activity.reports} value={c.activity.reportsValue} onPress={() => setReportsOpen(true)} />
-            <Row icon={MessageSquare} label={c.activity.feedback} value={c.activity.feedbackValue} onPress={() => setFeedbackOpen(true)} />
-          </Card>
+            {/* Coach score (DT-07) — bleu signal bars, kept visually distinct from the gold-rouge reward. */}
+            <View style={{ marginTop: sp.md }}>
+              <ScoreCard />
+            </View>
 
-          {/* ===== My documents ===== */}
-          <View style={st.sectionHead}><Eyebrow>{c.documents.eyebrow}</Eyebrow></View>
-          <Text style={st.note}>{c.documents.note}</Text>
-          <Card>
-            <Row first icon={DOC_META.cv.Icon} label={c.documents.cv} chip={docChip('cv')} onPress={() => openDoc('cv')} />
-            <Row icon={DOC_META.urssaf.Icon} label={c.documents.urssaf} chip={docChip('urssaf')} onPress={() => openDoc('urssaf')} />
-            <Row icon={DOC_META.insurance.Icon} label={c.documents.insurance} chip={docChip('insurance')} onPress={() => openDoc('insurance')} />
-            <Row icon={DOC_META.diploma.Icon} label={c.documents.diploma} chip={docChip('diploma')} onPress={() => openDoc('diploma')} />
-          </Card>
+            {/* How you progress + recognition-only note (verbatim — never affects pay, DT-06). */}
+            <Text style={st.howSecTitle}>{g.howTitle}</Text>
+            <View style={st.howCard}>
+              <HowRow Icon={CalendarDays} title={g.how.sessions.title} desc={g.how.sessions.desc} first />
+              <HowRow Icon={Trophy} title={g.how.climb.title} desc={g.how.climb.desc} />
+            </View>
 
-          {/* ===== Account ===== */}
-          <View style={st.sectionHead}><Eyebrow>{c.account.eyebrow}</Eyebrow></View>
-          <Card>
-            <Row first icon={User} label={c.account.personal} value={p.email} onPress={() => openField('personal')} />
-            <Row
-              icon={CalendarCheck}
-              label={c.account.calendar}
-              value={p.gcalConnected ? undefined : c.calendar.disconnected}
-              chip={p.gcalConnected ? <StatusChip tone="ok" icon={CheckCircle2} label={c.account.connected} /> : undefined}
-              onPress={() => setSheet('gcal')}
-            />
-            <Row icon={KeyRound} label={c.account.password} onPress={() => openField('password')} />
-            {/* Delete account (AUTH-14) — destructive: red icon + label, never colour alone. */}
-            <Row
-              icon={Trash2}
-              label={c.account.deleteAccount}
-              tint={palette.rouge[300]}
-              chip={p.deleteRequested ? <StatusChip tone="pending" icon={Clock} label={c.account.deleteRequested} /> : undefined}
-              onPress={() => setSheet(p.deleteRequested ? 'deleteDone' : 'delete')}
-            />
-          </Card>
-
-          {/* ===== Support ===== */}
-          <View style={st.sectionHead}><Eyebrow>{c.support.eyebrow}</Eyebrow></View>
-          <Card>
-            <Row first icon={CircleHelp} label={c.support.help} onPress={openHelp} />
-            <Row icon={Mail} label={c.support.contact} onPress={openContact} />
-            <Row icon={FileText} label={c.support.version} value="0.1.0" onPress={() => setSheet('about')} />
-          </Card>
-
-          {/* ===== Log out — destructive, outline + icon + label (never colour alone) ===== */}
-          <Pressable
-            style={({ pressed }) => [st.logout, pressed && { opacity: 0.8 }]}
-            onPress={() => setSheet('logout')}
-            accessibilityRole="button"
-            accessibilityLabel={c.logoutA11y}
-          >
-            <LogOut size={18} color={palette.rouge[300]} style={{ marginRight: 8 }} />
-            <Text style={st.logoutTxt}>{c.logout}</Text>
-          </Pressable>
+            <Text style={st.note}>{g.note}</Text>
+          </View>
         </ScrollView>
-        </Reveal>
+      </Reveal>
 
-        {/* ===== Interactive sheets ===== */}
-        <OptionSheet
-          visible={sheet === 'avatar'}
-          onClose={close}
-          title={c.avatarSheet.title}
-          help={c.avatarSheet.help}
-          options={avatarOptions}
-          closeA11y={c.avatarSheet.closeA11y}
-          onSelect={(k) => setP((s) => ({ ...s, photoUrl: k === 'choose' ? DEMO_PHOTO : null }))}
-        />
+      {/* Full ladder (Médailles) */}
+      <MedaillesScreen
+        visible={medaillesOpen}
+        onClose={() => setMedaillesOpen(false)}
+        earned={earned}
+        locked={locked}
+        sessions={completed}
+      />
 
-        {/* Weekly schedule — half-day grid, Mon→Sun (PLA-09), commit on Save. */}
-        <HalfDayScheduleSheet
-          visible={sheet === 'schedule'}
-          onClose={close}
-          title={e.schedule.title}
-          help={e.schedule.help}
-          days={e.schedule.weekdays}
-          amLabel={e.schedule.am}
-          pmLabel={e.schedule.pm}
-          value={p.av.slots}
-          onSave={(slots) => editAv({ slots })}
-          saveLabel={c.common.save}
-          cancelLabel={c.common.cancel}
-        />
+      {/* Settings (the gear) — the full account & app hub */}
+      <SettingsScreen visible={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
-        <OptionSheet
-          visible={sheet === 'transport'}
-          onClose={close}
-          title={e.transport.title}
-          selectedKey={isCustomTransport ? 'other' : p.av.transport}
-          options={[
-            { key: e.transport.car, label: e.transport.car, icon: Car },
-            { key: e.transport.twoWheel, label: e.transport.twoWheel, icon: Bike },
-            { key: e.transport.walking, label: e.transport.walking, icon: Footprints },
-            { key: 'other', label: isCustomTransport ? `${e.transport.other} · ${p.av.transport}` : e.transport.other, icon: Edit3 },
-          ]}
-          onSelect={(k) => {
-            // "Other" → let this sheet close, then open the free-text vehicle editor.
-            if (k === 'other') setTimeout(() => openField('vehicle'), 220);
-            else editAv({ transport: k });
-          }}
-        />
-
-        {/* Max travel time — slider, 10–90 min (PLA-08), commit on Save. */}
-        <SliderSheet
-          visible={sheet === 'travel'}
-          onClose={close}
-          title={e.travel.title}
-          help={e.travel.help}
-          min={TRAVEL.min}
-          max={TRAVEL.max}
-          step={TRAVEL.step}
-          value={p.av.travelMin}
-          format={(v) => `≤ ${v} min`}
-          onSave={(v) => editAv({ travelMin: v })}
-          saveLabel={c.common.save}
-          cancelLabel={c.common.cancel}
-          decA11y={e.travel.decA11y}
-          incA11y={e.travel.incA11y}
-        />
-
-        <FieldEditSheet
-          visible={sheet === 'field'}
-          onClose={close}
-          title={fieldSheet.title}
-          fields={fieldSheet.fields}
-          choice={fieldSheet.choice}
-          validate={fieldSheet.validate}
-          onSave={fieldSheet.onSave}
-          saveLabel={c.common.save}
-          cancelLabel={c.common.cancel}
-        />
-
-        <ActionModal
-          visible={sheet === 'confirmAvail'}
-          onClose={close}
-          Icon={CalendarClock}
-          accentFg={INK.pending.fg}
-          accentBg={INK.pending.bg}
-          title={c.confirmAvail.title}
-          body={c.confirmAvail.body}
-          note={`${p.av.transport} · ≤ ${p.av.travelMin} min`}
-          primaryLabel={c.confirmAvail.primary}
-          onPrimary={markFresh}
-          secondaryLabel={c.confirmAvail.secondary}
-          closeA11y={c.common.close}
-        />
-
-        <ActionModal
-          visible={sheet === 'gcal'}
-          onClose={close}
-          Icon={CalendarCheck}
-          accentFg={INK.ok.fg}
-          accentBg={INK.ok.bg}
-          title={p.gcalConnected ? c.calendar.disconnectTitle : c.calendar.connectTitle}
-          body={p.gcalConnected ? c.calendar.disconnectBody : c.calendar.connectBody}
-          primaryLabel={p.gcalConnected ? c.calendar.disconnect : c.calendar.connect}
-          onPrimary={() => setP((s) => ({ ...s, gcalConnected: !s.gcalConnected }))}
-          secondaryLabel={c.common.cancel}
-          closeA11y={c.common.close}
-        />
-
-        <ActionModal
-          visible={sheet === 'doc'}
-          onClose={close}
-          Icon={DOC_META[docKey].Icon}
-          accentFg={docStatus === 'verified' ? INK.ok.fg : INK.pending.fg}
-          accentBg={docStatus === 'verified' ? INK.ok.bg : INK.pending.bg}
-          title={DOC_META[docKey].label}
-          body={c.documentSheet.body}
-          note={docStatus === 'pending' ? c.documentSheet.pendingNote : undefined}
-          primaryLabel={c.documentSheet.replace}
-          onPrimary={() => setP((s) => ({ ...s, docs: { ...s.docs, [docKey]: 'pending' } }))}
-          secondaryLabel={c.common.close}
-          closeA11y={c.common.close}
-        />
-
-        <ActionModal
-          visible={sheet === 'logout'}
-          onClose={close}
-          Icon={LogOut}
-          accentFg={palette.rouge[300]}
-          accentBg="rgba(225,50,43,0.16)"
-          title={c.logoutConfirm.title}
-          body={c.logoutConfirm.body}
-          primaryLabel={c.logout}
-          // Close the confirm sheet + dismiss the profile; signOut fires once the page-sheet is
-          // gone — via onDismiss, or a 500ms fallback if onDismiss doesn't land (see finishLogout).
-          onPrimary={() => { pendingLogout.current = true; close(); onClose(); setTimeout(finishLogout, 500); }}
-          secondaryLabel={c.common.cancel}
-          closeA11y={c.common.close}
-        />
-
-        <ActionModal
-          visible={sheet === 'about'}
-          onClose={close}
-          Icon={CircleHelp}
-          accentFg={ON_CARD}
-          accentBg={palette.neutral[700]}
-          title={c.about.title}
-          body={c.about.body}
-          primaryLabel={c.common.close}
-          closeA11y={c.common.close}
-        />
-
-        {/* Delete account (AUTH-14): confirm the request, then acknowledge it was sent. */}
-        <ActionModal
-          visible={sheet === 'delete'}
-          onClose={close}
-          Icon={Trash2}
-          accentFg={palette.rouge[300]}
-          accentBg="rgba(225,50,43,0.16)"
-          title={c.deleteConfirm.title}
-          body={c.deleteConfirm.body}
-          primaryLabel={c.deleteConfirm.confirm}
-          onPrimary={() => {
-            setP((s) => ({ ...s, deleteRequested: true }));
-            // Let this sheet's exit play, then surface the acknowledgement (transport→vehicle idiom).
-            setTimeout(() => setSheet('deleteDone'), 260);
-          }}
-          secondaryLabel={c.common.cancel}
-          closeA11y={c.common.close}
-        />
-        <ActionModal
-          visible={sheet === 'deleteDone'}
-          onClose={close}
-          Icon={Clock}
-          accentFg={INK.pending.fg}
-          accentBg={INK.pending.bg}
-          title={c.deleteConfirm.requestedTitle}
-          body={c.deleteConfirm.requestedBody}
-          primaryLabel={c.common.close}
-          closeA11y={c.common.close}
-        />
-
-        {/* Progression & activity destinations (GAME-01/02 · SESS-05 · SESS-06). */}
-        <BadgesScreen visible={badgesOpen} onClose={() => setBadgesOpen(false)} />
-        <ReportHistoryScreen visible={reportsOpen} onClose={() => setReportsOpen(false)} />
-        <FeedbackScreen visible={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
-      </View>
-    </Modal>
+      {/* Profile-photo actions (mocked picker) */}
+      <OptionSheet
+        visible={avatarOpen}
+        onClose={() => setAvatarOpen(false)}
+        title={pc.avatarSheet.title}
+        help={pc.avatarSheet.help}
+        options={avatarOptions}
+        closeA11y={pc.avatarSheet.closeA11y}
+        onSelect={(k) => setPhotoUrl(k === 'choose' ? DEMO_PHOTO : null)}
+      />
+    </SafeAreaView>
   );
 }
 
-/* ---------- styles ----------
-   Polarity legend:
-   · on the CANVAS        -> ON_CANVAS / ON_CANVAS_2
-   · inside the dark CARD  -> ON_CARD / ON_CARD_2 / ON_CARD_3 (light)
-*/
+function HowRow({ Icon, title, desc, first }: { Icon: LucideIcon; title: string; desc: string; first?: boolean }) {
+  return (
+    <View style={[st.howRow, !first && st.howDivider]}>
+      <View style={st.howIcon}>
+        <Icon size={18} color={ON_CARD_2} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={st.howTitleTxt}>{title}</Text>
+        <Text style={st.howDesc}>{desc}</Text>
+      </View>
+    </View>
+  );
+}
+
 const st = StyleSheet.create({
-  topbar: {
-    flexDirection: 'row', alignItems: 'center', gap: sp.sm,
-    paddingHorizontal: sp.lg, paddingTop: sp.lg, paddingBottom: sp.md,
-  },
-  title: { fontFamily: F.oswS, fontSize: 28, lineHeight: 32, color: ON_CANVAS, marginTop: 2 },
-  closeBtn: {
-    width: 44, height: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: SUBTLE,
-  },
+  fill: { flex: 1, backgroundColor: S.canvas },
+  body: { paddingHorizontal: sp.lg, paddingTop: sp.lg },
 
-  identity: { alignItems: 'center', paddingTop: sp.sm, paddingBottom: sp.sm },
-  avatarWrap: { width: 84, height: 84 },
-  avatar: { width: 84, height: 84, borderRadius: 999 },
+  /* ----- ink hero · identity row ----- */
+  idRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md },
+  avatarWrap: { width: 60, height: 60 },
+  avatar: { width: 60, height: 60, borderRadius: 999, backgroundColor: INK_RAISED },
   camBadge: {
-    position: 'absolute', bottom: 0, right: 0,
-    width: 30, height: 30, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: palette.neutral[700], borderWidth: 2, borderColor: CANVAS,
+    position: 'absolute', bottom: -2, right: -2,
+    width: 24, height: 24, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: palette.neutral[200], borderWidth: 2, borderColor: INK.bg,
   },
-  name: { fontFamily: F.oswS, fontSize: 24, color: ON_CANVAS, marginTop: sp.md },
-  role: { fontFamily: F.body, fontSize: 15, color: ON_CANVAS_2, marginTop: 2 },
-  statusWrap: { marginTop: sp.sm },
+  idText: { flex: 1, minWidth: 0 },
+  idName: { fontFamily: F.oswB, fontSize: 22, color: INK.textPrimary },
+  idRole: { fontFamily: F.body, fontSize: 14, color: INK.textSecondary, marginTop: 1 },
+  idChip: {
+    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: OK_INK.bg, paddingVertical: 4, paddingHorizontal: 9, borderRadius: r.pill, marginTop: 6,
+  },
+  idChipTxt: { fontFamily: F.bodyS, fontSize: 12, color: OK_INK.fg },
+  gearBtn: {
+    alignSelf: 'flex-start',
+    width: 40, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: INK_RAISED, borderWidth: 1, borderColor: INK.border,
+  },
 
-  sectionHead: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginTop: sp.xl, marginBottom: sp.sm,
-  },
-  eyebrow: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 1, color: ON_CANVAS_2 },
-  updated: { fontFamily: F.body, fontSize: 13, color: ON_CANVAS_2 },
-  note: { fontFamily: F.body, fontSize: 13, color: ON_CANVAS_2, marginBottom: sp.sm },
+  /* ----- ink hero · tier centrepiece ----- */
+  heroCenter: { alignItems: 'center', marginTop: sp.lg },
+  halo: { padding: 12, borderRadius: 999, backgroundColor: INK_RAISED },
+  heroKicker: { fontFamily: F.oswB, fontSize: 13, letterSpacing: 1.5, color: INK.level, textTransform: 'uppercase', marginTop: sp.md },
+  heroNumeral: { fontFamily: F.display, color: INK.textPrimary, textTransform: 'uppercase', textAlign: 'center' },
+  heroSubtitle: { fontFamily: F.body, fontSize: 14, color: INK.textSecondary, marginTop: 2 },
 
-  nudge: {
-    flexDirection: 'row', alignItems: 'center', gap: sp.sm,
-    backgroundColor: INK.pending.bg, borderColor: 'rgba(242,194,0,0.35)', borderWidth: 1,
-    borderRadius: r.lg, padding: sp.md, marginBottom: sp.sm,
-  },
-  nudgeTxt: { flex: 1, fontFamily: F.body, fontSize: 14, color: INK.pending.fg },
+  heroMeterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: sp.sm },
+  heroReadout: { fontFamily: F.oswS, fontSize: 16, color: INK.textSecondary },
+  streakChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: INK_RAISED, borderWidth: 1, borderColor: INK.border, paddingVertical: 4, paddingHorizontal: 10, borderRadius: r.pill },
+  streakTxt: { fontFamily: F.oswB, fontSize: 14, color: INK.textSecondary },
+  heroCaption: { fontFamily: F.bodyS, fontSize: 13, color: INK.textSecondary, marginTop: sp.sm },
 
-  card: {
-    borderRadius: r.xl, paddingHorizontal: sp.md, // tighter L/R inset than the sp.lg gutter
-    backgroundColor: palette.neutral[800],
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.35, shadowRadius: 20,
-  },
-  row: { flexDirection: 'row', alignItems: 'center', gap: sp.md, minHeight: 56, paddingVertical: sp.sm },
-  rowDivider: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },
-  rowIcon: {
-    width: 34, height: 34, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: palette.neutral[700],
-  },
-  rowLabel: { fontFamily: F.bodyS, fontSize: 16, color: ON_CARD },
-  rowLabelGrow: { flex: 1, minWidth: 0 }, // chip rows: label takes the slack and wraps if long
-  rowRight: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
-  rowChipRight: { flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 8 }, // chip + chevron, natural width
-  rowValue: { flexShrink: 1, fontFamily: F.body, fontSize: 14, color: ON_CARD_2, textAlign: 'right' },
+  /* ----- next-tier spotlight ----- */
+  spotlight: { flexDirection: 'row', alignItems: 'center', gap: sp.md, borderRadius: r.xl, padding: sp.lg, backgroundColor: palette.neutral[0], borderWidth: 1, borderColor: HAIR, overflow: 'hidden' },
+  spotlightBody: { flex: 1 },
+  spotlightEyebrow: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 1.2, color: GOLD_FG, textTransform: 'uppercase' },
+  spotlightName: { fontFamily: F.oswB, fontSize: 18, color: ON_CARD, marginTop: 2 },
+  spotlightGap: { fontFamily: F.bodyB, fontSize: 14, color: GAP_FG, marginTop: 2 },
+  spotlightMeterRow: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, marginTop: sp.sm },
+  spotlightCount: { fontFamily: F.oswS, fontSize: 13, color: ON_CARD_2, minWidth: 52, textAlign: 'right' },
 
-  cta: { marginTop: sp.md },
+  /* ----- collection preview header ----- */
+  secLinkRow: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, marginTop: sp.xl, marginBottom: sp.sm },
+  secTitle: { fontFamily: F.oswS, fontSize: 18, letterSpacing: 0.3, color: ON_CANVAS },
+  secChip: { backgroundColor: GOLD_WASH, paddingVertical: 2, paddingHorizontal: 8, borderRadius: r.pill },
+  secChipTxt: { fontFamily: F.oswS, fontSize: 13, color: GOLD_FG },
+  seeAll: { fontFamily: F.bodyS, fontSize: 14, color: ON_CARD_2 },
 
-  chip: {
-    flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingVertical: 5, paddingHorizontal: 10, borderRadius: r.pill,
-  },
-  chipTxt: { fontFamily: F.body, fontSize: 12 },
+  /* ----- collection grid (preview) ----- */
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: sp.sm },
+  slot: { width: '48%' },
 
-  logout: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    minHeight: 48, borderRadius: r.pill, marginTop: sp.xl,
-    borderWidth: 1.5, borderColor: 'rgba(225,50,43,0.5)',
-  },
-  logoutTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: palette.rouge[300] },
+  /* ----- stat band ----- */
+  statBand: { flexDirection: 'row', gap: sp.sm, marginTop: sp.xl },
+  statTile: { flex: 1, borderRadius: r.lg, padding: sp.md, backgroundColor: palette.neutral[0], borderWidth: 1, borderColor: HAIR },
+  statChip: { width: 32, height: 32, borderRadius: 999, alignItems: 'center', justifyContent: 'center', marginBottom: sp.sm },
+  statNum: { fontFamily: F.oswB, fontSize: 22, color: ON_CARD },
+  statLabel: { fontFamily: F.body, fontSize: 12, lineHeight: 15, color: ON_CARD_2, marginTop: 2 },
+
+  /* ----- how-you-progress ----- */
+  howSecTitle: { fontFamily: F.oswS, fontSize: 18, letterSpacing: 0.3, color: ON_CANVAS, marginTop: sp.xl, marginBottom: sp.sm },
+  howCard: { borderRadius: r.xl, backgroundColor: palette.neutral[0], borderWidth: 1, borderColor: HAIR, paddingHorizontal: sp.md },
+  howRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: sp.md },
+  howDivider: { borderTopWidth: 1, borderTopColor: HAIR },
+  howIcon: { width: 40, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.neutral[100] },
+  howTitleTxt: { fontFamily: F.bodyB, fontSize: 15, color: ON_CARD },
+  howDesc: { fontFamily: F.body, fontSize: 13, lineHeight: 17, color: ON_CARD_2, marginTop: 2 },
+
+  note: { fontFamily: F.body, fontSize: 13, lineHeight: 19, color: ON_CANVAS_2, marginTop: sp.xl },
 });

@@ -13,10 +13,10 @@ import { X, Check, type LucideIcon } from '../icons';
 import { palette, color, spacing as sp, radius as r } from '../theme/theme';
 import { BottomSheet } from './BottomSheet';
 
-const ON_CARD = palette.neutral[50];
-const ON_CARD_2 = palette.neutral[300];
-const SUBTLE = palette.neutral[800];
-const DIVIDER = 'rgba(255,255,255,0.08)';
+const ON_CARD = palette.neutral[900];
+const ON_CARD_2 = palette.neutral[600];
+const SUBTLE = palette.neutral[100];
+const DIVIDER = 'rgba(24,23,21,0.07)';
 
 const F = { bodyB: 'Inter_700Bold', bodyS: 'Inter_600SemiBold' };
 
@@ -49,7 +49,7 @@ export function OptionSheet({
         {options.map((o, i) => {
           const Icon = o.icon;
           const on = o.key === selectedKey;
-          const fg = o.destructive ? palette.rouge[300] : ON_CARD;
+          const fg = o.destructive ? palette.rouge[600] : ON_CARD;
           return (
             <Pressable
               key={o.key}
@@ -61,7 +61,7 @@ export function OptionSheet({
             >
               {Icon ? (
                 <View style={st.icon}>
-                  <Icon size={18} color={o.destructive ? palette.rouge[300] : ON_CARD_2} />
+                  <Icon size={18} color={o.destructive ? palette.rouge[600] : ON_CARD_2} />
                 </View>
               ) : null}
               <Text style={[st.label, { color: fg }]} numberOfLines={1}>{o.label}</Text>
@@ -88,7 +88,7 @@ const st = StyleSheet.create({
   rowDivider: { borderTopWidth: 1, borderTopColor: DIVIDER },
   icon: {
     width: 34, height: 34, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: palette.neutral[700],
+    backgroundColor: palette.neutral[200],
   },
   label: { flex: 1, fontFamily: F.bodyS, fontSize: 16 },
 });

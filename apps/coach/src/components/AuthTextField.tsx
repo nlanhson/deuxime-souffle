@@ -10,23 +10,23 @@
  * an accessibilityLabel on the input — RN has no <label for> association, so the input needs its own
  * accessible name.
  */
-import React, { useState, type ReactNode } from 'react';
+import React, { useState, useRef, useCallback, type ReactNode } from 'react';
 import {
-  StyleSheet, Text, TextInput, View,
+  Pressable, StyleSheet, Text, TextInput, View,
   type StyleProp, type TextInputProps, type ViewStyle,
 } from 'react-native';
 
 import { palette, color, spacing as sp, radius as r } from '../theme/theme';
 import { type LucideIcon } from '../icons';
 
-const CARD = palette.neutral[800];
-const BORDER = 'rgba(255,255,255,0.10)';
+const CARD = palette.neutral[0];
+const BORDER = palette.neutral[200];
 const BORDER_ERR = 'rgba(225,50,43,0.65)';
-const ICON = palette.neutral[400];
-const PLACEHOLDER = palette.neutral[500];
-const TXT = palette.neutral[50];
-const ON_2 = palette.neutral[300];
-const MUTED = palette.neutral[500];
+const ICON = palette.neutral[500];
+const PLACEHOLDER = palette.neutral[600];
+const TXT = palette.neutral[900];
+const ON_2 = palette.neutral[600];
+const MUTED = palette.neutral[600];
 // Field labels use Inter (the body family, same as the input) — Oswald is a condensed display face
 // that reads cramped at label size. Matches the common form pattern (cf. Forest / ClickUp on Mobbin).
 const F = { label: 'Inter_600SemiBold', body: 'Inter_400Regular' };
@@ -51,6 +51,17 @@ export function AuthTextField({
   onFocus, onBlur, accessibilityLabel, style, ...rest
 }: Props) {
   const [focused, setFocused] = useState(false);
+  const localRef = useRef<TextInput>(null);
+  // Merge the caller's ref (used to focus-chain between fields) with our own, so a tap anywhere on
+  // the field row — the icon, the padding, the gaps — focuses the input and opens the native
+  // keyboard, not just the inner TextInput's own glyph area.
+  const setInputRef = useCallback((node: TextInput | null) => {
+    localRef.current = node;
+    if (typeof inputRef === 'function') inputRef(node);
+    else if (inputRef && typeof inputRef === 'object') {
+      (inputRef as React.MutableRefObject<TextInput | null>).current = node;
+    }
+  }, [inputRef]);
 
   return (
     <View style={containerStyle}>
@@ -58,10 +69,15 @@ export function AuthTextField({
         <Text style={st.label}>{label}</Text>
         {optional ? <Text style={st.optional}>{optional}</Text> : null}
       </View>
-      <View style={[st.wrap, focused && st.wrapFocus, error && st.wrapError]}>
+      {/* Whole row is the tap target (accessible={false} keeps the TextInput as the a11y node). */}
+      <Pressable
+        style={[st.wrap, focused && st.wrapFocus, error && st.wrapError]}
+        onPress={() => localRef.current?.focus()}
+        accessible={false}
+      >
         {Icon ? <Icon size={18} color={ICON} /> : null}
         <TextInput
-          ref={inputRef}
+          ref={setInputRef}
           style={[st.input, style]}
           placeholderTextColor={PLACEHOLDER}
           selectionColor={color.action}
@@ -71,7 +87,7 @@ export function AuthTextField({
           {...rest}
         />
         {trailing}
-      </View>
+      </Pressable>
       {help ? <Text style={st.help}>{help}</Text> : null}
     </View>
   );
@@ -83,14 +99,20 @@ const st = StyleSheet.create({
     marginTop: sp.md, marginBottom: sp.xs,
   },
   label: { fontFamily: F.label, fontSize: 13, letterSpacing: 0.2, color: ON_2 },
-  optional: { fontFamily: F.body, fontSize: 12, color: MUTED },
+  optional: { fontFamily: F.body, fontSize: 13, color: MUTED },
   wrap: {
     flexDirection: 'row', alignItems: 'center', gap: sp.sm, minHeight: 54,
     paddingHorizontal: sp.md, borderRadius: r.lg, backgroundColor: CARD,
     borderWidth: 1.5, borderColor: BORDER,
   },
-  wrapFocus: { borderColor: color.action },
+  // Focus = red border + a faint red halo, so the active field reads as a deliberate state (not just
+  // a colour swap). iOS-first; Android keeps the border-colour cue (no elevation, to avoid a grey box).
+  wrapFocus: {
+    borderColor: color.action,
+    shadowColor: color.action, shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.16, shadowRadius: 5,
+  },
   wrapError: { borderColor: BORDER_ERR },
   input: { flex: 1, fontFamily: F.body, fontSize: 16, color: TXT, paddingVertical: 14 },
-  help: { fontFamily: F.body, fontSize: 12, lineHeight: 16, color: MUTED, marginTop: 6 },
+  help: { fontFamily: F.body, fontSize: 13, lineHeight: 16, color: MUTED, marginTop: 6 },
 });

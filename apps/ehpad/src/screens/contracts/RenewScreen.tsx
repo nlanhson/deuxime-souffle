@@ -6,8 +6,8 @@ import * as api from '@/data/api';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { useAsync } from '@/hooks/useAsync';
-import { addDays, addMonths, lastWeekday, mondayIndex, nextWeekday } from '@/lib/calendar';
-import { capitalize, formatDate, formatEuro, formatTime, parseDate, toIso } from '@/lib/format';
+import { addDays, addMonths } from '@/lib/calendar';
+import { capitalize, formatDate, formatEuro, parseDate, toIso } from '@/lib/format';
 import { contractStatusChip, unitLabel } from '@/lib/status';
 import {
   Button,
@@ -56,18 +56,9 @@ export default function RenewScreen() {
     if (!contract) return null;
     const start = addDays(parseDate(contract.endDate), 1);
     const end = addDays(addMonths(start, 12), -1);
-    // Cadence dérivée des séances existantes (jour + heure les plus récents)
-    const last = (state.data?.sessions ?? [])
-      .filter((s) => s.contractId === contract.id)
-      .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))[0];
-    const weekday = last ? mondayIndex(parseDate(last.date)) : 1;
-    const time = last?.time ?? '10:30';
-    const firstSessions = Array.from({ length: 6 }, (_, i) =>
-      toIso(nextWeekday(lastWeekday(start, weekday, 0), weekday, i)),
-    );
     const estimated = SESSIONS_PER_YEAR[contract.frequency] ?? 46;
-    return { start: toIso(start), end: toIso(end), weekday, time, firstSessions, estimated };
-  }, [contract, state.data?.sessions]);
+    return { start: toIso(start), end: toIso(end), estimated };
+  }, [contract]);
 
   if (!isAdmin) {
     return (
@@ -103,16 +94,6 @@ export default function RenewScreen() {
                     </div>
                   ))}
                 </dl>
-                {card === 1 && (
-                  <div className={styles.subBlock}>
-                    <Skeleton height={12} width="40%" radius="var(--radius-md)" />
-                    <div className={styles.skeletonStack} style={{ marginTop: 'var(--space-sm)' }}>
-                      {Array.from({ length: 7 }, (_, i) => (
-                        <Skeleton key={i} height={14} width="70%" radius="var(--radius-md)" />
-                      ))}
-                    </div>
-                  </div>
-                )}
               </Card>
             ))}
           </div>
@@ -248,17 +229,6 @@ export default function RenewScreen() {
             `${capitalize(formatDate(proposal.start))} → ${formatDate(proposal.end)}`,
             `≈ ${proposal.estimated}`,
           )}
-          <div className={styles.subBlock}>
-            <p className={styles.summaryLabel}>{copy.generatedSessions}</p>
-            <ul className={styles.sessionPreview}>
-              {proposal.firstSessions.map((date) => (
-                <li key={date}>
-                  {capitalize(formatDate(date))} · {formatTime(proposal.time)}
-                </li>
-              ))}
-              <li>{copy.andMore(Math.max(proposal.estimated - proposal.firstSessions.length, 0))}</li>
-            </ul>
-          </div>
         </CardSection>
       </div>
 

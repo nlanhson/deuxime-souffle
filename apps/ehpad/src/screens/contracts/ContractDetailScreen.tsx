@@ -207,6 +207,13 @@ export default function ContractDetailScreen() {
           {fr.contracts.detail.nonRenewedInfo(formatDate(contract.endDate))}
         </InlineAlert>
       )}
+      {/* DT-E6 — échéance de renouvellement bien visible (bannière colorée en
+          tête de page). Le CTA « Renouveler » reste la barre d'actions ci-dessous. */}
+      {contract.status === 'a_renouveler' && (
+        <InlineAlert variant="warning" title={fr.contracts.detail.renewDeadlineTitle}>
+          {fr.contracts.detail.renewDeadline(formatDate(contract.endDate))}
+        </InlineAlert>
+      )}
 
       <div className={styles.actionRow}>
         {contract.status === 'active' && (
@@ -216,6 +223,7 @@ export default function ContractDetailScreen() {
         )}
         {contract.status === 'a_renouveler' && (
           <Button
+            variant="primary"
             icon={RefreshCw}
             disabled={!isAdmin}
             disabledReason={gateReason}
@@ -232,6 +240,18 @@ export default function ContractDetailScreen() {
             onClick={() => navigate(`/contrats/${contract.id}/modifier`)}
           >
             {fr.contracts.actions.edit}
+          </Button>
+        )}
+        {/* DT-E6 — porte d'entrée du parcours dissuasif de non-reconduction.
+            Action discrète (ghost) : « Renouveler » doit rester l'action première. */}
+        {contract.status === 'a_renouveler' && (
+          <Button
+            variant="ghost"
+            disabled={!isAdmin}
+            disabledReason={gateReason}
+            onClick={() => navigate(`/contrats/${contract.id}/non-renouvellement`)}
+          >
+            {fr.contracts.actions.doNotRenew}
           </Button>
         )}
       </div>
@@ -259,7 +279,12 @@ export default function ContractDetailScreen() {
             </div>
             <div>
               <dt>{fr.contracts.card.end}</dt>
-              <dd>{capitalize(formatDate(contract.endDate))}</dd>
+              <dd>
+                {/* DT-E5 — contrat sans fin : « Sans échéance » au lieu de la date nominale. */}
+                {contract.openEnded
+                  ? fr.contracts.wizard.period.openEndedValue
+                  : capitalize(formatDate(contract.endDate))}
+              </dd>
             </div>
             <div>
               <dt>{fr.contracts.card.rate}</dt>

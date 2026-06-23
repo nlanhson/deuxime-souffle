@@ -18,7 +18,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
 import { spacing as sp, surfaces } from '../theme/theme';
-import { copy } from '../copy';
+import { useCopy } from '../i18n';
 import { Logo } from '../components/Logo';
 import { ease, dur } from '../lib/motion';
 
@@ -26,6 +26,7 @@ const S = surfaces.coach;
 const F = { display: 'Anton_400Regular' };
 
 export function SplashScreen({ onDone, reduced }: { onDone: () => void; reduced: boolean }) {
+  const copy = useCopy();
   const c = copy.auth.splash;
   const t = useRef(new Animated.Value(0)).current;
   const fired = useRef(false);
@@ -74,6 +75,10 @@ export function SplashScreen({ onDone, reduced }: { onDone: () => void; reduced:
         <Animated.Text style={[st.word, { opacity: wordOpacity, transform: [{ translateY: wordY }] }]}>
           {c.wordmark}
         </Animated.Text>
+        {/* Community identity (DT-03) — "Le Mouvement" / "The Movement" as the brand tagline. */}
+        <Animated.Text style={[st.tagline, { opacity: wordOpacity, transform: [{ translateY: wordY }] }]}>
+          {c.tagline}
+        </Animated.Text>
       </View>
     </Pressable>
   );
@@ -85,5 +90,10 @@ const st = StyleSheet.create({
   word: {
     fontFamily: F.display, fontSize: 34, lineHeight: 41, letterSpacing: 0.5,
     color: S.textPrimary, textAlign: 'center', paddingHorizontal: sp.xl,
+  },
+  // Brand tagline under the wordmark — Oswald kicker, sentence case (no all-caps), muted ink.
+  tagline: {
+    fontFamily: 'Oswald_500Medium', fontSize: 16, letterSpacing: 1,
+    color: S.textSecondary, textAlign: 'center',
   },
 });

@@ -19,10 +19,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useReducedMotion } from '../lib/useReducedMotion';
 
 const SWEEP_MS = 1200;
-// Base fill: a hair of white that reads on both the ink canvas (#171717) and the raised cards
-// (#2B2B2B). The travelling highlight is a touch brighter so the sweep stays subtle.
-const BASE = 'rgba(255,255,255,0.07)';
-const SHEEN: readonly [string, string, string] = ['transparent', 'rgba(255,255,255,0.10)', 'transparent'];
+// Base fill: a hair of ink that reads on both the light canvas (#F7F4EF) and the white cards
+// (#FFFFFF). The travelling highlight is a touch stronger so the sweep stays subtle.
+const BASE = 'rgba(0,0,0,0.06)';
+const SHEEN: readonly [string, string, string] = ['transparent', 'rgba(0,0,0,0.06)', 'transparent'];
 
 type Ctx = { t: Animated.Value | null; reduced: boolean };
 const SkeletonCtx = React.createContext<Ctx>({ t: null, reduced: true });

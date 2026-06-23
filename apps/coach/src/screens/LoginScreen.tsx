@@ -26,7 +26,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
-import { copy } from '../copy';
+import { useCopy } from '../i18n';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { GoogleButton } from '../components/GoogleButton';
@@ -36,8 +36,8 @@ import { X, Mail, Lock, Eye, EyeOff, TriangleAlert } from '../icons';
 import { ease, dur } from '../lib/motion';
 
 const S = surfaces.coach;
-const ICON = palette.neutral[400];
-const ON_2 = palette.neutral[300];
+const ICON = palette.neutral[500];
+const ON_2 = palette.neutral[600];
 const ERR = palette.rouge[300];
 const F = {
   display: 'Anton_400Regular',
@@ -61,6 +61,7 @@ export function LoginScreen({
   onForgot: (email?: string) => void;
   reduced: boolean;
 }) {
+  const copy = useCopy();
   const c = copy.auth.login;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -221,7 +222,7 @@ const st = StyleSheet.create({
   topbar: { flexDirection: 'row', alignItems: 'center', marginBottom: sp.xl },
   closeBtn: {
     width: 44, height: 44, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: palette.neutral[800],
+    backgroundColor: palette.neutral[100],
   },
 
   // Sentence case (brand rule: no all-caps) — the red eyebrow reads as a kicker, not a shout.
@@ -234,8 +235,8 @@ const st = StyleSheet.create({
 
   googleWrap: { marginTop: sp.md },
   divider: { flexDirection: 'row', alignItems: 'center', gap: sp.md, marginVertical: sp.md },
-  divLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.10)' },
-  divTxt: { fontFamily: F.body, fontSize: 13, color: palette.neutral[500] },
+  divLine: { flex: 1, height: 1, backgroundColor: palette.neutral[200] },
+  divTxt: { fontFamily: F.body, fontSize: 13, color: palette.neutral[600] },
 
   eyeBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', marginRight: -sp.xs },
 

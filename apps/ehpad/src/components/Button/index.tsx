@@ -18,7 +18,7 @@ interface ButtonProps extends CommonProps, Omit<ButtonHTMLAttributes<HTMLButtonE
   disabledReason?: string | undefined;
 }
 
-/** Bouton « Le Club » EHPAD — secondary est le bouton par défaut (le rouge est
+/** Bouton « Le Mouvement » EHPAD — secondary est le bouton par défaut (le rouge est
  *  réservé au seul CTA primaire de la vue). Cible ≥ 44px (52px par défaut). */
 export function Button({
   variant = 'secondary',

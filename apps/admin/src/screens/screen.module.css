@@ -1,0 +1,117 @@
+/* Shared layout idioms for the back-office domain screens.
+   Imported alongside each screen's own module. */
+
+/* Vertical rhythm between sections of a page. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* KPI band — same metric strip as the dashboard. */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-md);
+}
+
+/* Two-column split: main list + side rail (detail / context). */
+.split {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+@media (max-width: 1080px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Alert banner — red veil for overdue / emergency, gold for advisory. */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+}
+.banner[data-tone='danger'] {
+  background: var(--color-danger-soft);
+  border-color: var(--lc-rouge-100);
+  color: var(--color-danger);
+}
+.banner[data-tone='warning'] {
+  background: var(--color-warning-soft);
+  border-color: var(--lc-or-100);
+  color: var(--lc-or-800);
+}
+.bannerIcon {
+  flex-shrink: 0;
+}
+.bannerText {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-body-sm);
+  line-height: var(--lh-body);
+  color: var(--color-text-primary);
+}
+.bannerText strong {
+  font-weight: var(--weight-semibold);
+}
+
+/* Sub-label under a numeral or title. */
+.muted {
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
+}
+
+/* Inline row of small meta facts (e.g. "12 séances · 4,6 ★ · Lyon"). */
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
+}
+.dot::before {
+  content: '·';
+  margin-right: var(--space-sm);
+  color: var(--color-border-strong);
+}
+
+/* Result count / table footer note. */
+.count {
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cell helper: stack a primary line over a muted secondary line in a table. */
+.cellStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.cellStrong {
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+}
+.cellMuted {
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+}
+
+/* Person cell: avatar + name stack. */
+.person {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* Money / tabular numerals. */
+.num {
+  font-variant-numeric: tabular-nums;
+}

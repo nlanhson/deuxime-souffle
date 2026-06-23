@@ -47,10 +47,10 @@ export function SecondaryButton({ label, onPress, style, accessibilityLabel, dis
 const st = StyleSheet.create({
   // minHeight matches PrimaryButton + GoogleButton (52) so every auth CTA is the same size.
   btn: {
-    minHeight: 52, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center',
+    minHeight: 52, borderRadius: r.button, alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: sp.md, borderWidth: 1.5, borderColor: palette.neutral[600],
     backgroundColor: 'transparent',
   },
   // Light grey label (not full white) so the outline button stays clearly subordinate to the primary.
-  txt: { fontFamily: 'Inter_600SemiBold', fontSize: 16, letterSpacing: 0.2, color: palette.neutral[300] },
+  txt: { fontFamily: 'Inter_600SemiBold', fontSize: 16, letterSpacing: 0.2, color: palette.neutral[700] },
 });

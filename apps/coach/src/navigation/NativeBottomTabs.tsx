@@ -9,6 +9,7 @@ import { createNativeBottomTabNavigator } from '@bottom-tabs/react-navigation';
 import { useBottomTabBarHeight } from 'react-native-bottom-tabs';
 
 import { surfaces, palette } from '../theme/theme';
+import { useCopy } from '../i18n';
 import { TABS, type TabName } from './tabs';
 import { TabBarInsetContext } from './tabBarInsets';
 
@@ -51,10 +52,11 @@ const NATIVE_ACTIVE_TINT = palette.rouge[600]; // #C32721 — pre-compensated fo
 const ANDROID_BAR_STYLE = Platform.OS === 'android' ? { backgroundColor: coach.canvas } : undefined;
 
 export function NativeBottomTabs() {
+  const copy = useCopy();
   return (
     <Tabs.Navigator
       tabBarActiveTintColor={NATIVE_ACTIVE_TINT}
-      tabBarInactiveTintColor={palette.neutral[500]}
+      tabBarInactiveTintColor={palette.neutral[600]}
       tabBarStyle={ANDROID_BAR_STYLE}
       hapticFeedbackEnabled
       labeled
@@ -65,7 +67,7 @@ export function NativeBottomTabs() {
           name={t.name}
           component={t.component}
           options={{
-            tabBarLabel: t.label,
+            tabBarLabel: copy.tabs[t.labelKey],
             tabBarIcon: ({ focused }) => ({ sfSymbol: focused ? t.sf.active : t.sf.inactive }),
           }}
         />

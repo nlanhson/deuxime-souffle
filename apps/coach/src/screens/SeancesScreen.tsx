@@ -13,27 +13,39 @@
  * (cream, inside the dark cards). UI text comes from ../copy (the localization seam).
  */
 import React from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Modal, TextInput, Animated, LayoutAnimation } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
-import { MapPin, AlertTriangle, Check, CheckCircle2, Navigation, Edit3, Users, Bell, Clock, User, X, ChevronDown, ChevronUp, ChevronRight, Ban, CalendarX, StickyNote, Send, Activity, Smile, Wallet, Copy, type LucideIcon } from '../icons';
+import { MapPin, AlertTriangle, Check, CheckCircle2, Navigation, Edit3, Users, Bell, Clock, User, X, ChevronDown, ChevronRight, Ban, CalendarClock, StickyNote, Send, Activity, Smile, Copy, Phone, Building2, ShieldCheck, Sparkles, DoorOpen, type LucideIcon } from '../icons';
 
 import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
-import { copy } from '../copy';
+import { useCopy, useLocale } from '../i18n';
+import { dayFromOffset, dayLabel } from '../lib/dateLabels';
+import { useNow } from '../lib/useNow';
+import { sessionStartEnd, lifecycleOf } from '../lib/sessionLifecycle';
+import { useReducedMotion } from '../lib/useReducedMotion';
+import { dur, ease } from '../lib/motion';
+import type { Copy as AppCopy } from '../copy';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { setStatusBarStyle } from 'expo-status-bar';
 import { NotificationCenter } from '../components/NotificationCenter';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { GradientFill } from '../components/GradientFill';
 import { ProfileAvatar } from '../components/ProfileAvatar';
 import { COACH_PHOTO } from '../lib/coachProfile';
 import { Segmented } from '../components/segmented';
 import { ActionModal } from '../components/ActionModal';
 import { OptionSheet } from '../components/OptionSheet';
 import { CheckInModal } from '../components/CheckInModal';
-import { AbsenceModal } from '../components/AbsenceModal';
+import { SessionMap } from '../components/SessionMap';
+import { CancelModal } from '../components/CancelModal';
 import { openDirections } from '../lib/openDirections';
-import { ProfileScreen } from './ProfileScreen';
+import { callNumber } from '../lib/callNumber';
+import { UpdateAvailabilityScreen } from './UpdateAvailabilityScreen';
 import { ReportScreen } from './ReportScreen';
 import { useTabBarInset } from '../navigation/tabBarInsets';
 import { useFirstLoad } from '../lib/useFirstLoad';
+import { useKeyboardInset } from '../lib/useKeyboardInset';
 import { Reveal } from '../components/Reveal';
 import { SeancesSkeleton } from './skeletons';
 
@@ -50,17 +62,17 @@ const CARD_LIFT = isDark ? palette.neutral[700] : S.surfaceRaised;  // lifted ce
 const SUBTLE = isDark ? palette.neutral[800] : palette.neutral[100]; // subtle container on the canvas
 const ON_CANVAS = S.textPrimary;                                   // on-canvas text — adapts per scheme
 const ON_CANVAS_2 = S.textSecondary;
-const ON_CARD = palette.neutral[50];                              // light text inside the dark card
-const ON_CARD_2 = palette.neutral[300];
+const ON_CARD = palette.neutral[900];                             // primary text inside the (now light) card
+const ON_CARD_2 = palette.neutral[600];
 const MOVEMENT = [palette.rouge[500], palette.or[500]] as const;  // signature gradient, 135°
 
 /* Status colours used INSIDE the dark cards — tuned for the ink surface (the global ramp,
    since the semantic status tokens are calibrated for light surfaces). Same approach as
    AccueilScreen; SPEC §4 proposes promoting these to coach-theme tokens. */
 const INK = {
-  ok:      { fg: palette.vert[300], bg: 'rgba(47,158,107,0.16)' },     // confirmed / done
-  pending: { fg: palette.or[300], bg: 'rgba(242,194,0,0.13)' },        // report due
-  info:    { fg: palette.bleu[200], bg: 'rgba(166,183,219,0.14)' },    // check-in open
+  ok:      { fg: palette.vert[700], bg: 'rgba(47,158,107,0.16)' },     // confirmed / done
+  pending: { fg: palette.or[800], bg: 'rgba(242,194,0,0.13)' },        // report due
+  info:    { fg: palette.bleu[700], bg: 'rgba(166,183,219,0.14)' },    // check-in open
   neutral: { fg: palette.neutral[400], bg: 'rgba(156,156,156,0.16)' }, // report sent / muted
 };
 
@@ -80,8 +92,18 @@ const F = {
 type Status = 'checkin' | 'confirmed' | 'checkedIn' | 'reportDue' | 'reportSent';
 // `rate` = the coach's hourly rate on this session (PLA-14 — mock; real code reads the
 // assignment's agreed rate).
-type Session = { id: string; time: string; end: string; place: string; addr: string; detail: string; contact: string; status: Status; rate: number };
-type Group = { label: string; items: Session[] };
+// `startsInH` = hours until the session starts (real app: session_start − now). Drives the
+// impact-aware cancellation penalty (PLA-11/PLA-13 + algorithm config): ≤ 48h → −2 confidence
+// points, > 48h → free. Only meaningful for upcoming sessions.
+// `firstVisit` = the coach's first session at this EHPAD ("This is your first session together!" —
+// the WBS TEST-session marker). Surfaced as a small celebratory tag on the card + detail.
+// `access` = the EHPAD's free-text "how to get in on arrival" note (door/entrance/floor/interphone),
+// the WBS PLA-14 §5 "access details if available" field. Optional — rendered only when present.
+type Session = { id: string; time: string; end: string; place: string; addr: string; detail: string; contact: string; phone: string; status: Status; rate: number; startsInH?: number; firstVisit?: boolean; access?: string };
+// `offset` = whole days from today (0 = today, 1 = tomorrow, −1 = yesterday). The visible day
+// header is formatted live from this against the device clock + locale (dayLabel), so the mock
+// agenda always reads relative to "now" instead of going stale.
+type Group = { offset: number; items: Session[] };
 
 // Duration shown on the card's time rail (ClassPass idiom: start time over duration, not end time).
 // Times are "HH:MM" 24h; the full start→end range stays available in the detail sheet.
@@ -98,55 +120,56 @@ function durationLabel(start: string, end: string): string {
 // "The Lindens @ 14:30" mirrors the Accueil hero; "Bellevue, yesterday" mirrors its report banner.
 const UPCOMING: Group[] = [
   {
-    label: 'Aujourd’hui',
+    offset: 0, // today
     items: [
-      { id: 'u1', time: '14:30', end: '15:30', place: 'Résidence Les Tilleuls', addr: '12 rue des Lilas, Lyon 3e · 2.4 km', detail: 'Groupe · 8 résidents', contact: 'Demandez Marie Laurent · Coordinatrice', status: 'checkin', rate: 35 },
-      { id: 'u2', time: '17:00', end: '18:00', place: 'Résidence du Parc', addr: '8 rue Léon Blum, Villeurbanne · 3.1 km', detail: 'Individuel · 1 résident', contact: 'Demandez Thomas Petit · Responsable des animations', status: 'confirmed', rate: 35 },
+      { id: 'u1', time: '14:30', end: '15:30', place: 'Résidence Les Tilleuls', addr: '12 rue des Lilas, Lyon 3e · 2.4 km', detail: 'Groupe · 8 résidents', contact: 'Demandez Marie Laurent · Coordinatrice', phone: '04 78 30 12 45', status: 'checkin', rate: 35, startsInH: 2, access: 'Entrée principale, interphone « APA » · 3e étage' },
+      { id: 'u2', time: '17:00', end: '18:00', place: 'Résidence du Parc', addr: '8 rue Léon Blum, Villeurbanne · 3.1 km', detail: 'Groupe · 5 résidents', contact: 'Demandez Thomas Petit · Responsable des animations', phone: '04 72 44 18 90', status: 'confirmed', rate: 35, startsInH: 4, access: 'Entrée du personnel, Rue Léon Blum (interphone APA)' },
     ],
   },
   {
-    label: 'Demain',
+    offset: 1, // tomorrow
     items: [
-      { id: 'u3', time: '10:00', end: '11:00', place: 'Résidence Les Cèdres', addr: '5 avenue Jean Jaurès, Lyon 7e · 4.8 km', detail: 'Groupe · 6 résidents', contact: 'Demandez Sophie Marchand · Coordinatrice', status: 'confirmed', rate: 40 },
+      { id: 'u3', time: '10:00', end: '11:00', place: 'Résidence Les Cèdres', addr: '5 avenue Jean Jaurès, Lyon 7e · 4.8 km', detail: 'Groupe · 6 résidents', contact: 'Demandez Sophie Marchand · Coordinatrice', phone: '04 78 61 23 77', status: 'confirmed', rate: 40, startsInH: 20, firstVisit: true, access: 'Accueil, rez-de-chaussée' },
     ],
   },
   {
-    label: 'Jeu · 11 juin',
+    offset: 3,
     items: [
-      { id: 'u4', time: '11:00', end: '12:00', place: 'Résidence Les Érables', addr: '27 cours Gambetta, Lyon 6e · 1.9 km', detail: 'Groupe · 10 résidents', contact: 'Demandez Claire Dubois · Responsable de soins', status: 'confirmed', rate: 35 },
+      { id: 'u4', time: '11:00', end: '12:00', place: 'Résidence Les Érables', addr: '27 cours Gambetta, Lyon 6e · 1.9 km', detail: 'Groupe · 10 résidents', contact: 'Demandez Claire Dubois · Responsable de soins', phone: '04 72 83 05 14', status: 'confirmed', rate: 35, startsInH: 50 },
     ],
   },
 ];
 
 const PAST: Group[] = [
   {
-    label: 'Hier',
+    offset: -1, // yesterday
     items: [
-      { id: 'p1', time: '15:00', end: '16:00', place: 'Résidence Bellevue', addr: '3 rue Bellecombe, Lyon 6e · 1.9 km', detail: 'Groupe · 10 résidents', contact: 'Demandez Julien Moreau · Coordinateur', status: 'reportDue', rate: 35 },
-      { id: 'p2', time: '09:30', end: '10:30', place: 'Résidence des Berges', addr: '14 quai Rambaud, Lyon 7e · 4.1 km', detail: 'Individuel · 1 résident', contact: 'Demandez Amélie Roche · Responsable des animations', status: 'reportSent', rate: 35 },
+      { id: 'p1', time: '15:00', end: '16:00', place: 'Résidence Bellevue', addr: '3 rue Bellecombe, Lyon 6e · 1.9 km', detail: 'Groupe · 10 résidents', contact: 'Demandez Julien Moreau · Coordinateur', phone: '04 78 52 39 60', status: 'reportDue', rate: 35 },
+      { id: 'p2', time: '09:30', end: '10:30', place: 'Résidence des Berges', addr: '14 quai Rambaud, Lyon 7e · 4.1 km', detail: 'Groupe · 6 résidents', contact: 'Demandez Amélie Roche · Responsable des animations', phone: '04 72 19 47 28', status: 'reportSent', rate: 35 },
     ],
   },
   {
-    label: 'Lun · 8 juin',
+    offset: -3,
     items: [
-      { id: 'p3', time: '14:00', end: '15:00', place: 'Résidence Les Chênes', addr: '19 montée des Soldats, Caluire · 5.2 km', detail: 'Groupe · 7 résidents', contact: 'Demandez Luc Girard · Coordinateur', status: 'reportSent', rate: 35 },
+      { id: 'p3', time: '14:00', end: '15:00', place: 'Résidence Les Chênes', addr: '19 montée des Soldats, Caluire · 5.2 km', detail: 'Groupe · 7 résidents', contact: 'Demandez Luc Girard · Coordinateur', phone: '04 78 08 56 31', status: 'reportSent', rate: 35 },
     ],
   },
 ];
 
 /* ---------- small building blocks ---------- */
 
-const STATUS_META: Record<Status, { tone: keyof typeof INK; label: string; icon?: LucideIcon }> = {
+const statusMeta = (copy: AppCopy): Record<Status, { tone: keyof typeof INK; label: string; icon?: LucideIcon }> => ({
   checkin:    { tone: 'info', label: copy.sessions.status.checkinOpen, icon: MapPin },
   confirmed:  { tone: 'ok', label: copy.sessions.status.confirmed },
   checkedIn:  { tone: 'ok', label: copy.sessions.status.checkedIn, icon: CheckCircle2 },
   reportDue:  { tone: 'pending', label: copy.sessions.status.reportDue, icon: AlertTriangle },
   reportSent: { tone: 'neutral', label: copy.sessions.status.reportSent, icon: Check },
-};
+});
 
 // Status chip — never colour alone: every tone carries an icon (or a dot) AND a word.
 function StatusChip({ status }: { status: Status }) {
-  const m = STATUS_META[status];
+  const copy = useCopy();
+  const m = statusMeta(copy)[status];
   const c = INK[m.tone];
   const Icon = m.icon;
   return (
@@ -157,19 +180,67 @@ function StatusChip({ status }: { status: Status }) {
   );
 }
 
+/* Time-derived "in progress" chip (WBS PLA-14 §7/§8) — shown while a session is currently running,
+   derived from the clock so it appears/clears dynamically. Filled live dot + word (never colour
+   alone). We deliberately DON'T synthesise a "Completed" chip from the clock: the workflow status
+   is mock-frozen, and a real ended session transitions to report-due/-sent (the Past tab) which
+   already reads as done — faking "Terminée" on a still-"check-in" session would contradict its
+   action-required banner and check-in CTA. */
+function LifecycleChip() {
+  const copy = useCopy();
+  const c = INK.info;
+  return (
+    <View style={[st.chip, { backgroundColor: c.bg }]}>
+      <View style={[st.dot, { backgroundColor: c.fg }]} />
+      <Text style={[st.chipTxt, { color: c.fg }]} numberOfLines={1}>{copy.sessions.status.inProgress}</Text>
+    </View>
+  );
+}
+
+// Is the session currently running (clock within [start, end])? Past workflow states (report
+// due/sent) keep their own chip and are never "in progress".
+function isInProgress(s: Session, dayOffset: number, today: Date, now: Date): boolean {
+  if (s.status === 'reportDue' || s.status === 'reportSent') return false;
+  const { start, end } = sessionStartEnd(dayFromOffset(dayOffset, today), s.time, s.end);
+  return lifecycleOf(start, end, now) === 'inProgress';
+}
+
+// The chip shown on a session — the live "in progress" override when running, else the workflow status.
+function SessionStatusChip({ s, dayOffset, today, now }: { s: Session; dayOffset: number; today: Date; now: Date }) {
+  return isInProgress(s, dayOffset, today, now) ? <LifecycleChip /> : <StatusChip status={s.status} />;
+}
+
+// The visible status label (for a11y) — mirrors SessionStatusChip so screen readers match the chip.
+function sessionStatusLabel(s: Session, dayOffset: number, today: Date, now: Date, copy: AppCopy): string {
+  return isInProgress(s, dayOffset, today, now) ? copy.sessions.status.inProgress : statusMeta(copy)[s.status].label;
+}
+
+// "First session together" tag (WBS TEST-session marker) — a small gold/reward tag with a sparkle.
+function FirstVisitTag() {
+  const copy = useCopy();
+  const c = INK.pending; // gold = reward tone
+  return (
+    <View style={[st.chip, { backgroundColor: c.bg }]}>
+      <Sparkles size={13} color={c.fg} />
+      <Text style={[st.chipTxt, { color: c.fg }]} numberOfLines={1}>{copy.sessions.firstVisit}</Text>
+    </View>
+  );
+}
+
 // The contextual action(s) per status — this is where the screen's loops live. The two real
 // loops are wired up from the screen: `onCheckIn` (C16 geolocated check-in) and `onWriteReport`
 // (C25 6-step report form). Directions / view-report stay visual stubs for now.
 type CtaHandlers = { onCheckIn?: () => void; onWriteReport?: () => void; onDirections?: () => void; onViewReport?: () => void };
 
-function SessionCta({ status, onCheckIn, onWriteReport, onDirections, onViewReport }: { status: Status } & CtaHandlers) {
+function SessionCta({ status, compact, onCheckIn, onWriteReport, onDirections, onViewReport }: { status: Status; compact?: boolean } & CtaHandlers) {
+  const copy = useCopy();
   if (status === 'checkin') {
     return (
       <View style={st.ctaRow}>
         <Pressable style={st.secondaryBtn} onPress={onDirections} accessibilityRole="button" accessibilityLabel={copy.sessions.action.directions}>
           <Text style={st.secondaryTxt}>{copy.sessions.action.directions}</Text>
         </Pressable>
-        <PrimaryButton label={copy.sessions.action.checkin} onPress={onCheckIn} style={{ flex: 1 }} />
+        <PrimaryButton label={copy.sessions.action.checkin} onPress={onCheckIn} compact={compact} style={{ flex: 1 }} />
       </View>
     );
   }
@@ -214,11 +285,42 @@ function SessionCta({ status, onCheckIn, onWriteReport, onDirections, onViewRepo
   );
 }
 
-type OpenSession = Session & { day: string };
+type OpenSession = Session & { day: string; dayOffset: number };
 
-function SessionCard({ s, day, first, onOpen, onCheckIn, onWriteReport, onViewReport }: { s: Session; day: string; first: boolean; onOpen: (d: OpenSession) => void; onCheckIn: (d: OpenSession) => void; onWriteReport: (d: OpenSession) => void; onViewReport: (d: OpenSession) => void }) {
+function SessionCard({ s, day, dayOffset, today, now, first, onOpen, onCheckIn, onWriteReport }: { s: Session; day: string; dayOffset: number; today: Date; now: Date; first: boolean; onOpen: (d: OpenSession) => void; onCheckIn: (d: OpenSession) => void; onWriteReport: (d: OpenSession) => void }) {
+  const copy = useCopy();
+  const reduced = useReducedMotion();
   const [expanded, setExpanded] = React.useState(false);
-  const open: OpenSession = { ...s, day };
+  const open: OpenSession = { ...s, day, dayOffset };
+
+  // Chevron rotates 0°→180° with the reveal (GPU transform). Reduced motion snaps instantly.
+  const chevron = React.useRef(new Animated.Value(0)).current;
+  React.useEffect(() => {
+    Animated.timing(chevron, {
+      toValue: expanded ? 1 : 0,
+      duration: reduced ? 0 : (expanded ? dur.base : dur.fast),
+      easing: expanded ? ease.out : ease.in,
+      useNativeDriver: true,
+    }).start();
+  }, [expanded, reduced, chevron]);
+  const chevronRotate = chevron.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
+
+  // Smooth in-place reveal: animate the height reflow (cards below slide) + fade the content,
+  // via LayoutAnimation (the idiom already used in useKeyboardInset). Entrance eases out at
+  // dur.base; collapse eases in and quicker (dur.fast) — Emil's asymmetric timing. Reduced motion
+  // skips the animation entirely (instant), keeping it vestibular-safe.
+  const toggle = () => {
+    if (!reduced) {
+      const willExpand = !expanded;
+      LayoutAnimation.configureNext({
+        duration: willExpand ? dur.base : dur.fast,
+        update: { type: willExpand ? LayoutAnimation.Types.easeOut : LayoutAnimation.Types.easeIn },
+        create: { type: LayoutAnimation.Types.easeOut, property: LayoutAnimation.Properties.opacity },
+        delete: { type: LayoutAnimation.Types.easeIn, property: LayoutAnimation.Properties.opacity },
+      });
+    }
+    setExpanded((v) => !v);
+  };
   return (
     <View style={[st.card, !first && st.cardDivider]}>
       <View style={st.cardTop}>
@@ -227,57 +329,78 @@ function SessionCard({ s, day, first, onOpen, onCheckIn, onWriteReport, onViewRe
           style={({ pressed }) => [st.headerTap, pressed && { opacity: 0.9 }]}
           onPress={() => onOpen(open)}
           accessibilityRole="button"
-          accessibilityLabel={`${s.place}, ${s.time} to ${s.end}, ${STATUS_META[s.status].label}. View details.`}
+          accessibilityLabel={`${s.place}, ${s.time} to ${s.end}, ${sessionStatusLabel(s, dayOffset, today, now, copy)}${s.firstVisit ? `, ${copy.sessions.firstVisit}` : ''}. View details.`}
         >
-          {/* time rail — start time over duration (ClassPass idiom) */}
+          {/* time rail — start time over duration (ClassPass idiom). No connector rule:
+              clean column alignment carries the relationship (ClassPass / Fresha). */}
           <View style={st.timeRail}>
             <Text style={st.railTime} numberOfLines={1}>{s.time}</Text>
             <Text style={st.railEnd}>{durationLabel(s.time, s.end)}</Text>
           </View>
 
-          {/* thin connector rule between the rail and the content */}
-          <View style={st.railRule} />
-
-          {/* title · tag · address */}
+          {/* title (hero) · tag(s) · address */}
           <View style={st.cardBody}>
             <Text style={st.place} numberOfLines={1}>{s.place}</Text>
             <View style={st.tagRow}>
-              <StatusChip status={s.status} />
+              <SessionStatusChip s={s} dayOffset={dayOffset} today={today} now={now} />
+              {s.firstVisit ? <FirstVisitTag /> : null}
             </View>
             <Text style={st.addr} numberOfLines={2}>{s.addr}</Text>
           </View>
         </Pressable>
 
-        {/* dropdown — expands the card in place */}
+        {/* dropdown — expands the card in place (smooth height + fade, see toggle) */}
         <Pressable
           style={st.chevBtn}
-          onPress={() => setExpanded((v) => !v)}
+          onPress={toggle}
           hitSlop={8}
           accessibilityRole="button"
           accessibilityState={{ expanded }}
           accessibilityLabel={expanded ? copy.sessions.collapseA11y : copy.sessions.expandA11y}
         >
-          {expanded ? <ChevronUp size={22} color={ON_CARD_2} /> : <ChevronDown size={22} color={ON_CARD_2} />}
+          <Animated.View style={{ transform: [{ rotate: chevronRotate }] }}>
+            <ChevronDown size={22} color={ON_CARD_2} />
+          </Animated.View>
         </Pressable>
       </View>
 
       {/* expanded — extra detail + the contextual actions */}
       {expanded ? (
         <View style={st.expandWrap}>
-          <View style={st.metaRow}>
-            <Users size={14} color={ON_CARD_2} />
-            <Text style={st.meta}>{s.detail}</Text>
-          </View>
+          {/* "Format · Group · X residents" intentionally not shown (DT-11 — group size is
+              variable/uncertain). The on-site contact remains the useful pre-arrival detail. */}
           <View style={st.metaRow}>
             <User size={14} color={ON_CARD_2} />
             <Text style={st.meta}>{s.contact}</Text>
           </View>
+          {/* Direct clickable phone number (DT-12). */}
+          <Pressable
+            onPress={() => callNumber(s.phone)}
+            hitSlop={8}
+            style={({ pressed }) => [st.callLink, pressed && { opacity: 0.6 }]}
+            accessibilityRole="button"
+            accessibilityLabel={`${copy.sessions.detail.callA11y}, ${s.phone}`}
+          >
+            {/* Neutral icon (matches the contact's person icon above); the number itself stays
+                blue + tappable (colour = clickable). */}
+            <Phone size={14} color={ON_CARD_2} />
+            <Text style={st.callTxt}>{s.phone}</Text>
+          </Pressable>
+          {/* Access — how to get in on arrival (WBS PLA-14 §5, "if available"); the other key
+              pre-arrival detail alongside the contact. Shown only when set. */}
+          {s.access ? (
+            <View style={st.metaRow}>
+              <DoorOpen size={14} color={ON_CARD_2} />
+              <Text style={st.meta}>{s.access}</Text>
+            </View>
+          ) : null}
           <SessionCta
             status={s.status}
+            compact
             onCheckIn={() => onCheckIn(open)}
             onWriteReport={() => onWriteReport(open)}
             onDirections={() => openDirections(open.addr)}
-            onViewReport={() => onViewReport(open)}
+            onViewReport={() => onOpen(open)}
           />
         </View>
       ) : null}
@@ -287,7 +410,7 @@ function SessionCard({ s, day, first, onOpen, onCheckIn, onWriteReport, onViewRe
 
 type Seg = 'upcoming' | 'past' | 'applications';
 
-const SEG_OPTIONS = [
+const segOptions = (copy: AppCopy) => [
   { value: 'upcoming' as const, label: copy.sessions.seg.upcoming },
   { value: 'past' as const, label: copy.sessions.seg.past },
   { value: 'applications' as const, label: copy.sessions.seg.applications },
@@ -296,23 +419,23 @@ const SEG_OPTIONS = [
 /* ---------- applications (C13) — cross-session list: the sessions you've applied for and
    where each one stands. A separate status vocabulary from the session list. ---------- */
 
-type AppStatus = 'pending' | 'accepted' | 'rejected';
-type Application = { place: string; addr: string; when: string; status: AppStatus; format: string; contact: string; applied: string };
+// DT-08: DS never rejects an application, and a selected coach's application auto-moves to
+// Confirmed (it leaves this list) — so the Applications tab is pending-only. No "Refusée"/"Rejected".
+type AppStatus = 'pending';
+type Application = { place: string; addr: string; when: string; status: AppStatus; contact: string; phone: string; applied: string };
 
 const APPLICATIONS: Application[] = [
-  { place: 'Résidence Saint-Joseph', addr: '21 rue de la Part-Dieu, Lyon 3e · 1.2 km', when: 'Ven · 12 juin · 10:00 → 11:00', status: 'pending', format: 'Groupe · 8 résidents', contact: 'Demandez Nadia Berger · Coordinatrice', applied: '7 juin' },
-  { place: 'Résidence Les Tilleuls', addr: '6 rue des Docks, Lyon 9e · 6.4 km', when: 'Sam · 13 juin · 15:00 → 16:00', status: 'accepted', format: 'Individuel · 1 résident', contact: 'Demandez Paul Mercier · Responsable des animations', applied: '6 juin' },
-  { place: 'Résidence Bellecour', addr: '2 place Bellecour, Lyon 2e · 3.0 km', when: 'Lun · 8 juin · 11:00 → 12:00', status: 'rejected', format: 'Groupe · 6 résidents', contact: 'Demandez Hélène Faure · Coordinatrice', applied: '4 juin' },
+  { place: 'Résidence Saint-Joseph', addr: '21 rue de la Part-Dieu, Lyon 3e · 1.2 km', when: 'Ven · 12 juin · 10:00 → 11:00', status: 'pending', contact: 'Demandez Nadia Berger · Coordinatrice', phone: '04 78 24 67 03', applied: '7 juin' },
+  { place: 'Résidence Le Verger', addr: '23 rue Vendôme, Lyon 6e · 2.6 km', when: 'Mer · 17 juin · 14:30 → 15:30', status: 'pending', contact: 'Demandez Léa Fournier · Coordinatrice', phone: '04 78 52 41 09', applied: '9 juin' },
 ];
 
-const APP_META: Record<AppStatus, { tone: keyof typeof INK; label: string; icon: LucideIcon }> = {
-  pending:  { tone: 'pending', label: copy.sessions.appStatus.pending, icon: Clock },
-  accepted: { tone: 'ok', label: copy.sessions.appStatus.accepted, icon: Check },
-  rejected: { tone: 'neutral', label: copy.sessions.appStatus.rejected, icon: X },
-};
+const appMeta = (copy: AppCopy): Record<AppStatus, { tone: keyof typeof INK; label: string; icon: LucideIcon }> => ({
+  pending: { tone: 'pending', label: copy.sessions.appStatus.pending, icon: Clock },
+});
 
 function ApplicationChip({ status }: { status: AppStatus }) {
-  const m = APP_META[status];
+  const copy = useCopy();
+  const m = appMeta(copy)[status];
   const c = INK[m.tone];
   const Icon = m.icon;
   return (
@@ -324,12 +447,13 @@ function ApplicationChip({ status }: { status: AppStatus }) {
 }
 
 function ApplicationCard({ a, first, onOpen }: { a: Application; first: boolean; onOpen: (a: Application) => void }) {
+  const copy = useCopy();
   return (
     <Pressable
       style={({ pressed }) => [st.card, !first && st.cardDivider, pressed && { opacity: 0.9 }]}
       onPress={() => onOpen(a)}
       accessibilityRole="button"
-      accessibilityLabel={`${a.place}, ${a.when}, ${APP_META[a.status].label}. View application.`}
+      accessibilityLabel={`${a.place}, ${a.when}, ${appMeta(copy)[a.status].label}. View application.`}
     >
       <View style={st.appHead}>
         <Text style={st.place} numberOfLines={1}>{a.place}</Text>
@@ -350,6 +474,7 @@ function ApplicationCard({ a, first, onOpen }: { a: Application; first: boolean;
 /* ---------- application detail (C13) — pageSheet, opened by tapping an application row ---------- */
 
 function ApplicationDetail({ detail, onClose, onWithdraw }: { detail: Application | null; onClose: () => void; onWithdraw: (a: Application) => void }) {
+  const copy = useCopy();
   const a = detail;
   return (
     <Modal visible={!!a} onRequestClose={onClose} animationType="slide" presentationStyle="pageSheet">
@@ -376,8 +501,8 @@ function ApplicationDetail({ detail, onClose, onWithdraw }: { detail: Applicatio
             <View style={st.dCard}>
               <DetailRow Icon={Clock} label={copy.sessions.appDetail.when} value={a.when} first />
               <DetailRow Icon={MapPin} label={copy.sessions.appDetail.where} value={a.addr} />
-              <DetailRow Icon={Users} label={copy.sessions.appDetail.format} value={a.format} />
-              <DetailRow Icon={User} label={copy.sessions.appDetail.contact} value={a.contact} />
+              {/* Format/group/residents row removed (DT-11) — group size is variable/uncertain. */}
+              <DetailRow Icon={User} label={copy.sessions.appDetail.contact} value={a.contact} phone={a.phone} callA11y={copy.sessions.appDetail.callA11y} />
               <DetailRow Icon={Send} label={copy.sessions.appDetail.applied} value={a.applied} />
             </View>
 
@@ -385,8 +510,8 @@ function ApplicationDetail({ detail, onClose, onWithdraw }: { detail: Applicatio
             {a.status === 'pending' ? (
               <>
                 <Text style={st.manageTitle}>{copy.sessions.appDetail.manageTitle}</Text>
-                <View style={st.manageCard}>
-                  <ManageRow Icon={Ban} label={copy.sessions.appDetail.withdraw} danger first onPress={() => onWithdraw(a)} />
+                <View style={st.iconActionRow}>
+                  <IconAction Icon={Ban} label={copy.sessions.appDetail.withdraw} danger onPress={() => onWithdraw(a)} />
                 </View>
               </>
             ) : null}
@@ -400,7 +525,7 @@ function ApplicationDetail({ detail, onClose, onWithdraw }: { detail: Applicatio
 /* Per-session management actions (C24 cancel · C20 absence · C28 notes) — live INSIDE the
    session detail sheet, where there's a session in context. Built per-session in SessionDetail. */
 function ManageRow({ Icon, label, danger, onPress }: { Icon: LucideIcon; label: string; danger?: boolean; first?: boolean; onPress?: () => void }) {
-  const tint = danger ? palette.rouge[300] : ON_CARD;
+  const tint = danger ? palette.rouge[700] : ON_CARD; // DT-20: AA destructive red on light
   return (
     <Pressable
       style={({ pressed }) => [st.manageRow, pressed && { opacity: 0.6 }]}
@@ -409,7 +534,7 @@ function ManageRow({ Icon, label, danger, onPress }: { Icon: LucideIcon; label: 
       accessibilityLabel={label}
     >
       <View style={st.rowIcon}>
-        <Icon size={18} color={danger ? palette.rouge[300] : ON_CARD_2} />
+        <Icon size={18} color={danger ? palette.rouge[700] : ON_CARD_2} />
       </View>
       <Text style={[st.manageLabel, { color: tint }]}>{label}</Text>
       <ChevronRight size={18} color={ON_CARD_2} />
@@ -422,14 +547,14 @@ function ManageRow({ Icon, label, danger, onPress }: { Icon: LucideIcon; label: 
 type NoteEntry = { author: string; date: string; text: string };
 
 // Seed: prior notes (by other coaches / earlier sessions), keyed by session id. Unlisted = empty.
-const SEED_NOTES: Record<string, NoteEntry[]> = {
+const seedNotes = (copy: AppCopy): Record<string, NoteEntry[]> => ({
   u1: [
     { author: 'Sophie Marchand', date: '28 mai', text: 'M. Lambert préfère les exercices assis à cause d’un problème de genou. Gardez l’échauffement court ; le groupe réagit bien à la musique.' },
   ],
   p1: [
     { author: copy.sessions.notesModal.you, date: '8 juin', text: 'Deux nouveaux résidents ont rejoint le groupe. Pensez à apporter des élastiques supplémentaires la prochaine fois.' },
   ],
-};
+});
 
 function TransmissionNotesModal({ session, notes, onClose, onAdd }: {
   session: OpenSession | null;
@@ -437,6 +562,8 @@ function TransmissionNotesModal({ session, notes, onClose, onAdd }: {
   onClose: () => void;
   onAdd: (text: string) => void;
 }) {
+  const copy = useCopy();
+  const kb = useKeyboardInset();
   const [draft, setDraft] = React.useState('');
   const c = copy.sessions.notesModal;
   // Clear the draft whenever a different session's notes open.
@@ -454,7 +581,9 @@ function TransmissionNotesModal({ session, notes, onClose, onAdd }: {
           </Pressable>
         </View>
 
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        {/* Footer lifts above the keyboard via useKeyboardInset (KeyboardAvoidingView under-lifts
+            inside a pageSheet modal). iOS pads by the keyboard height; Android resizes natively (kb=0). */}
+        <View style={{ flex: 1, paddingBottom: kb }}>
           <ScrollView contentContainerStyle={{ padding: sp.lg, paddingBottom: sp.lg }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator={false}>
             {session ? <Text style={st.notesPlace}>{session.place}</Text> : null}
             <Text style={st.notesIntro}>{c.body}</Text>
@@ -481,7 +610,7 @@ function TransmissionNotesModal({ session, notes, onClose, onAdd }: {
               value={draft}
               onChangeText={setDraft}
               placeholder={c.placeholder}
-              placeholderTextColor={palette.neutral[500]}
+              placeholderTextColor={palette.neutral[600]}
               multiline
               accessibilityLabel={c.title}
             />
@@ -492,10 +621,11 @@ function TransmissionNotesModal({ session, notes, onClose, onAdd }: {
               accessibilityRole="button"
               accessibilityState={{ disabled: !canSave }}
             >
+              <GradientFill />
               <Text style={st.saveTxt}>{c.save}</Text>
             </Pressable>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       </View>
     </Modal>
   );
@@ -509,27 +639,32 @@ type SubmittedReport = {
   review: ReviewStatus;    // where the report stands in validation
   participants: number;
   activities: string[];
-  flag?: string;           // facility flag note (undefined = nothing flagged)
-  nextNotes?: string;      // notes for the next session
   ready: boolean;          // facility readiness
   engagement: number;      // 0–3 index into copy.report.engagement.levels (SESS-01)
   difficulty: number;      // 0–2 index into copy.report.difficulty.options (SESS-01)
+  bilan: 'ok' | 'issue';   // overall summary (SESS-01 Q4 — the alert trigger)
+  bilanDetail?: string;    // the "point de vigilance" detail (when bilan === 'issue')
+  // The 3 confidential recipients (SESS-01 Step 2) — undefined = no message sent to that recipient.
+  coordinatorMsg?: string; // message to the EHPAD coordinator (EHPAD-only)
+  dsMessage?: string;      // confidential message to the DS team (DS-only)
+  nextNotes?: string;      // handover note to the next coach
 };
 
 // Mock submitted reports, keyed by the session id of each `reportSent` session.
 const REPORTS: Record<string, SubmittedReport> = {
-  p2: { submitted: '8 juin', review: 'validated', participants: 1, activities: ['Mobilité & équilibre', 'Souplesse'], ready: true, engagement: 2, difficulty: 0, nextNotes: 'Conserver la routine assise ; le résident a bien réagi.' },
-  p3: { submitted: '8 juin', review: 'pending', participants: 7, activities: ['Renforcement', 'Cardio', 'Coordination'], flag: 'Le chauffage était coupé dans la salle d’activité, il faisait donc assez froid.', ready: false, engagement: 3, difficulty: 2 },
+  p2: { submitted: '8 juin', review: 'validated', participants: 6, activities: ['Mobilité & équilibre', 'Souplesse'], ready: true, engagement: 2, difficulty: 0, bilan: 'ok', nextNotes: 'Conserver la routine assise ; le groupe a bien réagi.' },
+  p3: { submitted: '8 juin', review: 'pending', participants: 7, activities: ['Renforcement', 'Cardio', 'Coordination'], ready: false, engagement: 3, difficulty: 2, bilan: 'issue', bilanDetail: 'Le chauffage était coupé dans la salle d’activité, il faisait donc assez froid.', coordinatorMsg: 'Prévoir quelques chaises avec accoudoirs pour la prochaine fois.', dsMessage: 'Accès difficile : l’ascenseur de service était en panne.' },
 };
 
-const REVIEW_META: Record<ReviewStatus, { tone: keyof typeof INK; label: string; icon: LucideIcon }> = {
+const reviewMeta = (copy: AppCopy): Record<ReviewStatus, { tone: keyof typeof INK; label: string; icon: LucideIcon }> => ({
   pending:   { tone: 'info', label: copy.sessions.reportView.reviewStatus.pending, icon: Clock },
   validated: { tone: 'ok', label: copy.sessions.reportView.reviewStatus.validated, icon: CheckCircle2 },
   changes:   { tone: 'pending', label: copy.sessions.reportView.reviewStatus.changes, icon: AlertTriangle },
-};
+});
 
 function ReviewChip({ review }: { review: ReviewStatus }) {
-  const m = REVIEW_META[review];
+  const copy = useCopy();
+  const m = reviewMeta(copy)[review];
   const c = INK[m.tone];
   const Icon = m.icon;
   return (
@@ -540,62 +675,89 @@ function ReviewChip({ review }: { review: ReviewStatus }) {
   );
 }
 
-function ReportView({ session, onClose }: { session: OpenSession | null; onClose: () => void }) {
-  const rep = session ? REPORTS[session.id] : undefined;
+// Submitted report, read-only — embedded INSIDE the session detail sheet (WBS PLA-14 §9: "if a
+// report has been submitted, display it read-only within the session detail screen"). Review status
+// chip + the Step-1 summary + the 3 confidential recipient messages.
+function SubmittedReportSection({ session }: { session: OpenSession }) {
+  const copy = useCopy();
+  const rep = REPORTS[session.id];
   const v = copy.sessions.reportView;
   const rc = copy.report;
-  const level = rep ? rc.engagement.levels[rep.engagement] : undefined;
-  const diff = rep ? rc.difficulty.options[rep.difficulty] : undefined;
+  if (!rep) return null;
+  const level = rc.engagement.levels[rep.engagement];
+  const diff = rc.difficulty.options[rep.difficulty];
+  if (!level || !diff) return null;
   return (
-    <Modal visible={!!session} onRequestClose={onClose} animationType="slide" presentationStyle="pageSheet">
-      <View style={{ flex: 1, backgroundColor: CANVAS }}>
-        <View style={st.dHeader}>
-          <Text style={st.dHeaderTitle}>{v.title}</Text>
-          <Pressable onPress={onClose} hitSlop={8} style={st.dClose} accessibilityRole="button" accessibilityLabel={v.closeA11y}>
-            <X size={22} color={ON_CANVAS} />
-          </Pressable>
-        </View>
-
-        {session && rep && level && diff ? (
-          <ScrollView contentContainerStyle={{ padding: sp.lg, paddingBottom: sp.xl }} showsVerticalScrollIndicator={false}>
-            {/* hero — place + review status */}
-            <Text style={st.dPlace}>{session.place}</Text>
-            <View style={{ alignSelf: 'flex-start', marginTop: sp.sm }}>
-              <ReviewChip review={rep.review} />
-            </View>
-            <Text style={st.appNote}>{v.reviewNote[rep.review]}</Text>
-
-            {/* the submitted answers, read-only */}
-            <View style={st.dCard}>
-              <DetailRow Icon={Clock} label={v.submittedLabel} value={`${session.day} · ${rep.submitted}`} first />
-              <DetailRow Icon={Users} label={rc.participants.label} value={`${rep.participants} ${rc.participants.unit}`} />
-              <DetailRow Icon={Activity} label={rc.activities.label} value={rep.activities.join(' · ')} />
-              <DetailRow Icon={AlertTriangle} label={rc.flag.label} value={rep.flag ?? v.flagNone} />
-              <DetailRow Icon={StickyNote} label={rc.nextNotes.label} value={rep.nextNotes ?? v.nextNone} />
-              <DetailRow Icon={Check} label={rc.readiness.label} value={rep.ready ? v.readyYes : v.readyNo} />
-              <DetailRow Icon={Smile} label={rc.engagement.label} value={`${level.emoji}  ${level.word}`} />
-              <DetailRow Icon={Activity} label={rc.difficulty.label} value={diff.word} />
-            </View>
-          </ScrollView>
-        ) : null}
+    <>
+      <Text style={st.manageTitle}>{v.title}</Text>
+      <View style={{ alignSelf: 'flex-start', marginBottom: sp.sm }}>
+        <ReviewChip review={rep.review} />
       </View>
-    </Modal>
+      <Text style={st.notesIntro}>{v.reviewNote[rep.review]}</Text>
+      <View style={st.dFactCard}>
+        <DetailRow Icon={Clock} label={v.submittedLabel} value={`${session.day} · ${rep.submitted}`} first />
+        <DetailRow Icon={Users} label={rc.participants.label} value={`${rep.participants} ${rc.participants.unit}`} />
+        <DetailRow Icon={Activity} label={rc.activities.label} value={rep.activities.join(' · ')} />
+        <DetailRow Icon={Check} label={rc.readiness.label} value={rep.ready ? v.readyYes : v.readyNo} />
+        <DetailRow Icon={Smile} label={rc.engagement.label} value={`${level.emoji}  ${level.word}`} />
+        <DetailRow Icon={Activity} label={rc.difficulty.label} value={diff.word} />
+        <DetailRow
+          Icon={AlertTriangle}
+          label={rc.bilan.label}
+          value={rep.bilan === 'issue' ? (rep.bilanDetail ? `${rc.bilan.issue} — ${rep.bilanDetail}` : rc.bilan.issue) : rc.bilan.ok}
+        />
+        <DetailRow Icon={Building2} label={rc.recipients.coordinator.title} value={rep.coordinatorMsg ?? v.coordinatorNone} />
+        <DetailRow Icon={ShieldCheck} label={rc.recipients.ds.title} value={rep.dsMessage ?? v.dsNone} />
+        <DetailRow Icon={StickyNote} label={rc.recipients.nextCoach.title} value={rep.nextNotes ?? v.nextNone} />
+      </View>
+    </>
   );
 }
 
 /* ---------- session detail (C22) — pageSheet modal, opened by tapping a card ---------- */
 
-function DetailRow({ Icon, label, value, onCopy, copyA11y, copied, copiedLabel }: {
+function DetailRow({ Icon, label, value, first, valueIsPhone, onCopy, copyA11y, copied, copiedLabel, phone, callA11y }: {
   Icon: LucideIcon; label: string; value: string; first?: boolean;
+  /** Render the row's own value AS a tap-to-call number (DT-12): the value text is the blue,
+   *  tappable phone link, while the leading icon stays neutral like every other row. Used for the
+   *  dedicated "Phone" section. */
+  valueIsPhone?: boolean;
   /** Copy-to-clipboard affordance (PLA-02 — the Where row). `copied` swaps in the confirmation. */
   onCopy?: () => void; copyA11y?: string; copied?: boolean; copiedLabel?: string;
+  /** Tap-to-call phone rendered as a secondary link BELOW the value (used elsewhere). */
+  phone?: string; callA11y?: string;
 }) {
   return (
-    <View style={st.dRow}>
+    <View style={[st.dRow, !first && st.dRowDivider]}>
       <View style={st.rowIcon}><Icon size={18} color={ON_CARD_2} /></View>
       <View style={{ flex: 1 }}>
         <Text style={st.dRowLabel}>{label}</Text>
-        <Text style={st.dRowValue}>{value}</Text>
+        {valueIsPhone ? (
+          <Pressable
+            onPress={() => callNumber(value)}
+            hitSlop={8}
+            style={({ pressed }) => [{ alignSelf: 'flex-start', minHeight: 32, justifyContent: 'center' }, pressed && { opacity: 0.6 }]}
+            accessibilityRole="button"
+            accessibilityLabel={callA11y ? `${callA11y}, ${value}` : value}
+          >
+            <Text style={st.dRowPhone}>{value}</Text>
+          </Pressable>
+        ) : (
+          <Text style={st.dRowValue}>{value}</Text>
+        )}
+        {/* Direct clickable phone number (DT-12) — taps through to the device dialer. */}
+        {phone ? (
+          <Pressable
+            onPress={() => callNumber(phone)}
+            hitSlop={8}
+            style={({ pressed }) => [st.callLink, pressed && { opacity: 0.6 }]}
+            accessibilityRole="button"
+            accessibilityLabel={callA11y ? `${callA11y}, ${phone}` : phone}
+          >
+            <Phone size={15} color={color.info} />
+            <Text style={st.callTxt}>{phone}</Text>
+          </Pressable>
+        ) : null}
       </View>
       {onCopy ? (
         <Pressable
@@ -620,14 +782,37 @@ function DetailRow({ Icon, label, value, onCopy, copyA11y, copied, copiedLabel }
   );
 }
 
+/* Quick action (Best Buy idiom) — a vertical icon-over-label button. Several sit in a row
+   (Cancel · Absence · Late) so the per-session actions read as a compact toolbar rather than a
+   stacked list. Destructive variant tints the circle + icon + label rouge (never colour alone —
+   it always carries an icon and a word). */
+function IconAction({ Icon, label, a11yLabel, danger, onPress }: { Icon: LucideIcon; label: string; a11yLabel?: string; danger?: boolean; onPress?: () => void }) {
+  const fg = danger ? palette.rouge[700] : ON_CARD;   // DT-20: AA destructive red on light
+  const bg = danger ? 'rgba(225,50,43,0.10)' : SUBTLE;
+  return (
+    <Pressable
+      style={({ pressed }) => [st.iconAction, pressed && { opacity: 0.6 }]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={a11yLabel ?? label}
+    >
+      <View style={[st.iconActionCircle, { backgroundColor: bg }]}>
+        <Icon size={22} color={fg} />
+      </View>
+      <Text style={[st.iconActionLabel, { color: fg }]} numberOfLines={1}>{label}</Text>
+    </Pressable>
+  );
+}
+
 /* Action-required banner (Fresha idiom) — a tinted strip explaining what the coach must do next.
    Only the two action-required states show it; the pinned footer button is the actual action. */
-const BANNER_META: Partial<Record<Status, { tone: keyof typeof INK; icon: LucideIcon; text: string }>> = {
+const bannerMeta = (copy: AppCopy): Partial<Record<Status, { tone: keyof typeof INK; icon: LucideIcon; text: string }>> => ({
   checkin:   { tone: 'info', icon: MapPin, text: copy.sessions.detail.banner.checkin },
   reportDue: { tone: 'pending', icon: AlertTriangle, text: copy.sessions.detail.banner.reportDue },
-};
+});
 function DetailBanner({ status }: { status: Status }) {
-  const m = BANNER_META[status];
+  const copy = useCopy();
+  const m = bannerMeta(copy)[status];
   if (!m) return null;
   const c = INK[m.tone];
   const Icon = m.icon;
@@ -642,8 +827,10 @@ function DetailBanner({ status }: { status: Status }) {
 /* Pinned footer (CVS idiom) — the contextual action(s), kept on screen below the scroll. Reuses
    the card's SessionCta so the vocabulary matches: Directions on checkin/confirmed, Check in,
    Write report, View report, or the checked-in confirmation. */
-function SheetFooter({ s, onCheckIn, onWriteReport, onViewReport }: { s: OpenSession; onCheckIn: () => void; onWriteReport: () => void; onViewReport: () => void }) {
+function SheetFooter({ s, onCheckIn, onWriteReport }: { s: OpenSession; onCheckIn: () => void; onWriteReport: () => void }) {
   const insets = useSafeAreaInsets();
+  // A sent report is shown read-only inline in the sheet — no footer action is needed.
+  if (s.status === 'reportSent') return null;
   return (
     <View style={[st.footerBar, { paddingBottom: sp.md + insets.bottom }]}>
       <SessionCta
@@ -651,13 +838,13 @@ function SheetFooter({ s, onCheckIn, onWriteReport, onViewReport }: { s: OpenSes
         onCheckIn={onCheckIn}
         onWriteReport={onWriteReport}
         onDirections={() => openDirections(s.addr)}
-        onViewReport={onViewReport}
       />
     </View>
   );
 }
 
-function SessionDetail({ detail, onClose, onCheckIn, onWriteReport, onCancel, onAbsence, onLate, onNotes, onViewReport }: { detail: OpenSession | null; onClose: () => void; onCheckIn: (d: OpenSession) => void; onWriteReport: (d: OpenSession) => void; onCancel: (d: OpenSession) => void; onAbsence: (d: OpenSession) => void; onLate: (d: OpenSession) => void; onNotes: (d: OpenSession) => void; onViewReport: (d: OpenSession) => void }) {
+function SessionDetail({ detail, notes, today, now, onClose, onCheckIn, onWriteReport, onCancel, onLate, onNotes }: { detail: OpenSession | null; notes: NoteEntry[]; today: Date; now: Date; onClose: () => void; onCheckIn: (d: OpenSession) => void; onWriteReport: (d: OpenSession) => void; onCancel: (d: OpenSession) => void; onLate: (d: OpenSession) => void; onNotes: (d: OpenSession) => void }) {
+  const copy = useCopy();
   const s = detail;
   // Copy address (PLA-02) — flashes a short inline confirmation, reset per session.
   const [copied, setCopied] = React.useState(false);
@@ -667,15 +854,14 @@ function SessionDetail({ detail, onClose, onCheckIn, onWriteReport, onCancel, on
     await Clipboard.setStringAsync(s.addr);
     setCopied(true);
   };
-  // Cancel / absence / late only make sense before you've checked in or it's already done.
+  // Cancel / absence / late only make sense before you've checked in (transmission notes moved
+  // out to their own section), so the manage group is empty for past/done sessions.
   const cancellable = s?.status === 'confirmed' || s?.status === 'checkin';
-  const manageRows: { icon: LucideIcon; label: string; danger?: boolean; onPress?: () => void }[] = s ? [
-    ...(cancellable ? [
-      { icon: Ban, label: copy.sessions.manage.cancelParticipation, danger: true, onPress: () => onCancel(s) },
-      { icon: CalendarX, label: copy.sessions.manage.declareAbsence, onPress: () => onAbsence(s) },
-      { icon: Clock, label: copy.sessions.manage.late, onPress: () => onLate(s) },
-    ] : []),
-    { icon: StickyNote, label: copy.sessions.manage.transmissionNotes, onPress: () => onNotes(s) },
+  const manageRows: { icon: LucideIcon; label: string; short: string; danger?: boolean; onPress?: () => void }[] = s && cancellable ? [
+    // Cancel + Absence are merged into the one high-friction cancellation funnel (CancelModal);
+    // "Signaler un retard" stays as the lighter delay path. Two actions, not three.
+    { icon: Ban, label: copy.sessions.manage.cancelParticipation, short: copy.sessions.manage.cancelShort, danger: true, onPress: () => onCancel(s) },
+    { icon: Clock, label: copy.sessions.manage.late, short: copy.sessions.manage.lateShort, onPress: () => onLate(s) },
   ] : [];
   return (
     <Modal visible={!!s} onRequestClose={onClose} animationType="slide" presentationStyle="pageSheet">
@@ -691,42 +877,88 @@ function SessionDetail({ detail, onClose, onCheckIn, onWriteReport, onCancel, on
         {s ? (
         <>
           <ScrollView contentContainerStyle={{ padding: sp.lg, paddingBottom: sp.xl }} showsVerticalScrollIndicator={false}>
-            {/* hero — place + status */}
+            {/* media hero (Lugg idiom) — a map preview leads the sheet and taps through to
+                directions, so the "where" is glanceable before any reading. */}
+            <SessionMap
+              onPress={() => openDirections(s.addr)}
+              a11y={`${copy.sessions.action.directions}: ${s.addr}`}
+              style={{ borderRadius: r.lg, marginBottom: sp.lg }}
+            />
+
+            {/* hero — place + status (+ first-session tag) + a prominent, glanceable "when" line (Lugg) */}
             <Text style={st.dPlace}>{s.place}</Text>
-            <View style={{ alignSelf: 'flex-start', marginTop: sp.sm }}>
-              <StatusChip status={s.status} />
+            <View style={st.dTagRow}>
+              <SessionStatusChip s={s} dayOffset={s.dayOffset} today={today} now={now} />
+              {s.firstVisit ? <FirstVisitTag /> : null}
             </View>
+            <Text style={st.dWhen}>{`${s.day} · ${s.time} → ${s.end} · ${durationLabel(s.time, s.end)}`}</Text>
 
             {/* action-required banner — only on the states that need the coach to act next */}
             <DetailBanner status={s.status} />
 
-            {/* facts — a plain info list (no card box), divided by hairlines */}
-            <View style={st.factList}>
-              <DetailRow Icon={Clock} label={copy.sessions.detail.when} value={`${s.day} · ${s.time} → ${s.end}`} first />
+            {/* facts — grouped into one bordered card (house style: flat bordered card) */}
+            <View style={st.dFactCard}>
               <DetailRow
                 Icon={MapPin}
                 label={copy.sessions.detail.where}
                 value={s.addr}
+                first
                 onCopy={copyAddress}
                 copyA11y={copy.sessions.detail.copyA11y}
                 copied={copied}
                 copiedLabel={copy.sessions.detail.copied}
               />
-              <DetailRow Icon={Users} label={copy.sessions.detail.format} value={s.detail} />
+              {/* Format/group/residents row removed (DT-11) — group size is variable/uncertain. */}
               <DetailRow Icon={User} label={copy.sessions.detail.contact} value={s.contact} />
-              {/* Coach hourly rate (PLA-14) */}
-              <DetailRow Icon={Wallet} label={copy.sessions.detail.rate} value={`${s.rate} ${copy.sessions.detail.rateUnit}`} />
+              {/* Phone is its own section: neutral leading icon (like the others), number stays blue + tappable. */}
+              <DetailRow Icon={Phone} label={copy.sessions.detail.phone} value={s.phone} valueIsPhone callA11y={copy.sessions.detail.callA11y} />
+              {/* Access — how to get in on arrival (WBS PLA-14 §5, "if available"): shown only when set. */}
+              {s.access ? <DetailRow Icon={DoorOpen} label={copy.sessions.detail.access} value={s.access} /> : null}
+              {/* Coach hourly rate (PLA-14) removed (DT-05) — rate is back-office-managed and never
+                  shown to the coach (negotiated with DS, known off-app). */}
             </View>
 
-            {/* manage — per-session actions, kept as a boxed card (the "setting" stack).
-                Cancel participation (C24) is wired; declare absence (C20) and transmission
-                notes (C28) are placed but not yet built. */}
-            <Text style={st.manageTitle}>{copy.sessions.manage.title}</Text>
-            <View style={st.manageCard}>
-              {manageRows.map((it, i) => (
-                <ManageRow key={it.label} Icon={it.icon} label={it.label} danger={it.danger} first={i === 0} onPress={it.onPress} />
-              ))}
+            {/* submitted report (PLA-14 §9) — shown read-only inline once a report has been sent,
+                instead of behind a separate modal. */}
+            {s.status === 'reportSent' ? <SubmittedReportSection session={s} /> : null}
+
+            {/* transmission notes (C28) — surfaced inline so the coach can READ the continuity
+                notes left by previous coaches before an upcoming session, not just open a modal.
+                Adding still happens in the composer modal via onNotes. */}
+            <Text style={st.manageTitle}>{copy.sessions.manage.transmissionNotes}</Text>
+            <Text style={st.notesIntro}>{copy.sessions.notesModal.body}</Text>
+            {notes.length ? (
+              notes.map((n, i) => (
+                <View key={i} style={st.noteCard}>
+                  <View style={st.noteHead}>
+                    <Text style={st.noteAuthor}>{n.author}</Text>
+                    <Text style={st.noteDate}>{n.date}</Text>
+                  </View>
+                  <Text style={st.noteText}>{n.text}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={st.empty}>{copy.sessions.notesModal.empty}</Text>
+            )}
+            <View style={st.notesAddRow}>
+              <ManageRow Icon={StickyNote} label={copy.sessions.manage.notesAdd} onPress={() => onNotes(s)} />
             </View>
+
+            {/* manage — per-session actions (cancel / absence / late). Hidden once the session is
+                checked-in or done, when none of these apply. */}
+            {manageRows.length ? (
+              <>
+                <Text style={st.manageTitle}>{copy.sessions.manage.title}</Text>
+                <View style={st.iconActionRow}>
+                  {manageRows.map((it) => (
+                    <IconAction key={it.label} Icon={it.icon} label={it.short} a11yLabel={it.label} danger={it.danger} onPress={it.onPress} />
+                  ))}
+                </View>
+              </>
+            ) : null}
+            {/* Availability shortcut removed: not in the WBS for the session detail (PLA-14). The
+                WBS reaches availability from Profile (PLA-08) and the empty-schedule "see
+                availability" link (S14) — both still present. */}
           </ScrollView>
 
           {/* pinned primary action (CVS idiom) */}
@@ -734,7 +966,6 @@ function SessionDetail({ detail, onClose, onCheckIn, onWriteReport, onCancel, on
             s={s}
             onCheckIn={() => onCheckIn(s)}
             onWriteReport={() => onWriteReport(s)}
-            onViewReport={() => onViewReport(s)}
           />
         </>
         ) : null}
@@ -746,22 +977,38 @@ function SessionDetail({ detail, onClose, onCheckIn, onWriteReport, onCancel, on
 /* ---------- screen ---------- */
 
 export function SeancesScreen() {
+  const copy = useCopy();
+  const { locale } = useLocale();
+  // Live clock — drives the time-derived "in progress" status, re-rendering only when the minute
+  // rolls over.
+  const now = useNow();
+  // Local-midnight "today" the day-offsets anchor to. Derived from the live clock so it rolls over
+  // at midnight if the app is left open; recomputes only when the calendar day changes. (List keys
+  // are offset-based, so this never remounts rows.)
+  const today = React.useMemo(() => { const d = new Date(now); d.setHours(0, 0, 0, 0); return d; }, [now.toDateString()]);
+  // Cream header (ink band removed) → dark status-bar glyphs while this tab is focused (the app
+  // default). Set explicitly so the glyphs are correct regardless of the previously focused screen.
+  useFocusEffect(
+    React.useCallback(() => {
+      setStatusBarStyle('dark');
+      return () => setStatusBarStyle('dark');
+    }, []),
+  );
   const [seg, setSeg] = React.useState<Seg>('upcoming');
   const [notifOpen, setNotifOpen] = React.useState(false);
-  const [profileOpen, setProfileOpen] = React.useState(false);
+  const navigation = useNavigation();                        // tab nav — header avatar → Profil tab
+  const [availOpen, setAvailOpen] = React.useState(false);   // M1 availability editor (from session detail)
   const [selected, setSelected] = React.useState<OpenSession | null>(null);
   const [selectedApp, setSelectedApp] = React.useState<Application | null>(null);  // C13 application detail
   const [applications, setApplications] = React.useState<Application[]>(APPLICATIONS); // mutable so withdraw can remove
   const [withdrawFor, setWithdrawFor] = React.useState<Application | null>(null);  // C14 withdraw confirm
   const [checkInFor, setCheckInFor] = React.useState<OpenSession | null>(null);   // C16 check-in flow
   const [reportFor, setReportFor] = React.useState<OpenSession | null>(null);     // C25 6-step report
-  const [cancelFor, setCancelFor] = React.useState<OpenSession | null>(null);     // C24 cancel confirm
-  const [absenceFor, setAbsenceFor] = React.useState<OpenSession | null>(null);   // C20 declare absence
+  const [cancelFor, setCancelFor] = React.useState<OpenSession | null>(null);     // cancellation funnel (cancel + absence)
   const [lateFor, setLateFor] = React.useState<OpenSession | null>(null);         // PLA-14 declare delay
   const [lateDone, setLateDone] = React.useState<OpenSession | null>(null);       //   …its acknowledgement
   const [notesFor, setNotesFor] = React.useState<OpenSession | null>(null);       // C28 transmission notes
-  const [notesBySession, setNotesBySession] = React.useState<Record<string, NoteEntry[]>>(SEED_NOTES);
-  const [reportViewFor, setReportViewFor] = React.useState<OpenSession | null>(null); // C27 view submitted report
+  const [notesBySession, setNotesBySession] = React.useState<Record<string, NoteEntry[]>>(() => seedNotes(copy));
   const [upcoming, setUpcoming] = React.useState<Group[]>(UPCOMING);              // mutable so check-in / cancel can mutate
   const groups = seg === 'past' ? PAST : upcoming;
   const isEmpty = groups.every((g) => g.items.length === 0);
@@ -791,14 +1038,11 @@ export function SeancesScreen() {
       .filter((g) => g.items.length > 0));
   };
 
-  // C24 — cancel participation: open the confirm from the detail sheet, then drop the session.
+  // Cancellation funnel (merges cancel + absence): open from the detail sheet. The funnel only fires
+  // onConfirm on the final commit — keep the modal open so it shows its own result, then its CTA /
+  // close calls setCancelFor(null). Retain off-ramps close without ever calling onConfirm.
   const handleCancel = (o: OpenSession) => { setSelected(null); setCancelFor(o); };
-  const confirmCancel = () => { if (cancelFor) removeUpcoming(cancelFor.id); setCancelFor(null); };
-
-  // C20 / PLA-11 — declare absence: the 3-step form, then drop the session (real app persists
-  // the reason + message).
-  const handleDeclareAbsence = (o: OpenSession) => { setSelected(null); setAbsenceFor(o); };
-  const confirmAbsence = () => { if (absenceFor) removeUpcoming(absenceFor.id); setAbsenceFor(null); };
+  const confirmCancel = () => { if (cancelFor) removeUpcoming(cancelFor.id); };
 
   // PLA-14 — declare a delay ("Late"): pick a rough delay, then acknowledge. The session stays
   // scheduled (unlike absence) — the real app just notifies the care home.
@@ -810,8 +1054,8 @@ export function SeancesScreen() {
     if (s) setTimeout(() => setLateDone(s), 260);
   };
 
-  // C27 — view the submitted report (read-only) + its review status.
-  const handleViewReport = (o: OpenSession) => { setSelected(null); setReportViewFor(o); };
+  // C27 — the submitted report is now shown read-only INLINE in the session detail sheet
+  // (SubmittedReportSection), so there's no separate "view report" handler/modal.
 
   // C28 — transmission notes: open the per-session note thread; adding appends a "You · just now" note.
   const handleNotes = (o: OpenSession) => { setSelected(null); setNotesFor(o); };
@@ -826,12 +1070,10 @@ export function SeancesScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: CANVAS }} edges={['top', 'left', 'right']}>
-      <Reveal loading={loading} skeleton={<SeancesSkeleton />}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: sp.lg, paddingBottom: sp.xl + tabBarInset }}
-      >
-        {/* ===== Header — title left, notifications + profile right (per the locked IA) ===== */}
+      {/* ===== Fixed header — plain cream header (ink band removed): title left, notifications +
+           profile right. Sits OUTSIDE the ScrollView so it stays pinned while the body scrolls;
+           a bottom hairline separates it from the scrolling content. ===== */}
+      <View style={st.header}>
         <View style={st.appbar}>
           <View style={{ flex: 1 }}>
             <Text style={st.eyebrow}>{copy.sessions.eyebrow}</Text>
@@ -841,17 +1083,22 @@ export function SeancesScreen() {
             <Bell size={22} color={ON_CANVAS} fill={ON_CANVAS} />
             <View style={st.badgeDot} />
           </Pressable>
-          <Pressable style={st.avatarWrap} hitSlop={6} onPress={() => setProfileOpen(true)} accessibilityLabel={copy.header.profileA11y}>
+          <Pressable style={[st.avatarWrap, { shadowOpacity: 0 }]} hitSlop={6} onPress={() => navigation.navigate('Profile' as never)} accessibilityLabel={copy.header.profileA11y}>
             <ProfileAvatar size={42} uri={COACH_PHOTO} />
           </Pressable>
         </View>
-
+      </View>
+      <Reveal loading={loading} skeleton={<SeancesSkeleton />}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: sp.lg, paddingBottom: sp.xl + tabBarInset }}
+      >
         {/* ===== Confirmed / Past / Applications ===== */}
         <Segmented
           value={seg}
           onChange={setSeg}
-          options={SEG_OPTIONS}
-          theme={{ track: SUBTLE, selected: palette.neutral[700] }}
+          options={segOptions(copy)}
+          theme={{ track: SUBTLE, selected: palette.neutral[0] }}
           style={{ marginTop: sp.md }}
         />
 
@@ -868,43 +1115,67 @@ export function SeancesScreen() {
           /* ===== Empty state — no Confirmed / Past sessions ===== */
           <View style={st.group}>
             <Text style={st.empty}>{seg === 'past' ? copy.sessions.emptyPast : copy.sessions.emptyUpcoming}</Text>
+            {/* Upcoming-only: a route to the availability editor (WBS S14 "see availability") —
+                keeping availability current is how the coach gets offered sessions. */}
+            {seg === 'upcoming' ? (
+              <>
+                <Text style={st.emptyHint}>{copy.sessions.emptyUpcomingHint}</Text>
+                <Pressable
+                  onPress={() => setAvailOpen(true)}
+                  hitSlop={8}
+                  style={({ pressed }) => [st.seeAvailRow, pressed && { opacity: 0.6 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={copy.sessions.seeAvailability}
+                >
+                  <CalendarClock size={18} color={color.info} />
+                  <Text style={st.seeAvailTxt}>{copy.sessions.seeAvailability}</Text>
+                  <ChevronRight size={18} color={color.info} />
+                </Pressable>
+              </>
+            ) : null}
           </View>
         ) : (
           /* ===== Grouped session list ===== */
-          groups.map((g) => (
-            <View key={g.label} style={st.group}>
-              <View style={st.dayPill}>
-                <Text style={st.dayPillTxt}>{g.label}</Text>
-                <Text style={st.dayPillCount}>{g.items.length}</Text>
+          groups.map((g) => {
+            const label = dayLabel(dayFromOffset(g.offset, today), locale, today);
+            return (
+            <View key={g.offset} style={st.group}>
+              <View style={st.dayHead}>
+                <Text style={st.dayHeadLabel}>{label}</Text>
+                <Text style={st.dayHeadCount}>{g.items.length}</Text>
               </View>
               {g.items.map((s, i) => (
                 <SessionCard
-                  key={`${g.label}-${s.time}-${s.place}`}
+                  key={`${g.offset}-${s.time}-${s.place}`}
                   s={s}
-                  day={g.label}
+                  day={label}
+                  dayOffset={g.offset}
+                  today={today}
+                  now={now}
                   first={i === 0}
                   onOpen={setSelected}
                   onCheckIn={handleCheckIn}
                   onWriteReport={handleWriteReport}
-                  onViewReport={handleViewReport}
                 />
               ))}
             </View>
-          ))
+            );
+          })
         )}
       </ScrollView>
       </Reveal>
 
       <SessionDetail
         detail={selected}
+        notes={selected ? (notesBySession[selected.id] ?? []) : []}
+        today={today}
+        now={now}
         onClose={() => setSelected(null)}
         onCheckIn={handleCheckIn}
         onWriteReport={handleWriteReport}
         onCancel={handleCancel}
-        onAbsence={handleDeclareAbsence}
         onLate={handleLate}
         onNotes={handleNotes}
-        onViewReport={handleViewReport}
       />
 
       {/* PLA-14 — declare a delay ("Late"): pick a rough delay → acknowledgement. */}
@@ -934,8 +1205,6 @@ export function SeancesScreen() {
         closeA11y={copy.sessions.lateModal.closeA11y}
       />
 
-      {/* C27 — read-only view of a submitted report + its review status */}
-      <ReportView session={reportViewFor} onClose={() => setReportViewFor(null)} />
 
       {/* C28 — transmission notes (read prior notes · add your own) */}
       <TransmissionNotesModal
@@ -945,28 +1214,13 @@ export function SeancesScreen() {
         onAdd={addNote}
       />
 
-      {/* C20 — declare absence (pick a reason → removed from the upcoming list) */}
-      <AbsenceModal
-        visible={!!absenceFor}
-        session={absenceFor ? { place: absenceFor.place, time: absenceFor.time, day: absenceFor.day } : null}
-        onClose={() => setAbsenceFor(null)}
-        onConfirm={confirmAbsence}
-      />
-
-      {/* C24 — cancel participation (confirm → removed from the upcoming list) */}
-      <ActionModal
+      {/* Cancellation funnel (cancel + absence merged) — impact → retain intercept → reason →
+          final confirm → result. onConfirm (final commit only) drops the session. */}
+      <CancelModal
         visible={!!cancelFor}
+        session={cancelFor ? { place: cancelFor.place, time: cancelFor.time, day: cancelFor.day, startsInH: cancelFor.startsInH } : null}
         onClose={() => setCancelFor(null)}
-        Icon={Ban}
-        accentFg={palette.rouge[300]}
-        accentBg="rgba(225,50,43,0.14)"
-        eyebrow={cancelFor ? `${cancelFor.place} · ${cancelFor.day} · ${cancelFor.time}` : undefined}
-        title={copy.sessions.cancelConfirm.title}
-        body={copy.sessions.cancelConfirm.body}
-        primaryLabel={copy.sessions.cancelConfirm.confirm}
-        onPrimary={confirmCancel}
-        secondaryLabel={copy.sessions.cancelConfirm.cancel}
-        closeA11y={copy.sessions.cancelConfirm.closeA11y}
+        onConfirm={confirmCancel}
       />
 
       <ApplicationDetail detail={selectedApp} onClose={() => setSelectedApp(null)} onWithdraw={setWithdrawFor} />
@@ -976,12 +1230,13 @@ export function SeancesScreen() {
         visible={!!withdrawFor}
         onClose={() => setWithdrawFor(null)}
         Icon={Ban}
-        accentFg={palette.rouge[300]}
+        accentFg={palette.rouge[700]}
         accentBg="rgba(225,50,43,0.14)"
         eyebrow={withdrawFor ? `${withdrawFor.place} · ${withdrawFor.when}` : undefined}
         title={copy.sessions.appDetail.withdrawConfirm.title}
         body={copy.sessions.appDetail.withdrawConfirm.body}
         primaryLabel={copy.sessions.appDetail.withdrawConfirm.confirm}
+        primaryTone="danger"
         onPrimary={confirmWithdraw}
         secondaryLabel={copy.sessions.appDetail.withdrawConfirm.cancel}
         closeA11y={copy.sessions.appDetail.closeA11y}
@@ -1008,7 +1263,9 @@ export function SeancesScreen() {
       />
 
       <NotificationCenter visible={notifOpen} onClose={() => setNotifOpen(false)} />
-      <ProfileScreen visible={profileOpen} onClose={() => setProfileOpen(false)} />
+      {/* M1 — dedicated availability editor, opened from a session detail (the "tap on availability"
+          entry point). Shares the availability store, so edits reflect on Profile too. */}
+      <UpdateAvailabilityScreen visible={availOpen} onClose={() => setAvailOpen(false)} />
     </SafeAreaView>
   );
 }
@@ -1021,7 +1278,8 @@ export function SeancesScreen() {
 
 const st = StyleSheet.create({
   /* header */
-  appbar: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, paddingTop: sp.sm, paddingBottom: sp.sm },
+  header: { paddingHorizontal: sp.lg, paddingTop: sp.sm, paddingBottom: sp.md },
+  appbar: { flexDirection: 'row', alignItems: 'center', gap: sp.sm }, // vertical padding comes from st.header
   eyebrow: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 1, color: ON_CANVAS_2 },
   title: { fontFamily: F.oswS, fontSize: 28, lineHeight: 32, color: ON_CANVAS, marginTop: 2 },
   // No background — the bell sits directly on the canvas; keep 44×44 for the tap target.
@@ -1041,37 +1299,41 @@ const st = StyleSheet.create({
 
   /* groups */
   group: { marginTop: sp.lg },
-  // Day-pill header (ClassPass idiom) — a compact chip marking each day, with a session count.
-  dayPill: {
-    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: sp.sm,
-    backgroundColor: SUBTLE, borderRadius: r.pill, paddingVertical: 5, paddingHorizontal: 12,
-    marginBottom: sp.sm,
+  // Day section header (Craft / ClassPass idiom) — a plain typographic heading with a hairline
+  // rule beneath. Reads as a calm agenda divider, not a filter tag. The count is demoted to a
+  // quiet muted number on the right rather than a badge.
+  dayHead: {
+    flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between',
+    paddingBottom: sp.sm, marginBottom: sp.xs,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.08)',
   },
-  dayPillTxt: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 0.6, color: ON_CANVAS },
-  dayPillCount: { fontFamily: F.bodyB, fontSize: 12, color: ON_CANVAS_2 },
+  dayHeadLabel: { fontFamily: F.oswS, fontSize: 18, letterSpacing: 0.3, color: ON_CANVAS },
+  dayHeadCount: { fontFamily: F.body, fontSize: 14, color: palette.neutral[500] },
 
   /* session card — dark "component" on the cream canvas */
   // Flat session rows on the canvas — a light hairline divider separates consecutive entries.
   card: { paddingVertical: sp.md },
-  cardDivider: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },
+  cardDivider: { borderTopWidth: 1, borderTopColor: 'rgba(24,23,21,0.07)' },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: sp.sm },
   // tappable collapsed header: time rail · connector rule · (title / tag / address)
-  headerTap: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm },
+  headerTap: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: sp.md },
 
   /* time rail — fixed-width column: start time bold over the muted duration. */
-  timeRail: { width: 50, alignItems: 'flex-start', paddingTop: 1 },
+  timeRail: { width: 52, alignItems: 'flex-start', paddingTop: 2 },
   railTime: { fontFamily: F.oswB, fontSize: 18, color: ON_CARD },
-  railEnd: { fontFamily: F.body, fontSize: 12, color: palette.neutral[400], marginTop: 1 },
-  // hairline connector tying the time rail to the session content
-  railRule: { width: 2, borderRadius: 1, alignSelf: 'stretch', backgroundColor: 'rgba(255,255,255,0.09)', marginLeft: 2 },
+  railEnd: { fontFamily: F.body, fontSize: 13, color: palette.neutral[600], marginTop: 1 },
 
-  /* card content — title, status tag, then address (the collapsed default) */
+  /* card content — title (hero), status tag, then address (the collapsed default) */
   cardBody: { flex: 1 },
-  place: { fontFamily: F.bodyS, fontSize: 18, color: ON_CARD },
-  tagRow: { flexDirection: 'row', marginTop: 6, marginBottom: 6 },
+  place: { fontFamily: F.bodyB, fontSize: 19, color: ON_CARD, letterSpacing: 0.2 },
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 6, marginBottom: 6 },
   addr: { fontFamily: F.body, fontSize: 14, color: ON_CARD_2 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 5 },
   meta: { fontFamily: F.body, fontSize: 14, color: ON_CARD_2 },
+  // Tap-to-call link (DT-12) — phone number rendered as an interactive blue link (colour = clickable),
+  // distinct from the red action CTA. Left-aligned, ≥44 tap target via minHeight + hitSlop.
+  callLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, minHeight: 32, alignSelf: 'flex-start' },
+  callTxt: { fontFamily: F.bodyS, fontSize: 16, color: color.info, letterSpacing: 0.2 },
 
   /* dropdown chevron + the expanded section it reveals */
   chevBtn: { width: 36, height: 44, alignItems: 'center', justifyContent: 'center' },
@@ -1082,35 +1344,36 @@ const st = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: 5, paddingHorizontal: 10, borderRadius: r.pill,
   },
-  chipTxt: { fontFamily: F.body, fontSize: 12 },
+  chipTxt: { fontFamily: F.body, fontSize: 13 },
   dot: { width: 8, height: 8, borderRadius: 999 },
 
-  /* CTAs — shared vocabulary with Accueil: the gradient primary now comes from the reusable
-     <PrimaryButton/> (gradient reserved for check-in); outline secondary, the gold report
+  /* CTAs — shared vocabulary with Accueil: the gradient primary comes from the reusable
+     <PrimaryButton/>. Per DT-02 the rouge→or gradient is the signature for EVERY primary action
+     (check-in, raise-hand/apply, save) — see <GradientFill/>; outline secondary, the gold report
      action, and a quiet "view" ghost stay local. */
   ctaRow: { flexDirection: 'row', gap: sp.sm, marginTop: sp.md },
   secondaryBtn: {
-    flex: 1, minHeight: 44, borderRadius: r.pill, flexDirection: 'row',
+    flex: 1, minHeight: 44, borderRadius: r.button, flexDirection: 'row',
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1.5, borderColor: palette.neutral[600],
   },
   secondaryTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: ON_CARD },
   reportBtn: {
-    flex: 1, minHeight: 44, borderRadius: r.pill, flexDirection: 'row',
+    flex: 1, minHeight: 44, borderRadius: r.button, flexDirection: 'row',
     alignItems: 'center', justifyContent: 'center', backgroundColor: palette.or[400],
   },
   reportTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: palette.neutral[900] },
   viewBtn: {
-    flex: 1, minHeight: 44, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center',
+    flex: 1, minHeight: 44, borderRadius: r.button, alignItems: 'center', justifyContent: 'center',
     backgroundColor: CARD_LIFT,
   },
   viewTxt: { fontFamily: F.bodyS, fontSize: 14, letterSpacing: 0.2, color: ON_CARD_2 },
   // checked-in confirmation — non-interactive, green-tinted to echo the status chip
   checkedInBadge: {
-    flex: 1, minHeight: 44, borderRadius: r.pill, flexDirection: 'row',
+    flex: 1, minHeight: 44, borderRadius: r.button, flexDirection: 'row',
     alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(47,158,107,0.16)',
   },
-  checkedInTxt: { fontFamily: F.bodyS, fontSize: 15, letterSpacing: 0.2, color: palette.vert[300] },
+  checkedInTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: palette.vert[700] }, // DT-20: AA on the green-tint badge
 
   /* ----- session detail (pageSheet) ----- */
   dHeader: {
@@ -1123,29 +1386,40 @@ const st = StyleSheet.create({
     backgroundColor: SUBTLE,
   },
   dPlace: { fontFamily: F.bodyB, fontSize: 26, color: ON_CANVAS },
+  // Hero tag row — status chip (+ optional first-session tag) under the place title.
+  dTagRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: sp.sm },
+  // Prominent, glanceable "when" line under the hero (Lugg) — day · range · duration.
+  dWhen: { fontFamily: F.oswS, fontSize: 17, letterSpacing: 0.3, color: ON_CANVAS_2, marginTop: sp.md },
   // Flat info container — no box; rows sit directly on the surface.
   dCard: { marginTop: sp.lg },
+  // Grouped fact card (Lugg) — facts collected into one bordered white card.
+  dFactCard: {
+    marginTop: sp.lg, backgroundColor: CARD, borderRadius: r.lg,
+    borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)', paddingHorizontal: sp.md,
+  },
   dRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: 10 },
+  // Hairline between stacked rows inside a fact card (skipped on the first row).
+  dRowDivider: { borderTopWidth: 1, borderTopColor: 'rgba(24,23,21,0.07)' },
   // Plain icon column (no chip background) — shared by the info rows and the manage rows.
   rowIcon: { width: 24, alignItems: 'center' },
-  dRowLabel: { fontFamily: F.body, fontSize: 12, color: palette.neutral[500] },
+  dRowLabel: { fontFamily: F.body, fontSize: 13, color: palette.neutral[600] },
   dRowValue: { fontFamily: F.bodyB, fontSize: 16, color: ON_CARD, marginTop: 2 },
+  // Phone-as-value (its own section) — number stays blue (colour = clickable); the leading icon
+  // is neutral like the other rows.
+  dRowPhone: { fontFamily: F.bodyB, fontSize: 16, color: color.info, letterSpacing: 0.2, marginTop: 2 },
   // Copy-address affordance on the Where row (PLA-02) — 44px target, inline "Copied" swap.
   dCopyBtn: {
     minWidth: 44, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 5, paddingHorizontal: sp.xs,
   },
-  dCopiedTxt: { fontFamily: F.bodyS, fontSize: 12, color: palette.vert[300] },
+  dCopiedTxt: { fontFamily: F.bodyS, fontSize: 13, color: palette.vert[700] }, // DT-20: AA on light
 
   /* action-required banner (Fresha idiom) */
   banner: {
     flexDirection: 'row', alignItems: 'center', gap: sp.sm,
     marginTop: sp.md, paddingVertical: sp.md, paddingHorizontal: sp.md, borderRadius: r.lg,
   },
-  bannerTxt: { flex: 1, fontFamily: F.bodyS, fontSize: 14, lineHeight: 19 },
-
-  /* flat info list — no box, no dividers, rows sitting on the canvas */
-  factList: { marginTop: sp.lg },
+  bannerTxt: { flex: 1, fontFamily: F.bodyS, fontSize: 16, lineHeight: 19 },
 
   /* pinned footer (CVS idiom) — the contextual primary action, kept below the scroll */
   footerBar: {
@@ -1153,7 +1427,7 @@ const st = StyleSheet.create({
     // flex:1 buttons size correctly. SessionCta carries its own top margin; paddingBottom
     // is applied inline with the safe-area inset.
     paddingHorizontal: sp.lg, paddingTop: sp.xs,
-    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', backgroundColor: CANVAS,
+    borderTopWidth: 1, borderTopColor: 'rgba(24,23,21,0.07)', backgroundColor: CANVAS,
   },
 
   /* ----- manage group (per-session actions inside the detail sheet) ----- */
@@ -1161,40 +1435,50 @@ const st = StyleSheet.create({
     fontFamily: F.oswS, fontSize: 13, letterSpacing: 1, color: ON_CANVAS_2,
     marginTop: sp.xl, marginBottom: sp.sm,
   },
-  // Flat manage container — no box; rows sit directly on the surface.
-  manageCard: {},
   manageRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: 10 },
-  manageLabel: { flex: 1, fontFamily: F.bodyS, fontSize: 15 },
+  manageLabel: { flex: 1, fontFamily: F.bodyS, fontSize: 16 },
+
+  /* ----- quick-action toolbar (Best Buy idiom) — icon-over-label buttons in a row ----- */
+  iconActionRow: { flexDirection: 'row', alignItems: 'flex-start', marginTop: sp.sm },
+  iconAction: { flex: 1, alignItems: 'center', gap: sp.sm, paddingVertical: sp.xs },
+  iconActionCircle: { width: 56, height: 56, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  iconActionLabel: { fontFamily: F.bodyS, fontSize: 13, lineHeight: 16, textAlign: 'center' },
 
   /* ----- applications list + detail (C13) ----- */
   appHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: sp.sm },
   empty: { fontFamily: F.body, fontSize: 14, color: ON_CANVAS_2, marginTop: sp.sm },
-  appNote: { fontFamily: F.body, fontSize: 15, lineHeight: 22, color: ON_CANVAS_2, marginTop: sp.md },
+  // Empty-state hint + "see availability" link (WBS S14) — colour=clickable on the blue link.
+  emptyHint: { fontFamily: F.body, fontSize: 14, lineHeight: 19, color: ON_CANVAS_2, marginTop: sp.xs },
+  seeAvailRow: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, minHeight: 44, marginTop: sp.sm },
+  seeAvailTxt: { flex: 1, fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: color.info },
+  appNote: { fontFamily: F.body, fontSize: 16, lineHeight: 22, color: ON_CANVAS_2, marginTop: sp.md },
 
   /* ----- transmission notes (C28) ----- */
   notesPlace: { fontFamily: F.bodyB, fontSize: 22, color: ON_CANVAS },
-  notesIntro: { fontFamily: F.body, fontSize: 14, lineHeight: 20, color: ON_CANVAS_2, marginTop: 4, marginBottom: sp.md },
+  notesIntro: { fontFamily: F.body, fontSize: 16, lineHeight: 20, color: ON_CANVAS_2, marginTop: 4, marginBottom: sp.md },
   noteCard: {
     backgroundColor: CARD, borderRadius: r.xl, padding: sp.md, marginTop: sp.sm,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)',
   },
   noteHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
   noteAuthor: { fontFamily: F.bodyS, fontSize: 14, color: ON_CARD },
-  noteDate: { fontFamily: F.body, fontSize: 12, color: palette.neutral[500] },
-  noteText: { fontFamily: F.body, fontSize: 14, lineHeight: 20, color: ON_CARD_2 },
+  noteDate: { fontFamily: F.body, fontSize: 13, color: palette.neutral[600] },
+  noteText: { fontFamily: F.body, fontSize: 16, lineHeight: 20, color: ON_CARD_2 },
+  // "Ajouter une note" affordance under the inline thread on the detail sheet (C28)
+  notesAddRow: { marginTop: sp.xs },
   // composer pinned under the thread
   inputBar: {
-    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)',
+    borderTopWidth: 1, borderTopColor: 'rgba(24,23,21,0.07)',
     paddingHorizontal: sp.lg, paddingTop: sp.md, paddingBottom: sp.md, gap: sp.sm,
   },
   noteInput: {
     minHeight: 48, maxHeight: 120, backgroundColor: CARD, borderRadius: r.lg,
     paddingHorizontal: sp.md, paddingTop: sp.sm, paddingBottom: sp.sm,
-    fontFamily: F.body, fontSize: 15, color: ON_CARD,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    fontFamily: F.body, fontSize: 16, color: ON_CARD,
+    borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)',
   },
   saveBtn: {
-    minHeight: 44, borderRadius: r.pill, backgroundColor: color.action,
+    minHeight: 44, borderRadius: r.button, backgroundColor: color.action,
     alignItems: 'center', justifyContent: 'center',
   },
   saveBtnDisabled: { opacity: 0.4 },

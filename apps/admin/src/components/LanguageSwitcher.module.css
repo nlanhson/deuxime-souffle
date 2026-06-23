@@ -1,46 +1,103 @@
-/* Pilule à deux segments, calée sur la hauteur (40px) des autres contrôles de
-   la barre du haut (recherche, cloche, bouton compte). */
-.group {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px;
-  height: 40px;
-  border: 1px solid var(--color-border-field);
-  border-radius: var(--radius-pill);
-  background: var(--color-surface);
+.root {
+  position: relative;
 }
 
-.option {
-  display: inline-flex;
+/* ---- Trigger — matches sidebar nav row style ---- */
+.trigger {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  min-width: 40px;
-  height: 100%;
+  gap: var(--space-sm);
+  width: 100%;
+  min-height: 36px;
   padding: 0 var(--space-sm);
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   background: none;
-  color: var(--color-text-secondary);
-  font-family: var(--font-body);
-  font-weight: var(--weight-semibold);
-  font-size: var(--text-body-sm);
-  letter-spacing: var(--ls-normal);
   cursor: pointer;
-  transition: background-color var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard);
+  text-align: left;
+  transition: background-color var(--duration-fast) var(--ease-standard);
 }
 
-.option:hover:not([data-active='true']) {
+.trigger:hover {
   background: var(--color-surface-hover);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.triggerLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-regular);
   color: var(--color-text-primary);
 }
 
-.option[data-active='true'] {
-  background: var(--color-accent);
-  color: var(--color-on-action);
+/* ---- Slide-up picker ---- */
+.picker {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: var(--space-sm);
+  right: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.1);
+  /* Hidden state */
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-standard),
+              transform var(--duration-fast) var(--ease-standard);
 }
 
-.option:focus-visible {
+.picker[data-open='true'] {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ---- Picker option ---- */
+.pickerOption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: 6px var(--space-sm);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.pickerOption:hover {
+  background: var(--color-surface-hover);
+}
+
+.pickerOption:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+.pickerLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+/* ---- Flag ---- */
+.flag {
+  display: block;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
 }

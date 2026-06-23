@@ -20,7 +20,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
-import { copy } from '../copy';
+import { useCopy } from '../i18n';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { AuthTextField } from '../components/AuthTextField';
 import { Logo } from '../components/Logo';
@@ -28,7 +28,7 @@ import { X, Mail, TriangleAlert, CheckCircle2 } from '../icons';
 import { ease, dur } from '../lib/motion';
 
 const S = surfaces.coach;
-const ON_2 = palette.neutral[300];
+const ON_2 = palette.neutral[600];
 const ERR = palette.rouge[300];
 const F = {
   display: 'Anton_400Regular',
@@ -50,6 +50,7 @@ export function ForgotPasswordScreen({
   onBack: () => void;
   onDone: () => void;
 }) {
+  const copy = useCopy();
   const c = copy.auth.forgot;
 
   const [email, setEmail] = useState(initialEmail);
@@ -191,7 +192,7 @@ const st = StyleSheet.create({
   topbar: { flexDirection: 'row', alignItems: 'center', marginBottom: sp.xl },
   closeBtn: {
     width: 44, height: 44, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: palette.neutral[800],
+    backgroundColor: palette.neutral[100],
   },
 
   sentIcon: {
@@ -203,7 +204,7 @@ const st = StyleSheet.create({
   title: { fontFamily: F.display, fontSize: 40, lineHeight: 48, color: S.textPrimary },
   subtitle: { fontFamily: F.body, fontSize: 16, lineHeight: 24, color: ON_2, marginTop: sp.xs, marginBottom: sp.sm },
   emailEmph: { fontFamily: F.bodyS, color: S.textPrimary },
-  hint: { fontFamily: F.body, fontSize: 14, lineHeight: 20, color: palette.neutral[500], marginTop: sp.xs },
+  hint: { fontFamily: F.body, fontSize: 14, lineHeight: 20, color: palette.neutral[600], marginTop: sp.xs },
 
   notice: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, marginTop: sp.md },
   noticeErr: { flex: 1, fontFamily: F.body, fontSize: 14, lineHeight: 20, color: ERR },

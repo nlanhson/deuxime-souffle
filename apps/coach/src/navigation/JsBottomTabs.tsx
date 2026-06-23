@@ -6,6 +6,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { surfaces, color, palette } from '../theme/theme';
+import { useCopy } from '../i18n';
 import { TABS, type TabName } from './tabs';
 
 type ParamList = Record<TabName, undefined>;
@@ -13,19 +14,20 @@ const Tabs = createBottomTabNavigator<ParamList>();
 const coach = surfaces.coach;
 
 export function JsBottomTabs() {
+  const copy = useCopy();
   return (
     <Tabs.Navigator
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: color.action,
-        tabBarInactiveTintColor: palette.neutral[400],
+        tabBarInactiveTintColor: palette.neutral[600],
         tabBarStyle: {
           backgroundColor: coach.canvas,
-          borderTopColor: palette.neutral[800],
+          borderTopColor: palette.neutral[200],
         },
         tabBarLabelStyle: {
           fontFamily: 'Inter_600SemiBold',
-          fontSize: 11,
+          fontSize: 13,
           letterSpacing: 0.4,
           marginTop: 4,
         },
@@ -37,7 +39,7 @@ export function JsBottomTabs() {
           name={t.name}
           component={t.component}
           options={{
-            tabBarLabel: t.label,
+            tabBarLabel: copy.tabs[t.labelKey],
             tabBarIcon: ({ color: c, size, focused }) => t.icon({ color: c, size, focused }),
           }}
         />

@@ -1,5 +1,5 @@
 /**
- * Le Club — Deuxième Souffle · Typed design tokens
+ * Le Mouvement — Deuxième Souffle · Typed design tokens
  * Shared across React Native (coach) and React (admin / EHPAD).
  * Destination once the Turborepo exists: packages/shared/theme.
  *

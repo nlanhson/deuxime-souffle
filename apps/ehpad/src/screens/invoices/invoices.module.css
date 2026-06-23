@@ -45,6 +45,43 @@
   border-left: 1px solid var(--color-border-subtle);
 }
 
+/* DT-E2 — Accent de marque « ponctuel » : pastille d'icône colorée par cellule
+   (mêmes teintes/forme que la bande de l'Accueil). Présent mais calme. */
+.statIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 2px;
+}
+
+.statIcon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.statIcon[data-accent='blue'] {
+  background: var(--color-info-soft);
+  color: var(--color-info);
+}
+
+.statIcon[data-accent='green'] {
+  background: var(--color-progress-soft);
+  color: var(--color-progress-strong);
+}
+
+.statIcon[data-accent='gold'] {
+  background: var(--color-warning-soft);
+  color: var(--color-reward-strong);
+}
+
+.statIcon[data-accent='red'] {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
 .statEyebrow {
   font-family: var(--font-heading);
   font-weight: var(--weight-semibold);
@@ -235,4 +272,61 @@
 
 .cardActions {
   margin-top: var(--space-lg);
+}
+
+/* ---- détail séance-par-séance (transparence de facturation, QE-6) ---- */
+
+.breakdownIntro {
+  margin: 0 0 var(--space-md);
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
+}
+
+/* Défilement horizontal de secours en étroit — le tableau ne casse jamais la page. */
+.breakdownScroll {
+  overflow-x: auto;
+}
+
+.breakdownTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-body-sm);
+}
+
+.breakdownTable th,
+.breakdownTable td {
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-subtle);
+  white-space: nowrap;
+}
+
+.breakdownTable thead th {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.breakdownTable tbody td {
+  color: var(--color-text-primary);
+}
+
+/* Colonne montant : alignée à droite, chiffres tabulaires (les € s'empilent net). */
+.breakdownNum {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pied = total HT : pas de filet bas, libellé + valeur en pleine encre. */
+.breakdownTable tfoot th,
+.breakdownTable tfoot td {
+  border-bottom: 0;
+  padding-top: var(--space-md);
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.breakdownTable tfoot th {
+  text-align: right;
 }

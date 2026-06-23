@@ -9,6 +9,194 @@ Maintained as we go — every meaningful change and every decision lands here.
 
 ---
 
+## 2026-06-23 — Contract wizard rebuilt to Loïc's mockups (5 steps) + "Need help?" on every step
+
+Reworked **"Request a new contract"** ([ContractWizard.tsx](src/screens/contracts/ContractWizard.tsx)) to match
+the 5-screen mockup lot: the old single "Besoins" step is split into three, each step is
+redesigned, and a help box is added under every step.
+
+### Changes
+- **Progress bar = the 5 mockup steps**: Fréquence · Unités · Enchaînement · Indispos · Période.
+  The wizard still has **Créneaux + Récapitulatif** after Période (reached via "Voir les créneaux
+  suggérés →"); they render as *continuation* screens (bar shows all 5 done, no extra bullets) via a
+  new `visibleStepCount` prop on [Wizard](src/components/Wizard/index.tsx). 7 internal steps, 5 bullets.
+- **Step 1 — Fréquence**: radio *cards* with per-option sub-labels ("≈ 4 passages/mois · le plus courant", …).
+- **Step 2 — Unités**: checkbox *cards* with descriptions, the "Personnel soignant · doit être rattachée"
+  amber constraint, inline "Autre" field, and a blue lightbulb info-box counting the selection.
+- **Step 3 — Enchaînement** (conditional): chain-same-day vs separate-days as cards with the selected
+  units shown as chips (UC·1h → UP·1h), a green benefit line, the "+30 % de risque de 2 coachs" amber
+  warning, and a green tip box. With a **single unit** it shows a "rien à enchaîner" note and is skippable.
+- **Step 4 — Indispos** ([ExclusionsStep.tsx](src/screens/contracts/ExclusionsStep.tsx)): now titled
+  "Quand peut-on intervenir ?" with numbered sections (1 plage horaire · 2 grille · 3 périodes spéciales),
+  a **green ✓ / red ✗ grid** (weekends pre-blocked & non-interactive), a per-row "tout bloquer" checkbox,
+  and the shortcut row now includes **Tout réinitialiser**.
+- **Step 5 — Période**: the "12 mois glissants · Recommandé" option is now a selectable **hero card**
+  (date range + "≈ N séances · reconduction auto") with the dates in an editable sub-panel and the rarer
+  durations folded into an "Autres options" disclosure. Advance button reads "Voir les créneaux suggérés".
+- **"Besoin d'aide ?" box on every step** — a blue lightbulb InlineAlert with the DS contact email,
+  rendered once in the wizard shell (`help` prop) so it can't be forgotten on any step.
+- Component extensions (all backward-compatible): `Checkbox` gains `appearance="card"`; `RadioGroup`
+  gains `hideLegend` and `helper` accepts `ReactNode`; `InlineAlert` gains an `icon` override (lightbulb);
+  `Wizard` gains `visibleStepCount` + `help`.
+
+### Decisions
+- **House style, not the comps' palette.** The mockups use teal buttons / orange controls; this build keeps
+  the EHPAD brand language — blue accent for selected cards, red→gold reserved for the final submit — exactly
+  as the coach-signup and admin-invite wizards did ("brand, not comps' teal"). The *structure, copy and
+  pedagogy* of the mockups are reproduced faithfully; the colours stay on-brand and consistent with the app.
+- **Progress bar shows 5 bullets, Créneaux/Récap continue after** (user's call) — keeps the praised slot
+  suggestion + final recap/confirm without diverging from the mockup's 5-step bar.
+- **Weekends are predefined unavailable** (red ✗, non-interactive) — DS doesn't run EHPAD sessions on
+  weekends; the grid and shortcuts now only toggle Mon–Fri.
+
+---
+
+## 2026-06-23 — Contracts: collapse "Under review" into "Pending"
+
+Client decision (reverses the earlier Pending/Under-review badge split): a contract with a
+pending modification (`modification_en_attente`) now presents exactly like a pending one —
+same chip, same "Pending" label, same hourglass. ([status.ts](src/lib/status.ts))
+- The Contracts list no longer offers "Under review" as a separate **filter** option; the
+  "Pending" filter now covers both, and search matches the displayed "Pending" label.
+  ([ContractsScreen.tsx](src/screens/contracts/ContractsScreen.tsx))
+- The underlying status is unchanged, so the contract **detail** page keeps its accurate
+  "a major change is awaiting validation" banner — only the badge wording/visual is unified.
+
+## 2026-06-23 — Realism pass: local avatar photos + fuller mock data
+
+Made the app feel like a real, lived-in product. Build + lint clean; cross-refs, avatar
+files, and demo invariants verified (mechanical check + a 4-reviewer workflow).
+
+### Changes
+- **Avatars are now self-hosted (13 local photos).** Replaced every external
+  `randomuser.me` hotlink with bundled JPEGs under [public/avatars/](public/avatars) (~92 KB total).
+  Avatars now render reliably offline, in production, and behind ad/privacy blockers — no more
+  silent fall-back to initials. All `<Avatar>` call sites already passed `src`, so this is a
+  data-only swap. ([rich.ts](src/data/seed/rich.ts))
+- **Fuller cast.** Coaches 3 → 7 (added Amélie Garnier, Lucas Moreau, Nadia Haddad, Sofiane
+  Benali) and contacts 3 → 6 (added Nathalie Faure · psychologue, Philippe Roy · comptable,
+  David Lemoine · directeur adjoint) — each with a photo, realistic French email/phone/role.
+- **Contacts screen now shows faces.** The contact cards led with a generic role-icon tile;
+  they now lead with the person's **photo** (role kept as the attack label, gold star retained
+  for the principal). The directory finally reads like a real address book.
+  ([ContactsScreen.tsx](src/screens/contacts/ContactsScreen.tsx), [contacts.module.css](src/screens/contacts/contacts.module.css))
+- **Busier, more believable activity.** Two more **active** contracts (CT-2026-022 "Snoezelen"
+  UP/UHR, CT-2026-025 "Aidants & familles") so the Home "active contracts" KPI and the calendar
+  feel populated; ~12 new sessions distribute the new coaches, including two **substitute**
+  sessions so existing contracts show **two coaches** in "Participating coaches". Facility lifetime
+  total 96 → 140, live coach count, +1 standard session, +"Salle Snoezelen" marker.
+
+### Decisions
+- **Bundle avatars locally instead of hotlinking randomuser.me.** A real product hosts its own
+  images; hotlinking is the usual reason avatars "disappear" (offline / blocked / rate-limited).
+  Photos confirmed reachable, downloaded once, committed (~92 KB) — the demo is now self-contained.
+- **Every new coach is referenced by a session.** Coaches only surface in this app through
+  sessions/contracts/evaluations (no standalone roster screen), so each new coach was given real
+  sessions — otherwise they'd be invisible. Headline contract counts stay as curated "sample"
+  numbers (the session list is a representative slice), consistent with the existing seed.
+
+## 2026-06-23 — EHPAD design-feedback pass: cross-cutting decisions (DT-E1…DT-E6)
+
+Worked the **"Cross-cutting Decisions — Apply to multiple screens"** rows from
+`Docs/Design_Feedback_EHPAD_EN.xlsx` (the per-screen rows are owned by another workstream).
+Typecheck + lint + production build all clean.
+
+### Changes
+- **DT-E1 · "Partner space" rename.** Every "EHPAD space" lockup/label is now "Espace
+  partenaire" / "Partner space" — DS also serves senior residences & home-care, so the naming
+  is inclusive. Centralised in i18n (`app.space`, contacts `hasAccount` access line, system
+  welcome title) + the browser `<title>`/meta. The facility *type* "EHPAD" stays untouched.
+  ([i18n/fr.ts](src/i18n/fr.ts), [i18n/en.ts](src/i18n/en.ts), [index.html](index.html))
+- **DT-E2 · Brand accents reintroduced (punctually).** The two KPI bands (Home + Invoices) each
+  carry a small soft-tint icon chip per tile across the four brand colours (blue/green/gold/red),
+  semantically assigned (e.g. unpaid total = red, rating = gold). Calm, never as loud as Coach.
+  Also a gold "Recommandé" chip on the wizard's 12-month preset.
+  ([Dashboard.module.css](src/screens/dashboard/Dashboard.module.css), [DashboardScreen.tsx](src/screens/dashboard/DashboardScreen.tsx), [invoices.module.css](src/screens/invoices/invoices.module.css), [InvoicesScreen.tsx](src/screens/invoices/InvoicesScreen.tsx))
+- **DT-E3 · Availability time ranges + profile by facility type (wizard step 2).** New profile
+  selector (EHPAD: morning 11am–12pm / afternoon 2–5pm · Residence/flexible: 9am–7pm), defaulted
+  from the facility category, with the active ranges shown under each Morning/Afternoon grid row
+  and recapped in the summary. New `WizardData.availabilityProfile` + `Contract.availabilityProfile`.
+  ([ExclusionsStep.tsx](src/screens/contracts/ExclusionsStep.tsx), [ContractWizard.tsx](src/screens/contracts/ContractWizard.tsx), [contracts.module.css](src/screens/contracts/contracts.module.css), [types/models.ts](src/types/models.ts))
+- **DT-E4 · "Individual session" removed (wizard step 1).** DS sessions are always group; the
+  session-type radio is gone, type is fixed to `collective`, and a pedagogical note states it.
+  ([ContractWizard.tsx](src/screens/contracts/ContractWizard.tsx), [i18n](src/i18n/fr.ts))
+- **DT-E5 · Contract durations fixed (wizard step 3).** Dropped 6 months; 12 months is now the
+  recommended default (pre-applied on entry, gold "Recommandé" chip); added 24 months and **"No
+  end (endless contract)"**. Endless keeps a 24-month nominal horizon for session generation but
+  renders "Sans échéance" everywhere (wizard summary, contract detail, contracts list). New
+  `WizardData.openEnded` + `Contract.openEnded`.
+  ([ContractWizard.tsx](src/screens/contracts/ContractWizard.tsx), [api.ts](src/data/api.ts), [ContractDetailScreen.tsx](src/screens/contracts/ContractDetailScreen.tsx), [ContractsScreen.tsx](src/screens/contracts/ContractsScreen.tsx), [types/models.ts](src/types/models.ts))
+- **DT-E6 · Non-renewal flow surfaced + deadline alerts.** The existing 3-step deterrent flow
+  (NonRenewalScreen) now has an entry point: a discreet "Ne pas renouveler" button on a "To renew"
+  contract (Renew stays the primary action). Added a coloured **deadline banner** at the top of
+  the contract detail page ("Ce contrat expire le … renouvelez-le dès maintenant") and a **Home
+  banner** ("1 contrat à renouveler avant …") linking straight to the contract.
+  ([ContractDetailScreen.tsx](src/screens/contracts/ContractDetailScreen.tsx), [DashboardScreen.tsx](src/screens/dashboard/DashboardScreen.tsx), [i18n](src/i18n/fr.ts))
+
+### Decisions
+- **"Endless contract" = display flag, not a null end date.** `Contract.endDate` stays a real
+  date (start + 24 months nominal) so session generation and date math keep working; `openEnded`
+  only drives what the UI shows. Avoids guarding every `formatDate(endDate)` call site.
+- **Brand accents applied to KPI bands only (first pass).** Repainting every badge/separator
+  risks the "generated-dashboard" loudness the calm moodboard avoids — DT-E2 is a 🟡 calibration,
+  so it's deliberately scoped to the highest-traffic surfaces for the client to review live.
+- **Deadline banners are message-only.** The Renew CTA already lives in the action row / links in
+  the banner action — the banner states the deadline without duplicating a second primary button.
+
+## 2026-06-23 — EHPAD design-feedback pass: per-screen corrections & verifications
+
+Worked the **"Feedback by Screen — Corrections & verifications only"** rows from
+`Docs/Design_Feedback_EHPAD_EN.xlsx` (the cross-cutting DT-E1…DT-E6 rows are owned by
+another workstream). Each item run live in the browser (Chrome-for-Testing via Puppeteer)
+before deciding whether to change code.
+
+### Changes
+- **Rating stars → gold (p.4 Evaluation form).** Filled stars now use the brand gold
+  (bright fill `--lc-or-400` + darker `--lc-or-700` edge for AA non-text contrast) and the
+  selection halo is a soft gold (`--color-warning-soft`) instead of blue — both the
+  interactive `RatingInput` and the read-only `RatingDisplay` (averages, sent evaluations).
+  ([Rating.module.css](src/components/Rating/Rating.module.css), [Rating/index.tsx](src/components/Rating/index.tsx))
+- **"Pending" vs "Under review" badges differentiated (p.5 Contracts list).** They shared
+  the same light blue + hourglass. `modification_en_attente` now has its own deeper-blue chip
+  variant (`review` = bleu-100/bleu-800) and a distinct pictogram (`FileSearch` magnifier vs
+  the `Hourglass` of `en_attente_validation`).
+  ([status.ts](src/lib/status.ts), [Chip.module.css](src/components/Chip/Chip.module.css))
+- **Units column widened 22→28 % (p.5 Contracts list).** A single unit (e.g. "Standard unit
+  (UC)") now fits without truncation; multi-unit rows keep the existing hover `title` tooltip.
+  Reclaimed width from reference (16→14 %), progress (23→20 %), end date (16→15 %).
+  ([ContractsScreen.tsx](src/screens/contracts/ContractsScreen.tsx))
+- **"Renew this contract" → primary CTA (p.7 Contract detail).** On a "To renew" contract the
+  renew button now carries the red→gold gradient; "Edit" stays secondary (one primary per view).
+  ([ContractDetailScreen.tsx](src/screens/contracts/ContractDetailScreen.tsx))
+- **Invoice "Download PDF" → primary CTA + session-by-session breakdown (p.9 Invoice detail).**
+  Download is now the red→gold primary (the page's main action). Added a "Session breakdown"
+  table (date · coach · type · amount excl. VAT) with a Total row — answers QE-6 (billing
+  transparency). Data is deterministic mock (no backend): `sessionCount` lines at the unit price
+  (amount ÷ sessions = €65 in the seed), coaches/units rotating, summing exactly to `amountHT`.
+  ([InvoiceDetailScreen.tsx](src/screens/invoices/InvoiceDetailScreen.tsx), new [lib/invoice.ts](src/lib/invoice.ts), [invoices.module.css](src/screens/invoices/invoices.module.css), i18n keys in [fr.ts](src/i18n/fr.ts)/[en.ts](src/i18n/en.ts))
+
+### Verified — no change needed
+- **Session title underline (p.2 Past sessions).** The "Aidants & familles" underline is
+  **hover-only** and the whole card title is the button that opens the session-detail peek modal
+  → it does navigate. Underline correctly signals a clickable element; kept.
+- **Evaluation Submit button (p.4).** Already `variant="primary"` (red→gold gradient).
+- **Active-contract sections (p.7).** "Participating coaches", "Generated sessions" and the
+  modification history are all present **and populated** on an active contract (verified on
+  `ct-2026-014`: coach Karim Belkacem 4.8★, generated sessions list, audit trail).
+- **Contact Us Submit button (p.11).** Already `variant="primary"` (red→gold gradient).
+
+### Decisions
+- **Rating stars are gold, not blue — the one sanctioned exception to "blue = interactive".**
+  The reviewer asked for gold here and praised "gold stars" on the average-rating KPI; a star is a
+  universal reward metaphor. Kept the blue focus ring + soft-gold hover so interactivity still reads.
+  Used a bright-fill/dark-edge split so the gold passes WCAG 1.4.11 (3:1 non-text) on white.
+- **Invoice breakdown is synthesised, deterministic mock data.** The `Invoice` model has no line
+  items and QE-6 is still an open product question, but the app is a high-fidelity mock prototype
+  and the unit price is clean (€65), so a generated breakdown delivers the requested transparency
+  while always reconciling to the invoice total. Real line-item data is a backend concern for later.
+
+---
+
 ## 2026-06-15 — Brand lockup proportions: smaller picto, larger title
 
 ### Changes

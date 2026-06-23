@@ -1,0 +1,47 @@
+.tableCard {
+  padding: var(--space-lg);
+}
+.amount {
+  font-weight: var(--weight-semibold);
+}
+
+/* ---- Detail modal ---- */
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+.detailTop {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.lines {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-body-sm);
+}
+.lines th {
+  text-align: start;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--ls-label);
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.lines th:not(:first-child),
+.lines td:not(:first-child) {
+  text-align: end;
+}
+.lines td {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.lines tfoot td {
+  padding-top: var(--space-md);
+  font-weight: var(--weight-semibold);
+  border-bottom: none;
+}

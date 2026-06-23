@@ -27,7 +27,7 @@ export const DEFAULT_LOCALE: Locale = 'fr';
 
 /** Libellés des langues, dans leur propre langue (auto-glottonymes). */
 export const localeNames: Record<Locale, string> = { fr: 'Français', en: 'English' };
-export const localeShort: Record<Locale, string> = { fr: 'FR', en: 'EN' };
+export const localeShort: Record<Locale, string> = { fr: '🇫🇷', en: '🇬🇧' };
 
 const STORAGE_KEY = 'ds-admin.locale';
 

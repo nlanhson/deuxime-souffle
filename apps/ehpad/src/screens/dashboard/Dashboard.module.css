@@ -113,6 +113,45 @@
   padding: 20px var(--space-md);
 }
 
+/* DT-E2 — Accent de marque « ponctuel » : une pastille d'icône colorée par
+   cellule réintroduit les quatre teintes de la charte (bleu / vert / rouge /
+   or) sans repeindre la bande. Pastille douce (fond *-soft + icône forte),
+   28px — présente mais calme, jamais aussi appuyée que le côté coach. */
+.statIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 2px;
+}
+
+.statIcon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.statIcon[data-accent='blue'] {
+  background: var(--color-info-soft);
+  color: var(--color-info);
+}
+
+.statIcon[data-accent='green'] {
+  background: var(--color-progress-soft);
+  color: var(--color-progress-strong);
+}
+
+.statIcon[data-accent='gold'] {
+  background: var(--color-warning-soft);
+  color: var(--color-reward-strong);
+}
+
+.statIcon[data-accent='red'] {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
 .stat + .stat {
   border-left: 1px solid var(--color-border-subtle);
 }

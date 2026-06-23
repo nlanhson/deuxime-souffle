@@ -1,0 +1,46 @@
+/* Initials chip on a deterministic brand tone. Calm tints — never pulls focus. */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--ls-normal);
+  line-height: 1;
+  user-select: none;
+}
+
+.avatar[data-size='sm'] {
+  width: 32px;
+  height: 32px;
+  font-size: var(--text-caption);
+}
+.avatar[data-size='md'] {
+  width: 40px;
+  height: 40px;
+  font-size: var(--text-body-sm);
+}
+.avatar[data-size='lg'] {
+  width: 56px;
+  height: 56px;
+  font-size: var(--text-body-lg);
+}
+
+.avatar[data-tone='bleu'] {
+  background: var(--lc-bleu-50);
+  color: var(--lc-bleu-700);
+}
+.avatar[data-tone='vert'] {
+  background: var(--lc-vert-50);
+  color: var(--lc-vert-700);
+}
+.avatar[data-tone='or'] {
+  background: var(--lc-or-50);
+  color: var(--lc-or-800);
+}
+.avatar[data-tone='neutre'] {
+  background: var(--lc-neutral-100);
+  color: var(--color-text-secondary);
+}

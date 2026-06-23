@@ -28,6 +28,12 @@
   font-size: 13px;
 }
 
+.avatar[data-size='topbar'] {
+  width: 42px;
+  height: 42px;
+  font-size: var(--text-body-sm);
+}
+
 .avatar[data-size='md'] {
   width: 48px;
   height: 48px;

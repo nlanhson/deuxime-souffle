@@ -14,10 +14,10 @@ import { palette, color, spacing as sp, radius as r } from '../theme/theme';
 import { BottomSheet } from './BottomSheet';
 import { PrimaryButton } from './PrimaryButton';
 
-const ON_CARD = palette.neutral[50];
-const ON_CARD_2 = palette.neutral[300];
-const ON_CARD_3 = palette.neutral[500];
-const SUBTLE = palette.neutral[800];
+const ON_CARD = palette.neutral[900];
+const ON_CARD_2 = palette.neutral[600];
+const ON_CARD_3 = palette.neutral[600];
+const SUBTLE = palette.neutral[100];
 const F = { bodyB: 'Inter_700Bold', bodyS: 'Inter_600SemiBold', body: 'Inter_400Regular' };
 
 export type MultiOption = { key: string; label: string };
@@ -100,13 +100,13 @@ const st = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: sp.sm, marginTop: sp.md },
   chip: {
     paddingVertical: 10, paddingHorizontal: 16, borderRadius: r.pill,
-    backgroundColor: palette.neutral[900], borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: palette.neutral[100], borderWidth: 1, borderColor: 'rgba(24,23,21,0.10)',
   },
   chipOn: { backgroundColor: color.action, borderColor: color.action },
-  chipTxt: { fontFamily: F.bodyS, fontSize: 15, color: ON_CARD_2 },
+  chipTxt: { fontFamily: F.bodyS, fontSize: 16, color: ON_CARD_2 },
   chipTxtOn: { color: color.onAction },
 
   actions: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, marginTop: sp.lg },
-  cancel: { minHeight: 48, paddingHorizontal: sp.lg, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center' },
+  cancel: { minHeight: 48, paddingHorizontal: sp.lg, borderRadius: r.button, alignItems: 'center', justifyContent: 'center' },
   cancelTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: ON_CARD_3 },
 });

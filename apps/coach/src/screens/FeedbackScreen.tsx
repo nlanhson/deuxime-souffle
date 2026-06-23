@@ -23,11 +23,11 @@ import { FeedbackSkeleton } from './skeletons';
 const S = surfaces.coach;
 const ON_CANVAS = S.textPrimary;
 const ON_CANVAS_2 = S.textSecondary;
-const ON_CARD = palette.neutral[50];
-const ON_CARD_2 = palette.neutral[300];
-const ON_CARD_3 = palette.neutral[500];
-const SUBTLE = palette.neutral[800];
-const GOLD = palette.or[300];
+const ON_CARD = palette.neutral[900];
+const ON_CARD_2 = palette.neutral[600];
+const ON_CARD_3 = palette.neutral[600];
+const SUBTLE = palette.neutral[100];
+const GOLD = palette.or[800];
 
 const F = {
   display: 'Anton_400Regular',
@@ -159,18 +159,18 @@ const st = StyleSheet.create({
   heroAvg: { fontFamily: F.display, fontSize: 44, lineHeight: 53, color: ON_CANVAS },
   heroSub: { fontFamily: F.body, fontSize: 14, color: ON_CANVAS_2, marginTop: 2 },
 
-  empty: { fontFamily: F.body, fontSize: 15, lineHeight: 22, color: ON_CANVAS_2, marginTop: sp.md },
+  empty: { fontFamily: F.body, fontSize: 16, lineHeight: 22, color: ON_CANVAS_2, marginTop: sp.md },
 
   card: {
     borderRadius: r.lg, padding: sp.md, marginBottom: sp.sm,
-    backgroundColor: palette.neutral[800], borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: palette.neutral[0], borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)',
   },
   cardHead: { flexDirection: 'row', alignItems: 'center', gap: sp.md },
   cardIcon: {
     width: 36, height: 36, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: palette.neutral[700],
+    backgroundColor: palette.neutral[200],
   },
-  cardPlace: { fontFamily: F.bodyB, fontSize: 15, color: ON_CARD },
+  cardPlace: { fontFamily: F.bodyB, fontSize: 16, color: ON_CARD },
   cardDate: { fontFamily: F.body, fontSize: 13, color: ON_CARD_3, marginTop: 2 },
   rating: {
     flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 4,
@@ -179,7 +179,7 @@ const st = StyleSheet.create({
   },
   ratingTxt: { fontFamily: F.bodyS, fontSize: 13, color: GOLD },
 
-  comment: { fontFamily: F.body, fontSize: 14, lineHeight: 21, color: ON_CARD_2, marginTop: sp.sm },
+  comment: { fontFamily: F.body, fontSize: 16, lineHeight: 21, color: ON_CARD_2, marginTop: sp.sm },
 
   note: { fontFamily: F.body, fontSize: 13, lineHeight: 19, color: ON_CANVAS_2, marginTop: sp.md },
 });

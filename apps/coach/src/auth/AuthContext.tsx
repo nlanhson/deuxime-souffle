@@ -2,8 +2,9 @@
  * AuthContext — the app's authentication + account-status seam (E01 — Auth & Account).
  *
  * PROTOTYPE: in-memory only. Models the coach account lifecycle the brief defines:
- *   signedOut → (register) → pending  → (admin validates) → active
- *               (signIn, existing coach) ───────────────────→ active
+ *   signedOut → (register) → pending → (admin validates) → approved → (enter) → active
+ *               (signIn, existing coach) ─────────────────────────────────────→ active
+ * `approved` is the transient welcome beat (AcceptedScreen, AUTH-07) shown once before the app.
  * `register` mirrors "Coach self-registration … with admin validation": it creates a
  * PENDING_APPROVAL account, so the App gate locks the coach onto the pending-approval screen
  * until an admin approves (here, there's no backend, so approval doesn't happen yet). `signIn`
@@ -15,12 +16,14 @@
  */
 import React, { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 
-export type AccountStatus = 'signedOut' | 'pending' | 'active';
+// 'approved' is a transient WELCOME beat between pending and active: the team has validated the
+// account, so we show the "you're in" screen once, then `enter()` lands the coach in the app.
+export type AccountStatus = 'signedOut' | 'pending' | 'approved' | 'active';
 export type OnboardingEntry = 'splash' | 'signup' | 'login';
 
 type AuthState = {
   status: AccountStatus;
-  /** First name captured at registration, for greeting on the pending screen (null after login). */
+  /** First name captured at registration, for greeting on the pending/accepted screens (null after login). */
   applicantName: string | null;
   /** Which onboarding screen to resume on when returning to the signed-out flow. */
   onboardingEntry: OnboardingEntry;
@@ -29,6 +32,10 @@ type AuthState = {
   signOut: () => void;
   /** Leave the pending screen back to the Apply-to-coach form (not the splash). */
   backToSignup: () => void;
+  /** Admin validates a pending account → show the welcome/accepted screen (AUTH-07). */
+  approve: () => void;
+  /** Leave the accepted screen → the active app. */
+  enter: () => void;
 };
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -66,6 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setOnboardingEntry('signup');
         setStatus('signedOut');
       },
+      // pending → approved (the welcome beat) → active. `enter` keeps the captured first name so the
+      // active app's first-run greeting can use it; a later manual log-out resets it via signOut.
+      approve: () => setStatus('approved'),
+      enter: () => setStatus('active'),
     }),
     [status, applicantName, onboardingEntry],
   );

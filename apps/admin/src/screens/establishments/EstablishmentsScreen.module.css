@@ -1,0 +1,219 @@
+.tableCard {
+  padding: var(--space-lg);
+}
+
+/* ---- Groups rail ---- */
+.groupsCard {
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.groupsHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text-secondary);
+}
+.groupsTitle {
+  font-size: var(--text-subheading);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+}
+.groups {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+.groupRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+.groupRow:first-child {
+  border-top: none;
+}
+
+/* ---- Detail modal ---- */
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+.detailTop {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.blockTitle {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+}
+.statValue {
+  font-size: var(--text-h3);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+.statLabel {
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+}
+
+.contacts {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: 0;
+}
+.contact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+}
+.contactTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.contactLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (max-width: 720px) {
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ---- CFPPA / BdC markers ---- */
+.markers {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+.markerCard {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.markerHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-info);
+}
+.markerTitle {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+}
+.markerStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+  margin-top: var(--space-sm);
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+.markerStats strong {
+  color: var(--color-text-primary);
+}
+
+/* ---- Create-establishment wizard ---- */
+.wizSub {
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+}
+.extraHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+.extraRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: var(--space-sm);
+  align-items: center;
+}
+.removeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-border-field);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.removeBtn:hover {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+.recap {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+.recapCard {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.recapCardTitle {
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--space-xs);
+}
+
+@media (max-width: 720px) {
+  .markers {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .recap {
+    grid-template-columns: 1fr;
+  }
+}

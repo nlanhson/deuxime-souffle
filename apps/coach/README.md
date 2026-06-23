@@ -52,7 +52,7 @@ once and open the app over the LAN with `npx expo start --dev-client`.
 
 ## Layout
 ```
-App.tsx                            NavigationContainer (Le Club dark theme) → RootTabs
+App.tsx                            NavigationContainer (Le Mouvement dark theme) → RootTabs
 src/navigation/
   RootTabs.tsx                     adaptive resolver — picks native or JS at runtime
   supportsNativeTabs.ts            capability check (native module? Expo Go? web? iOS version?)
@@ -63,7 +63,7 @@ src/screens/AccueilScreen.tsx      the Coach Home (Accueil tab)
 src/screens/{Seances,Disponibles,Revenus}Screen.tsx   placeholder tabs
 src/screens/ScreenScaffold.tsx     shared on-brand placeholder
 src/copy.ts                        localization seam (English now, French to ship)
-src/theme/theme.ts                 vendored Le Club tokens
+src/theme/theme.ts                 vendored Le Mouvement tokens
 ```
 
 ## Next

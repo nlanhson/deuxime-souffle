@@ -11,13 +11,18 @@
 export const copy = {
   header: {
     date: 'mar. · 9 juin',
-    greeting: 'Bonjour, Karim',
+    // DT-18: the English "Hi, Karim" is kept in BOTH locales as the sporty/community brand greeting
+    // (client decision 2026-06-19) — not localized to "Salut". Shown in Anton caps in the hero.
+    greeting: 'Hi, Karim',
     notificationsA11y: 'Notifications, 2 non lues',
     profileA11y: 'Profil de Karim',
-    // Coach badge / level chip in the header (WBS PLA-01: "Dashboard displays Coach badge").
-    // "Lv" + the number is composed in-component; opens the Badges & level screen.
-    levelPrefix: 'Niv',
-    levelA11y: 'Votre niveau et vos badges',
+    // Accessibility label for the tier card (WBS PLA-01) — opens the progression surface.
+    levelA11y: 'Votre palier et votre progression',
+    // Section title above the tier card on Home (same style as the other Home titles).
+    levelTitle: 'Mon palier',
+    // Hero motivational stats (mock values composed in-component: "×5", "214").
+    streakLabel: 'Série',
+    residentsLabel: 'Résidents',
   },
   reportBanner: {
     title: 'Compte rendu à compléter',
@@ -55,50 +60,51 @@ export const copy = {
   // (SESS-01, Detail column): one numeric stepper, one single-choice, three Yes/No (two reveal a
   // text field), and a 5-point atmosphere rating. Submitting validates the session and triggers
   // billing. Field VALUES (counts, options) are mock placeholders formatted in the component.
+  // Post-session report (C25/C26 · WBS SESS-01) — a 3-step form: Résumé · À transmettre · Confirmation.
   report: {
     eyebrow: 'Compte rendu de séance',
     // The reported session — mock, mirrors the home banner ("Yesterday's session · Bellevue").
     session: 'Séance d’hier',
     place: 'Résidence Bellevue',
-    intro: 'Deux minutes. Cela valide la séance et déclenche votre facturation.',
+    intro: 'Cela valide la séance et déclenche votre facturation.',
     closeA11y: 'Fermer le compte rendu',
     required: 'Obligatoire',
     yes: 'Oui',
     no: 'Non',
-    // 1 · participants (numeric stepper, WBS default-ish; pre-filled from the session size).
+    // 3-step wizard chrome (SESS-01 revised + mockup).
+    stepPrefix: 'Étape',
+    stepOf: 'sur',
+    steps: { summary: 'Résumé', recipients: 'À transmettre', confirm: 'Confirmation' },
+    back: 'Retour',
+    continue: 'Continuer',
+    // 48h speed-bonus reminder (SESS-01) — a report sent within 48h earns +1 confidence point.
+    speedBonus: {
+      title: 'Bonus rapidité',
+      body: 'Envoyez votre compte rendu sous 48 h pour gagner +1 point d’indice de confiance.',
+      remaining: 'Il vous reste 47 h.',
+    },
+    // Step 1 · participants (numeric stepper; pre-filled from the session size, default 8).
     participants: {
       label: 'Nombre de participants',
-      help: 'Combien de résidents ont participé.',
+      help: 'Comptez les résidents présents, sans les nommer.',
       minusA11y: 'Un participant de moins',
       plusA11y: 'Un participant de plus',
       unit: 'résidents',
     },
-    // 2 · activities (multiple choice from admin-configured options — mock list here).
+    // Step 1 · activities (multiple choice from admin-configured options — mock list here).
     activities: {
       label: 'Activités réalisées',
       help: 'Sélectionnez tout ce qui s’applique.',
       options: ['Mobilité & équilibre', 'Renforcement', 'Souplesse', 'Coordination', 'Cardio', 'Jeux cognitifs'],
     },
-    // 3 · flag to facility (Yes/No → reveals an optional message).
-    flag: {
-      label: 'Un point à signaler à l’établissement ?',
-      help: 'Le coordinateur le verra directement.',
-      placeholder: 'Que doit savoir l’établissement ?',
-    },
-    // 4 · notes for next session (Yes/No → reveals a REQUIRED note).
-    nextNotes: {
-      label: 'Des notes pour la prochaine séance ?',
-      help: 'Transmises à la personne qui l’animera ensuite.',
-      placeholder: 'ex. M. Lambert a besoin d’une chaise avec accoudoirs.',
-    },
-    // 5 · facility readiness (plain Yes/No).
+    // Step 1 · facility readiness (plain Yes/No).
     readiness: {
       label: 'L’établissement était-il prêt à vous accueillir ?',
       help: 'Salle préparée, résidents réunis, matériel disponible.',
     },
-    // 6 · participant engagement (WBS SESS-01: 4 emoji options, not a star rating).
+    // Step 1 · participant dynamism / engagement (SESS-01: 4 emoji options, not a star rating).
     engagement: {
-      label: 'Engagement global des participants',
+      label: 'Dynamisme global des participants',
       help: 'À quel point le groupe était impliqué dans l’ensemble.',
       // index 0–3, low → high. The WBS's verbatim four levels.
       levels: [
@@ -107,9 +113,9 @@ export const copy = {
         { emoji: '🙂', word: 'Bien impliqués' },
         { emoji: '🔥', word: 'Très dynamiques' },
       ],
-      a11y: 'Engagement des participants',
+      a11y: 'Dynamisme des participants',
     },
-    // 7 · perceived session difficulty (WBS SESS-01: Easy / Standard / Demanding).
+    // Step 1 · perceived session difficulty (SESS-01: Easy / Standard / Demanding).
     difficulty: {
       label: 'Difficulté ressentie de la séance',
       help: 'À quel point la séance a été exigeante à animer.',
@@ -121,12 +127,59 @@ export const copy = {
       ],
       a11y: 'Difficulté de la séance',
     },
+    // Step 1 · overall "bilan" (SESS-01 Q4) — the binary that triggers the admin alert; a vigilance
+    // reveals a required detail.
+    bilan: {
+      label: 'Bilan de la séance',
+      help: 'Tout s’est-il bien passé, ou y a-t-il un point de vigilance ?',
+      ok: 'Rien à signaler',
+      issue: 'Point de vigilance',
+      detailLabel: 'Détail du point de vigilance',
+      detailPlaceholder: 'Décrivez le point de vigilance…',
+    },
+    // Step 2 · the 3 distinct confidential recipients (SESS-01) — each optional, 200 characters max,
+    // visible only to its own recipient.
+    recipients: {
+      intro: 'Trois destinataires distincts. Chaque message est facultatif et n’est vu que par son destinataire.',
+      max: 200,
+      coordinator: {
+        title: 'Coordinateur de l’établissement',
+        audience: 'Visible par l’établissement uniquement',
+        help: 'Aménagement de la salle, matériel, observation sur le groupe. Pas de noms de résidents.',
+        placeholder: 'Votre message au coordinateur…',
+        toggleA11y: 'Ajouter un message au coordinateur',
+      },
+      ds: {
+        title: 'Équipe Deuxième Souffle',
+        audience: 'Confidentiel — visible par Deuxième Souffle uniquement',
+        help: 'Difficulté opérationnelle, problème d’accès, observation confidentielle.',
+        placeholder: 'Votre message confidentiel à l’équipe DS…',
+        toggleA11y: 'Ajouter un message confidentiel à l’équipe DS',
+      },
+      nextCoach: {
+        title: 'Prochain coach',
+        audience: 'Visible par le prochain coach de ce type de séance',
+        help: 'Continuité pédagogique : ce qui aide à préparer la prochaine séance.',
+        placeholder: 'ex. M. Lambert a besoin d’une chaise avec accoudoirs.',
+        toggleA11y: 'Ajouter une note pour le prochain coach',
+      },
+      emptyEnabled: 'Écrivez un message ou désactivez ce destinataire.',
+    },
     submit: 'Envoyer le compte rendu',
-    incomplete: 'Répondez aux questions en surbrillance pour envoyer.',
-    // Confirmation state (replaces the form after submit).
+    incomplete: 'Répondez aux questions en surbrillance pour continuer.',
+    // Step 3 · confirmation (replaces the form after submit) — validated + billing, the speed-bonus
+    // box, and a recap of who received what.
     done: {
       title: 'Compte rendu envoyé',
       body: 'Merci, Karim. Cette séance est validée et votre facturation est en cours.',
+      bonusTitle: 'Bonus rapidité obtenu',
+      bonusBody: '+1 point d’indice de confiance (envoyé sous 48 h).',
+      routingTitle: 'Qui reçoit quoi',
+      routing: {
+        coordinator: 'Le coordinateur de l’établissement reçoit votre message.',
+        ds: 'L’équipe Deuxième Souffle suit la séance.',
+        nextCoach: 'Le prochain coach verra votre note.',
+      },
       cta: 'Terminé',
     },
   },
@@ -152,12 +205,29 @@ export const copy = {
     // Care unit within the EHPAD (WBS PLA-01: "Session cards display Unit type").
     unit: 'Unité protégée · Rez-de-chaussée',
     unitLabel: 'Unité',
+    // Detail-sheet row labels (scannable icon + label + value rows) + the Call quick action.
+    whenLabel: 'Horaire',
+    whereLabel: 'Adresse',
+    contactLabel: 'Contact',
+    callLabel: 'Appeler',
     // Client session-detail fields (WBS Coach Planning & Check-in): EHPAD name, time,
     // address, contact person. `contact` = the on-site person to ask for on arrival.
     contact: 'Demandez Marie Laurent · Coordinatrice',
+    // Direct line of the on-site reference person (DT-12) — tap-to-call from the session detail.
+    phone: '04 78 30 12 45',
+    callA11y: 'Appeler le contact sur place',
+    // Previous coach's handover note (DT-09 / SESS-01 Step 2) — shown DIRECTLY on the next-session
+    // detail (not behind a menu), integrated from the previous coach's report. Mirrors the same
+    // session's transmission note in the Sessions tab so the two screens tell one story.
+    handover: {
+      label: 'Note de transmission',
+      meta: 'Sophie Marchand · coach précédent · 28 mai',
+      text: 'M. Lambert préfère les exercices assis à cause d’un problème de genou. Gardez l’échauffement court ; le groupe réagit bien à la musique.',
+    },
     checkin: 'Check-in ouvert. Vous êtes sur place.',
-    // Primary action = geolocated check-in (C16) — the PRD's #1 field action, not a generic "Start".
-    checkInCta: 'Faire le check-in',
+    // Primary action = the coach's arrival declaration (WBS PLA-09 "I am on site"; DT-04). The
+    // "check-in" term stays on statuses/alerts — only this action button is reworded.
+    checkInCta: 'Je suis sur place',
     directions: 'Itinéraire',
     // Live hero status (Square Go / Jobber pattern): the card reflects the REAL check-in window
     // and travel, not one always-open state. Mock times/distance are formatted in-component.
@@ -179,9 +249,24 @@ export const copy = {
     whenPrefix: 'Aujourd’hui',
     closeA11y: 'Fermer le détail de la séance',
   },
+  // Coach score (DT-07 / PLA-09) — per-coach matching transparency: the three signals the
+  // algorithm weighs (Équité / Réputation / Proximité), /100. Explicitly NOT a ranking vs other
+  // coaches (DT-06 keeps gamification non-comparative). Mock figures live in the component. Home + Profile.
+  score: {
+    title: 'Score coach',
+    outOf: '/ 100',
+    equity: 'Équité',
+    reputation: 'Réputation',
+    proximity: 'Proximité',
+    caption: 'Critères d’attribution de l’algorithme.',
+    a11y: 'Score coach',
+  },
   week: {
     eyebrow: 'Cette semaine',
     monthEyebrow: 'Ce mois-ci',
+    // Title over the Home calendar (DT-13) — "My schedule": the coach's confirmed/booked sessions,
+    // distinct from the "Séances supplémentaires" opportunities block.
+    planningTitle: 'Mon planning',
     // Week-view paging labels (swipe to previous/next week). |offset|>1 → "Week of {Mon Abbr} {d}".
     lastWeek: 'Semaine dernière',
     nextWeek: 'Semaine prochaine',
@@ -196,10 +281,17 @@ export const copy = {
     // Week/Month toggle on the home calendar card (C09/C10).
     seg: { week: 'Semaine', month: 'Mois' },
     toggleA11y: 'Vue du calendrier',
+    viewSheetCloseA11y: 'Fermer la vue du calendrier',
     // Mon-first weekday initials for the month grid (locale-formatted in real code).
     weekdays: ['L', 'M', 'M', 'J', 'V', 'S', 'D'],
-    // Reads "{done} done · {total} scheduled · {hours}" — counts are injected from data in the
-    // screen; only words/units live here. `doneLabel` is the NEW done-so-far progress metric.
+    // Calendar caption (client reword): "{done} séance(s) confirmée(s) sur {total} prévue(s) · {hours}"
+    // — e.g. "1 séance confirmée sur 4 prévues · 4 h". Counts are injected from data in the screen;
+    // only the words/units live here. Singular/plural variants keep the agreement correct.
+    summaryConfirmedOne: 'séance confirmée',
+    summaryConfirmedMany: 'séances confirmées',
+    summaryOf: 'sur',
+    summaryScheduledOne: 'prévue',
+    summaryScheduledMany: 'prévues',
     doneLabel: 'faites',
     scheduledLabel: 'prévues',
     hours: '7 h 30',
@@ -214,6 +306,9 @@ export const copy = {
       unit: 'séances',
       complete: 'terminées',
     },
+    // Month-grid dot legend (coach feedback): the red dot here marks the coach's CONFIRMED sessions
+    // (this calendar is "Mon planning"). Disponibles' identical dot means "available" — see its copy.
+    legend: 'Séance confirmée',
     // Under-calendar detail: tapping a date reveals its sessions. Past ("due", already happened)
     // sessions read muted; upcoming ones read normal — the chip carries the status in words so
     // it never relies on the graying alone.
@@ -227,11 +322,16 @@ export const copy = {
   },
   available: {
     eyebrow: 'Séances disponibles aujourd’hui',
+    // Home "additional sessions" block (DT-13) — titled distinctly from "Mon planning" (the
+    // confirmed schedule) so the coach reads opportunities-to-grab apart from booked sessions.
+    homeTitle: 'Séances disponibles à venir',
+    // Sub-header for the non-urgent openings, below the ⏰ Urgentes group (DT-14).
+    homeLater: 'Plus tard',
     link: 'Voir tout',
-    near: 'Disponibles près de vous aujourd’hui · Lyon et alentours',
+    near: 'Disponibles près de vous · Lyon et alentours',
     apply: 'Postuler',
-    // "See all" sheet (today's open sessions)
-    allTitle: 'Séances disponibles aujourd’hui',
+    // "See all" sheet (open upcoming sessions — span several days, so no "today")
+    allTitle: 'Séances disponibles à venir',
     closeA11y: 'Fermer les séances disponibles',
   },
   // Available sessions screen (Disponibles tab) — open, not-yet-assigned sessions the coach
@@ -241,12 +341,10 @@ export const copy = {
   // DS assigns ONE coach), so this screen shows no candidate/competitor count — applying is
   // joining a shortlist, not winning a race. `appliedNote` makes that expectation explicit.
   availableScreen: {
-    eyebrow: 'Séances ouvertes',
+    eyebrow: 'Séances disponibles',
     title: 'Disponibles',
     seg: { list: 'Liste', week: 'Semaine' },
-    filterA11y: 'Filtrer les séances ouvertes',
-    // The leading count is formatted in code from the data, e.g. "5 open · Lyon & nearby".
-    nearSuffix: 'ouvertes · Lyon et alentours',
+    filterA11y: 'Filtrer les séances disponibles',
     status: { applied: 'Postulé' },
     action: {
       apply: 'Lever la main',
@@ -275,19 +373,16 @@ export const copy = {
       overLimitTail: 'au-delà de votre limite',
     },
     appliedNote: 'Vous êtes présélectionné. DS désigne un seul coach.',
-    empty: 'Aucune séance ouverte ici pour le moment.',
+    empty: 'Aucune séance disponible ici pour le moment.',
     emptyHint: 'De nouvelles apparaissent quand les EHPAD en ouvrent près de chez vous.',
-    // Filter sheet (List view). Distance maps to the coach's max-travel-time preference (WBS
-    // PLA-08); status is the coach's own application state. The "≤ N km" labels and the result
-    // count are composed in-component from data.
+    // Filter sheet (List view). Status is the coach's own application state. The result count is
+    // composed in-component from data.
     filter: {
       title: 'Filtres',
       closeA11y: 'Fermer les filtres',
-      distance: 'Distance',
-      status: 'Disponibilité',
-      distAny: 'Toutes',
+      status: 'Statut',
       statusAll: 'Toutes',
-      statusOpen: 'Ouvertes',
+      statusOpen: 'À postuler',
       statusApplied: 'Postulé',
       reset: 'Réinitialiser',
       showPrefix: 'Voir',
@@ -304,24 +399,30 @@ export const copy = {
       // `seg.month` shows the current month name (composed in-component, e.g. "June").
       seg: { week: 'Semaine', month: 'Mois', all: 'Tout' },
       toggleA11y: 'Vue du calendrier',
+      viewSheetCloseA11y: 'Fermer la vue du calendrier',
       thisWeek: 'Cette semaine',
       thisMonth: 'Ce mois-ci',
-      allTitle: 'Toutes les séances ouvertes',
+      allTitle: 'Toutes les séances disponibles',
       lastWeek: 'Semaine dernière',
       nextWeek: 'Semaine prochaine',
       weekOf: 'Semaine du',
       prevWeekA11y: 'Semaine précédente',
       nextWeekA11y: 'Semaine suivante',
-      tiles: { open: 'Ouvertes', applied: 'Postulé', unit: 'séances' },
+      tiles: { open: 'Disponibles', applied: 'Postulé', unit: 'séances', unitOne: 'séance' },
+      // Month-grid dot legend (coach feedback): here the red dot marks AVAILABLE (open) sessions to
+      // apply for. Home's identical dot means "confirmed" (copy.week.legend) — hence the per-screen key.
+      legend: 'Séance disponible',
       // Per-day count (WBS PLA-04: "displays count per day"). Suffix for the day-detail header,
       // composed in-component as "{n} open" / "{n} open sessions".
-      dayCountSuffix: 'ouvertes',
-      dayEmpty: 'Aucune séance ouverte ce jour.',
+      dayCountSuffix: 'disponibles',
+      dayCountSuffixOne: 'disponible',
+      dayEmpty: 'Aucune séance disponible ce jour.',
       // Whole shown week / month has no open sessions (PLA-04 / PLA-05) — reachable now the
       // calendar pages freely past the seeded period.
       periodEmpty: 'Aucune séance prévue',
-      a11ySessions: 'ouvertes',
-      a11yNone: 'aucune séance ouverte',
+      a11ySessions: 'disponibles',
+      a11ySessionsOne: 'disponible',
+      a11yNone: 'aucune séance disponible',
       // Month view: prev/next month a11y + a legend for the day dots (WBS PLA-05). The calendar
       // pages months freely (a live schedule), so the chevrons are active.
       prevMonthA11y: 'Mois précédent',
@@ -332,14 +433,18 @@ export const copy = {
     // = starts very soon; Available = everything else. Each session has exactly one bucket, so the
     // counts partition the list. Counts + the urgency countdown are composed in-component.
     list: {
-      filterA11y: 'Filtrer les séances ouvertes par catégorie',
+      filterA11y: 'Filtrer les séances disponibles par catégorie',
       cats: { all: 'Toutes', recommended: 'Recommandées', urgent: 'Urgentes', available: 'Disponibles' },
-      // Urgency countdown on urgent cards. "In N days" is composed as `${inDays} ${n} ${days}`.
+      // Per-card triage tags (singular). The List view is now date-grouped, so a card carries its
+      // matching category as a tag instead of sitting under a category section header.
+      tag: { recommended: 'Recommandé', urgent: 'Urgent' },
+      // today / tomorrow day-group headers reuse these; the per-card urgency countdown was dropped
+      // (the day header already states the date).
       urgency: { today: 'Aujourd’hui', tomorrow: 'Demain', inDays: 'Dans', days: 'jours' },
       empty: 'Aucune séance dans cette catégorie.',
       // Total-count caption under the chips (PLA-15: total for the selected period — the List view
       // is one month). No filter → `${n} ${period}`; with a refine filter → `${vis} ${of} ${total} ${shown}`.
-      count: { period: 'ouvertes ce mois-ci', of: 'sur', shown: 'affichées' },
+      count: { period: 'disponibles ce mois-ci', of: 'sur', shown: 'affichées' },
     },
     // Detail page — opens when an available-session card is tapped (mirrors the Séances detail).
     detail: {
@@ -363,6 +468,7 @@ export const copy = {
     earned: 'Gagné',
     confirmedSub: '12 séances confirmées',
     projected: 'Prévu',
+    expected: 'attendu', // Home meter legend — total the month is on track for (Gagné + Prévu)
     projectedSub: '+6 à venir',
     goal: 'Objectif', // monthly target (set at onboarding) — shown on the Earned card
     // Earnings screen (Revenus tab · C35 "View financial dashboard"). All copy here; the
@@ -389,6 +495,16 @@ export const copy = {
         rate: 'Tarif',
         rateUnit: 'par heure',
       },
+      // 3-month rolling revenue forecast (DT-15) — DS books ~3 months ahead, so the coach can
+      // anticipate cash flow. Current month = réalisé + prévu; next two = projected.
+      forecastTitle: 'Prévision sur 3 mois',
+      forecastNote: 'Revenu projeté pour les 3 prochains mois — DS planifie 3 mois à l’avance.',
+      forecastHeroLabel: 'Prévu sur 3 mois',
+      forecastEarned: 'Réalisé',
+      forecastProjected: 'Prévu',
+      forecastAvgLabel: 'Moyenne',
+      forecastAvgUnit: 'par mois',
+      forecastA11y: 'Prévision de revenus sur 3 mois',
       sessionsTitle: 'Séances de ce mois-ci',
       sessionsNote: 'Les revenus se mettent à jour après chaque séance réalisée',
       notRated: 'Non évaluée',
@@ -401,6 +517,27 @@ export const copy = {
         inProgress: 'En cours',
       },
       downloadA11y: 'Télécharger le relevé',
+      // Submit-invoice card (per month) — coaches send their own invoice to Deuxième Souffle,
+      // either as a file (the PDF they received by e-mail) or a photo. The button opens a source
+      // sheet; once sent, the card shows a confirmation for that month.
+      invoice: {
+        title: 'Soumettre ma facture',
+        note: 'Envoyez votre facture du mois — un fichier reçu par e-mail ou une photo.',
+        cta: 'Ajouter ma facture',
+        ctaA11y: 'Ajouter ma facture pour ce mois-ci',
+        sheetTitle: 'Soumettre ma facture',
+        sheetHelp: 'Importez un fichier (le PDF reçu par e-mail) ou prenez votre facture en photo.',
+        sheetCloseA11y: 'Fermer',
+        fromFile: 'Importer un fichier',
+        fromPhoto: 'Prendre une photo',
+        fromLibrary: 'Choisir une photo',
+        // Confirmation once a month's invoice is submitted.
+        submittedTitle: 'Facture envoyée',
+        via: { file: 'Fichier importé', photo: 'Photo' },
+        submittedNote: 'Reçue par Deuxième Souffle · en cours de traitement',
+        replace: 'Remplacer',
+        replaceA11y: 'Remplacer la facture envoyée',
+      },
     },
   },
   // Sessions screen (Séances tab) — the coach's assigned sessions. Check-in (C16) and the
@@ -415,15 +552,23 @@ export const copy = {
       checkedIn: 'Check-in fait',
       reportDue: 'Compte rendu à faire',
       reportSent: 'Compte rendu envoyé',
+      // Time-derived (PLA-14) — shown while a session is currently running.
+      inProgress: 'En cours',
     },
+    // "First session together" indicator (TEST session) — a small celebratory tag on the card + detail.
+    firstVisit: 'Première séance',
     action: {
-      checkin: 'Faire le check-in',
+      checkin: 'Je suis sur place',
       directions: 'Itinéraire',
       writeReport: 'Rédiger le compte rendu',
       viewReport: 'Voir le compte rendu',
     },
     emptyPast: 'Aucune séance passée pour l’instant.',
     emptyUpcoming: 'Aucune séance à venir.',
+    // Empty-state link → the availability editor (WBS S14: "see availability"). Keeping availability
+    // up to date is how the coach gets offered sessions.
+    emptyUpcomingHint: 'Tenez vos disponibilités à jour pour qu’on vous propose des séances.',
+    seeAvailability: 'Voir mes disponibilités',
     expandA11y: 'Afficher les détails de la séance',
     collapseA11y: 'Masquer les détails de la séance',
     // Session detail page (C22 "View session details") — opens when a session card is tapped.
@@ -434,6 +579,11 @@ export const copy = {
       where: 'Où',
       format: 'Format',
       contact: 'Contact sur place',
+      phone: 'Téléphone',
+      // Tap-to-call the on-site reference person (DT-12).
+      callA11y: 'Appeler le contact sur place',
+      // How to get in on arrival (WBS PLA-14 §5 — "access details if available"); shown only when set.
+      access: 'Accès',
       // Coach hourly rate (WBS PLA-14) — the "€ / hour" value is composed in-component.
       rate: 'Votre tarif horaire',
       rateUnit: '€ / heure',
@@ -457,7 +607,7 @@ export const copy = {
       title: 'Confirmer le check-in',
       body: 'Nous utilisons votre position pour confirmer que vous êtes à l’établissement, puis nous prévenons l’équipe de votre arrivée.',
       note: 'La position est vérifiée uniquement au check-in, jamais suivie en arrière-plan.',
-      confirm: 'Faire le check-in',
+      confirm: 'Je suis sur place',
       cancel: 'Pas encore',
       closeA11y: 'Fermer le check-in',
       locating: 'Vérification de votre présence sur place…',
@@ -477,13 +627,25 @@ export const copy = {
     },
     // Per-session management actions — shown as a "Manage" group inside the session detail
     // sheet, because each acts on the session you're looking at: cancel participation (C24),
-    // declare absence (C20), declare a delay (PLA-14 "Late"), transmission notes (C28).
+    // declare absence (C20), declare a delay (PLA-14 "Late"). Transmission notes (C28) now have
+    // their own visible section above this group (read prior notes + `notesAdd`).
     manage: {
       title: 'Gérer cette séance',
       cancelParticipation: 'Annuler ma participation',
       declareAbsence: 'Déclarer une absence',
       late: 'Signaler un retard',
+      // Short labels for the icon-action toolbar (the full phrases above stay as a11y labels).
+      cancelShort: 'Annuler',
+      absenceShort: 'Absence',
+      lateShort: 'Retard',
       transmissionNotes: 'Notes de transmission',
+      notesAdd: 'Ajouter une note',
+    },
+    // Availability shortcut from a session detail (M1 entry point) → the dedicated editor.
+    availability: {
+      title: 'Disponibilités',
+      intro: 'Ajustez vos créneaux et votre zone — cela change les séances qui vous sont proposées.',
+      row: 'Mettre à jour mes disponibilités',
     },
     // Declare a delay (WBS PLA-14: "Coach can declare a delay by selecting 'Late'") — pick a
     // rough delay, the care home is notified right away. Then a short acknowledgement.
@@ -500,14 +662,99 @@ export const copy = {
       doneBody: 'L’établissement a été prévenu de votre retard. Faites le check-in comme d’habitude à votre arrivée.',
       closeA11y: 'Fermer la déclaration de retard',
     },
-    // Cancel participation (C24) — confirm before dropping an assigned session. The warning nods to
-    // the reputation rules: a late cancellation (< 48h) and a no-show both carry score penalties.
-    cancelConfirm: {
+    // Cancel participation (C24 · WBS PLA-11 impact-aware + PLA-13 time-phase) — the consequence is
+    // timing-based, per the algorithm's configurable penalties: > 48h before the session = no
+    // penalty; ≤ 48h = −2 confidence-index points. Per DT-05 no rate/euro figure is shown — impact
+    // is reputation + operational (slot reopens, care home notified, future matching).
+    cancelModal: {
       title: 'Annuler cette séance ?',
-      body: 'Vous serez retiré de cette séance et l’établissement sera prévenu. Annuler peu avant le début peut affecter votre score de réputation.',
+      intro: 'Vous serez retiré de cette séance. Voici ce que cela implique.',
+      // Reputation impact — one of the two shows, depending on timing.
+      free: { label: 'Aucune pénalité', detail: 'Vous annulez à plus de 48 h du début de la séance.' },
+      late: { label: '−2 points d’indice de confiance', detail: 'Vous annulez à moins de 48 h du début de la séance.' },
+      consequences: {
+        reopen: 'La séance est aussitôt remise aux coachs disponibles.',
+        notify: 'L’établissement est prévenu immédiatement.',
+        matching: 'Les annulations tardives répétées pèsent sur vos prochaines propositions.',
+      },
       confirm: 'Annuler ma participation',
-      cancel: 'Garder la séance',
+      keep: 'Garder la séance',
       closeA11y: 'Fermer',
+      // Acknowledgement (replaces the review after confirming).
+      doneTitle: 'Séance annulée',
+      doneBody: 'L’établissement a été prévenu et la séance est de nouveau disponible.',
+      doneBodyLate: 'L’établissement a été prévenu et la séance est de nouveau disponible. −2 points d’indice de confiance ont été appliqués.',
+      doneCta: 'Terminé',
+    },
+    // Cancellation funnel — the coach's "I can't do this session". A deliberately high-friction flow
+    // that MERGES the old impact-aware cancel + declare-absence into one path (the only other
+    // session action left is "Signaler un retard"). 3 steps + a retain intercept + a result, with two
+    // retain off-ramps before it commits (PLA-11 impact-aware · PLA-13 timing penalty). The impact
+    // figures are illustrative prototype values (real app reads the live index / month / forecast).
+    cancelFlow: {
+      closeA11y: 'Fermer',
+      backA11y: 'Retour',
+      back: 'Retour',
+      step: 'Étape', // "Étape 1/3" — composed in-component as `${step} ${n}/3`
+      // ----- Step 1/3 · impact -----
+      step1Title: 'Avant d’annuler…',
+      warn: 'Annuler cette séance aura un impact sur votre indice de confiance et votre nombre de séances.',
+      impactHeading: 'Voici l’impact :',
+      impact: {
+        confidence: 'Indice de confiance',
+        sessions: 'Séances ce mois-ci',
+        ca: 'Prévision CA',
+        pts: 'pts',
+        sessionOne: 'séance',
+        sessionMany: 'séances',
+      },
+      keepCta: 'Finalement, je peux y aller',
+      proceedCta: 'J’ai compris, je continue',
+      // ----- retain intercept · maintain presence -----
+      maintain: {
+        title: 'Vous maintenez votre présence ?',
+        body: 'Confirmez que vous êtes bien disponible pour cette séance. L’établissement compte sur vous.',
+        preservedTitle: 'Avantages préservés',
+        preservedConfidence: 'Indice de confiance',
+        preservedMaintained: 'maintenu',
+        preservedSession: 'Séance comptée dans votre mois',
+        preservedCa: 'Prévision CA',
+        yes: 'Oui, je maintiens ma présence',
+        no: 'Non, je dois vraiment annuler',
+      },
+      // ----- Step 2/3 · reason -----
+      step2Title: 'Quelle est votre raison ?',
+      reasonIntro: 'Votre retour aide l’équipe DS à mieux comprendre la situation et à fluidifier le remplacement.',
+      reasonSelect: 'Sélectionnez un motif',
+      reasons: {
+        emergency: { label: 'Urgence médicale ou familiale', hint: 'Un justificatif (certificat médical, hospitalisation…) éviterait le retrait de points — facultatif.' },
+        accident: { label: 'Accident', hint: 'Vous pouvez joindre une attestation ou un mot du médecin si vous en avez un — non obligatoire.' },
+        transport: { label: 'Problème de transport exceptionnel', hint: '' },
+        other: { label: 'Une autre raison', hint: '' },
+      },
+      proofTitle: 'Justificatif (facultatif)',
+      proofBody: 'En tant que coach indépendant·e, vous êtes libre. Si vous avez un justificatif (certificat, attestation…), envoyez-le par e-mail à contact@deuxiemesouffle.fr ou par WhatsApp à l’équipe DS — pas besoin de l’importer dans l’app. Un justificatif valide évite le retrait de points.',
+      continue: 'Continuer',
+      // ----- Step 3/3 · final confirmation -----
+      step3Title: 'Confirmation finale',
+      willHappenTitle: 'En confirmant, voici ce qui va se passer :',
+      willHappen: {
+        notifyDs: 'L’équipe Deuxième Souffle est prévenue immédiatement',
+        notifyEhpad: 'L’EHPAD est averti (« coach indisponible, nouveau coach en cours »)',
+        replacement: 'L’équipe DS prend en charge la recherche d’un remplaçant',
+        penalty: 'Retrait de −2 pts sur votre indice de confiance (sauf justificatif valide fourni)',
+      },
+      confirmCheck: 'Je confirme que je ne pourrai finalement pas assurer cette séance, et j’accepte l’impact sur mon indice de confiance.',
+      abortCta: 'Non, finalement je peux y aller',
+      confirmCta: 'Je confirme l’annulation',
+      // ----- result -----
+      keptTitle: 'Votre séance est maintenue',
+      keptBody: 'Rien ne change : même créneau, même établissement. L’établissement compte toujours sur vous.',
+      keptCta: 'Parfait',
+      cancelledTitle: 'Séance annulée',
+      cancelledBody: 'L’établissement est prévenu et l’équipe DS recherche un remplaçant.',
+      cancelledPenalty: '−2 points d’indice de confiance ont été appliqués.',
+      cancelledCta: 'Terminé',
     },
     // Declare absence (C20 / WBS PLA-11 — a 3-STEP required form, not a one-tap confirm):
     // 1 reason (required) → 2 message to the care home → 3 review + confirm. The assignment
@@ -560,14 +807,16 @@ export const copy = {
         validated: 'Validé. Cette séance est confirmée et votre facturation est en cours.',
         changes: 'L’équipe a demandé une modification avant de pouvoir valider ce compte rendu.',
       },
-      flagNone: 'Rien à signaler',
+      coordinatorNone: 'Aucun message',
+      dsNone: 'Aucun message',
       nextNone: 'Aucune note laissée',
       readyYes: 'Oui',
       readyNo: 'Non',
     },
     // Application status (C13) — a cross-session list (your applied-for sessions and where each
     // stands), so it's the third segment rather than a per-session action.
-    appStatus: { pending: 'En attente', accepted: 'Acceptée', rejected: 'Refusée' },
+    // DT-08: only "pending" — no "Acceptée" (auto-moves to Confirmed) or "Refusée" (DS never rejects).
+    appStatus: { pending: 'En attente' },
     emptyApplications: 'Aucune candidature en cours.',
     // Application detail (C13) — opens when an application row is tapped.
     appDetail: {
@@ -578,12 +827,13 @@ export const copy = {
       where: 'Où',
       format: 'Format',
       contact: 'Contact sur place',
+      // Tap-to-call the on-site reference person (DT-12).
+      callA11y: 'Appeler le contact sur place',
       applied: 'Postulé le',
       // A plain-language line explaining what the status means / what happens next.
       note: {
-        pending: 'En attente de la décision de l’établissement. Vous serez prévenu dès qu’elle est prise.',
-        accepted: 'Vous êtes désigné. Cette séance a été ajoutée à votre planning.',
-        rejected: 'Cette séance a été attribuée à un autre coach.',
+        // DT-08: notified only IF selected — DS never sends a rejection.
+        pending: 'En attente de la décision de l’établissement. Vous serez prévenu si vous êtes retenu pour cette séance.',
       },
       // Withdraw application (C14) — only offered while the application is still Pending; once
       // accepted/declined there's nothing to withdraw (an assigned session is cancelled, not withdrawn).
@@ -591,7 +841,7 @@ export const copy = {
       withdraw: 'Retirer ma candidature',
       withdrawConfirm: {
         title: 'Retirer cette candidature ?',
-        body: 'Vous serez retiré des candidats pour cette séance. Vous pourrez repostuler tant qu’elle reste ouverte.',
+        body: 'Vous serez retiré des candidats pour cette séance. Vous pourrez repostuler tant qu’elle reste disponible.',
         confirm: 'Retirer',
         cancel: 'Garder ma candidature',
       },
@@ -629,11 +879,29 @@ export const copy = {
     closeA11y: 'Fermer le profil',
     editPhotoA11y: 'Changer la photo de profil',
     role: 'Coach APA · Lyon',
+    // Settings (the gear, top-right of the Profil tab) — the hub of everything that isn't the
+    // identity card or the level: availability, goals, documents, account, support, log out.
+    settingsTitle: 'Réglages',
+    settingsEyebrow: 'Compte & application',
+    openSettingsA11y: 'Ouvrir les réglages',
     // Account status (WBS E01: Active · Pending approval · Rejected · Deleted).
     status: { active: 'Actif', pending: 'En attente de validation', rejected: 'Candidature refusée' },
-    // Availability & travel preferences (PLA-08 / S18) — the section matching leans on.
+    // App preferences — the FR/EN language toggle lives here (the i18n seam).
+    preferences: {
+      eyebrow: 'Préférences',
+      language: 'Langue',
+      a11y: 'Choisir la langue de l’application',
+    },
+    // Availability & travel preferences (PLA-08 / S18) — the section matching leans on. Lives in a
+    // dedicated screen (M1); `manage` labels the Profile summary row, `title`/`intro`/`closeA11y`
+    // belong to the screen itself.
     availability: {
       eyebrow: 'Disponibilités',
+      title: 'Mes disponibilités',
+      // Profile summary row → opens the dedicated screen.
+      manage: 'Disponibilités & déplacements',
+      intro: 'Le matching s’appuie sur vos disponibilités et votre zone de déplacement pour vous proposer des séances proches.',
+      closeA11y: 'Fermer mes disponibilités',
       // "Updated N days ago" is composed in-component from the data.
       updatedPrefix: 'Mis à jour',
       justNow: 'à l’instant',
@@ -643,27 +911,151 @@ export const copy = {
       schedule: 'Planning hebdomadaire',
       travel: 'Temps de trajet max',
       transport: 'Transport',
-      // Plural (WBS PLA-08): a primary + an optional secondary departure point.
-      departure: 'Adresses de départ',
-      areas: 'Zones préférées',
+      // The primary departure address — the default for any slot no per-slot point covers (PLA-08).
+      departure: 'Adresse de départ',
+      // Authorized zones (DT-16 revised, 2026-06-22) — hand-picked from a preselected département
+      // list. A priority preference the matching favours, not a hard filter. The row value is the
+      // chosen codes ("75 · 92 · 94"), composed in-screen; `areasNone` is the empty state.
+      areas: 'Zones autorisées',
+      areasNone: 'Aucune sélectionnée',
+      // Per-slot departure addresses (DT-16) — a coach who leaves from different places at different
+      // times sets an address + its own radius for the chosen half-days. Composed counts/summaries
+      // are built in-screen.
+      perSlot: {
+        eyebrow: 'Adresses par créneau',
+        hint: 'Vous partez d’ailleurs certains créneaux ? Ajoutez une adresse et un rayon dédiés.',
+        empty: 'Tous vos créneaux partent de l’adresse principale.',
+        add: 'Ajouter une adresse par créneau',
+        coverage: 'Créneaux',
+        radius: 'Rayon',
+        noCoverage: 'Aucun créneau sélectionné',
+        remove: 'Retirer cette adresse',
+        slotOne: 'créneau',
+        slotMany: 'créneaux',
+      },
+      // Fine time-slots (v5 "créneaux précis") — refine an open half-day into precise windows, each
+      // with its own zones + travel cap. Section labels; the composer's own labels live in edit.fine.
+      fine: {
+        eyebrow: 'Créneaux précis',
+        hint: 'Affinez une demi-journée en plages horaires, chacune avec ses zones et son trajet. Sans plage, la demi-journée reste ouverte en entier.',
+        empty: 'Aucun créneau précis. Vos demi-journées ouvertes le sont en entier.',
+        add: 'Ajouter un créneau précis',
+        remove: 'Retirer ce créneau',
+        allZones: 'Toutes mes zones',
+        noneOpen: 'Activez d’abord une demi-journée dans le planning.',
+      },
       unavailability: 'Périodes d’indisponibilité',
       cta: 'Mettre à jour mes disponibilités',
+      // Weekly potential gauge (item 5 / mockup) — sessions/week the coach's availability could
+      // yield. The figure (~N) + level are derived in-screen from the slots.
+      potential: {
+        eyebrow: 'Potentiel hebdomadaire',
+        approx: '~',
+        perWeek: 'séances / semaine',
+        levels: { good: 'Bon potentiel', medium: 'Potentiel moyen', low: 'Potentiel limité' },
+        hint: 'Estimé selon vos créneaux et votre zone. Ajoutez des créneaux pour l’augmenter.',
+        a11y: 'Potentiel hebdomadaire',
+      },
+      // ---- Guided flow (mockup "dispos coach v5" screens 2→12) — hub-and-spoke step copy. Reuses
+      // edit.* for the shared pieces (transport modes, day/AM-PM labels, fine-slot composer); these
+      // are the step-specific titles, intros, buttons and info notes.
+      flow: {
+        back: 'Retour',
+        gauge: 'Potentiel de séances',
+        // Hub (screen 2)
+        hubAddresses: 'Adresses',
+        hubZones: 'Zones favorites',
+        hubCreneaux: 'Créneaux',
+        detailedPill: 'en détaillé',
+        activeSlotsOne: 'demi-journée active',
+        activeSlotsMany: 'demi-journées actives',
+        validate: 'Valider mes dispos',
+        // Transport (screen 3)
+        transportTitle: 'Transport & trajet',
+        transportQ: 'Comment vous déplacez-vous ?',
+        travelDefault: 'Temps de trajet max (par défaut)',
+        travelNote: 'Ce temps peut être ajusté par créneau (ex. entre deux séances déjà calées).',
+        // Adresses (screens 4 / 5)
+        addressTitle: 'Adresses de départ',
+        addressIntro: 'D’où partez-vous pour aller chez nos EHPAD ?',
+        primaryBadge: 'Par défaut',
+        addSecondary: 'Ajouter une adresse différente certains jours',
+        whyTwoTitle: 'Pourquoi deux adresses ?',
+        whyTwoBody: 'Vous logez parfois ailleurs en semaine (garde alternée…) ? Précisez-le pour matcher les bonnes séances.',
+        secondaryTitle: 'Adresse par jour',
+        secondaryIntro: 'Jours où vous partez d’une autre adresse.',
+        secondaryBadge: 'Adresse secondaire',
+        activeDays: 'Jours actifs',
+        removeSecondary: 'Retirer cette adresse',
+        street: 'Rue',
+        postal: 'Code postal',
+        city: 'Ville',
+        // Zones (screen 6)
+        zonesTitle: 'Mes zones',
+        zonesIntro: 'Cochez vos départements. Vous pourrez restreindre certaines zones par créneau à l’étape Créneaux.',
+        // Créneaux — rapide + détaillé (screens 7 / 8)
+        creneauxTitle: 'Mes créneaux',
+        modeRapide: 'Mode rapide',
+        modeDetaille: 'Mode détaillé',
+        rapideHint: 'Touchez pour activer ou désactiver chaque demi-journée.',
+        detailleHint: 'Touchez une demi-journée active pour la détailler en créneaux précis.',
+        amRange: '9 h – 12 h',
+        pmRange: '14 h – 17 h',
+        legendFine: '🎯 = créneaux précis définis',
+        recapLink: 'Récap de la semaine',
+        detailedOn: 'Mode détaillé activé',
+        addSlot: 'Ajouter un créneau',
+        gapTitle: 'Trou volontaire ?',
+        gapBody: 'Entre deux créneaux, l’algo ne proposera rien sur cette plage — c’est volontaire et OK.',
+        detailGate: 'Activez d’abord cette demi-journée en mode rapide.',
+        // Créneau précis — heure + zones (screens 9 / 10)
+        slotTitle: 'Nouveau créneau',
+        slotEditTitle: 'Modifier le créneau',
+        nextZones: 'Suivant : zones autorisées',
+        slotZonesTitle: 'Zones pour ce créneau',
+        slotZonesIntro: 'Sur ce créneau, je suis disponible pour :',
+        allZonesHint: 'par défaut',
+        restrictedHint: 'Je sélectionne ci-dessous',
+        slotTravelHint: 'Réduit pour rester proche entre deux séances.',
+        validateSlot: 'Valider ce créneau',
+        endAfterStart: 'La fin doit suivre le début.',
+        // Récap (screen 11)
+        recapTitle: 'Récap de ma semaine',
+        allZonesShort: 'toutes zones',
+        closed: 'Indispo',
+        // Indispos & validation (screen 12)
+        validationTitle: 'Indispos & validation',
+        timeOffIntro: 'Périodes où vous ne serez pas disponible.',
+        addPeriod: 'Ajouter une période',
+        periodLabel: 'Intitulé',
+        periodStart: 'Début',
+        periodEnd: 'Fin',
+        periodLabelPh: 'ex. Congés d’été',
+        periodDatePh: 'ex. 4 août 2026',
+        removePeriod: 'Retirer cette période',
+        savePeriod: 'Ajouter la période',
+        finalRecap: 'Récap final',
+        confirm: 'Confirmer mes disponibilités',
+        halfDayCount: 'demi-journée(s)',
+        fineDayCount: 'jour(s) en détaillé',
+      },
     },
     // Progression & past activity — badges/levels (GAME-01/02), submitted reports (SESS-05) and
     // the EHPAD feedback the coach received (SESS-06). Row values are mock placeholders (like
     // availabilityModal.note) — real code composes them from data.
     activity: {
       eyebrow: 'Progression & activité',
-      badges: 'Badges & niveau',
-      badgesValue: 'Niveau 3 · 5 badges',
+      badges: 'Paliers',
+      badgesValue: 'Or · 3/5 paliers',
       reports: 'Historique des comptes rendus',
       reportsValue: '14 envoyés',
       feedback: 'Avis des établissements',
       feedbackValue: '4,8 de moyenne',
     },
-    // Fairness target (target monthly volume + flexibility) and default rate.
+    // Fairness target (target monthly volume + flexibility). The default-rate field was removed
+    // from the coach UI (DT-05) — `rate` copy below is now unused but kept to avoid type churn.
     goals: {
-      eyebrow: 'Objectifs & tarif',
+      eyebrow: 'Objectifs',
       target: 'Objectif mensuel',
       rate: 'Tarif horaire par défaut',
     },
@@ -710,7 +1102,7 @@ export const copy = {
     edit: {
       // WBS PLA-08 names Car + Two-wheel vehicle; Walking and the free-text Other stay as
       // client-accepted extras.
-      transport: { title: 'Mode de transport', car: 'Voiture', twoWheel: 'Deux-roues', walking: 'À pied', other: 'Autre' },
+      transport: { title: 'Mode de transport', car: 'Voiture', twoWheel: 'Deux-roues', velo: 'Vélo', transports: 'Transports', walking: 'À pied', other: 'Autre' },
       vehicle: { title: 'Votre véhicule', label: 'Véhicule', placeholder: 'ex. Transports en commun' },
       // Slider, 10–90 min (WBS PLA-08). The "≤ N min" readout is composed in-component.
       travel: {
@@ -728,15 +1120,46 @@ export const copy = {
         pm: 'Après-midi',
         notSet: 'Aucune demi-journée définie',
       },
-      // Primary + optional secondary departure point (WBS PLA-08 "Departure addresses").
+      // Primary departure address (WBS PLA-08) — the default for any slot no per-slot point covers.
       departure: {
-        title: 'Adresses de départ',
+        title: 'Adresse de départ',
         primaryLabel: 'Adresse principale',
-        secondaryLabel: 'Adresse secondaire',
-        secondaryOptional: 'facultatif',
-        help: 'Le temps de trajet vers chaque séance est calculé depuis la plus proche.',
+        help: 'Le point de départ par défaut. Le temps de trajet vers chaque séance est calculé depuis ici.',
       },
-      areas: { title: 'Zones préférées', label: 'Zones', help: 'Les séances en dehors apparaissent quand même. Elles ne sont jamais masquées.' },
+      // Per-slot departure point editor (DT-16): address, the half-days it covers, and its own radius.
+      point: {
+        title: 'Adresse par créneau',
+        addTitle: 'Nouvelle adresse par créneau',
+        addressLabel: 'Adresse',
+        addressHelp: 'D’où vous partez pour les créneaux choisis.',
+        coverageTitle: 'Créneaux concernés',
+        coverageHelp: 'Cochez les demi-journées qui partent de cette adresse.',
+        radiusTitle: 'Rayon pour cette adresse',
+      },
+      // Fine time-slot composer (v5 screens 9+10) — half-day · start/end on the 30-min grid · zones
+      // allowed · per-window travel cap. Shape matches FineSlotSheet's `labels` prop (passed whole).
+      fine: {
+        addTitle: 'Nouveau créneau précis',
+        editTitle: 'Modifier le créneau',
+        daySection: 'Demi-journée',
+        start: 'Heure de début',
+        end: 'Heure de fin',
+        selected: 'Créneau sélectionné',
+        zonesSection: 'Zones autorisées sur ce créneau',
+        allZones: 'Toutes mes zones',
+        restricted: 'Zones restreintes',
+        travel: 'Trajet max sur ce créneau',
+        decA11y: 'Diminuer le trajet max',
+        incA11y: 'Augmenter le trajet max',
+        closeA11y: 'Fermer le créneau précis',
+      },
+      // Authorized zones picker (DT-16 revised) — multi-select from the preselected département
+      // list. Help mirrors the agreed framing: a priority, not an exclusivity.
+      zones: {
+        title: 'Zones autorisées',
+        help: 'Les zones où vous souhaitez intervenir en priorité. Vous pouvez aussi recevoir des propositions de séances dans d’autres zones (libre à vous de les accepter). Le critère de « proximité » du matching favorisera ces zones.',
+        closeA11y: 'Fermer les zones autorisées',
+      },
       unavailability: { title: 'Périodes d’indisponibilité', label: 'Période', help: 'Vacances ou congés. Indiquez « Aucune à venir » lorsque vous êtes pleinement disponible.' },
       target: { title: 'Objectif mensuel', label: 'Séances par mois', help: 'Utilisé pour répartir équitablement les séances entre coachs.', flexibilityLabel: 'Flexibilité', strict: 'Strict', flexible: 'Flexible' },
       rate: { title: 'Tarif horaire par défaut', label: 'Tarif (€ / heure)' },
@@ -773,10 +1196,12 @@ export const copy = {
       pendingNote: 'Nouveau fichier envoyé. En attente de vérification par l’équipe DS.',
     },
     logoutConfirm: { title: 'Se déconnecter ?', body: 'Vous devrez vous reconnecter pour voir vos séances.' },
-    // Delete account (AUTH-14) — a deletion REQUEST handled by the DS team, framed as such.
+    // Delete account (AUTH-14) — a soft-delete REQUEST handled by the DS team (item 17 / Q5): the
+    // account is deactivated and personal data removed, but invoices + activity history are legally
+    // retained (URSSAF / accounting) before purge — never an instant, irreversible wipe of everything.
     deleteConfirm: {
       title: 'Supprimer votre compte ?',
-      body: 'Cela envoie une demande de suppression à l’équipe Deuxième Souffle. Votre compte, vos séances et vos documents sont supprimés une fois la demande traitée, et c’est irréversible.',
+      body: 'Cela envoie une demande à l’équipe Deuxième Souffle. Votre compte sera désactivé et vos données personnelles supprimées. Vos factures et votre historique d’activité sont conservés le temps imposé par la loi (URSSAF, comptabilité), puis supprimés.',
       confirm: 'Demander la suppression',
       requestedTitle: 'Suppression demandée',
       requestedBody: 'L’équipe a reçu votre demande et confirmera par e-mail. Vous pouvez continuer à utiliser l’app jusqu’à son traitement.',
@@ -799,7 +1224,7 @@ export const copy = {
     // Splash — the in-app branded launch beat (distinct from the native cold-start splash).
     splash: {
       wordmark: 'Deuxième Souffle',
-      tagline: 'Le Club',
+      tagline: 'Le Mouvement',
       a11y: 'Deuxième Souffle',
       skipA11y: 'Passer',
     },
@@ -870,13 +1295,17 @@ export const copy = {
     // Submitting creates a PENDING_APPROVAL account (see `pending` — the KYC-documents step).
     // Google OAuth, the INSEE/uniqueness checks and profile completion are stubbed here.
     signup: {
-      eyebrow: 'Rejoindre le club',
+      eyebrow: 'Rejoindre le Mouvement',
       title: 'Candidater comme coach',
       subtitle: 'Créez votre compte coach. L’équipe le vérifie avant votre mise en ligne.',
       google: 'Continuer avec Google',
       orDivider: 'ou',
-      // Step header, verbatim from the back-office flow; documents follow on the pending screen.
-      step: 'Étape 1 : Identité du coach',
+      // Two-step application: step 1 = identity (this form), step 2 = KYC documents (pending screen).
+      // The stepper makes the "1 sur 2" progress explicit; the title names what this step covers.
+      stepLabel: 'Étape 1 sur 2',
+      stepCurrent: 1,
+      stepTotal: 2,
+      step: 'Identité du coach',
       optionalTag: 'facultatif',
       civility: {
         label: 'Civilité',
@@ -924,11 +1353,83 @@ export const copy = {
       consent: 'J’accepte les conditions d’utilisation et la politique de confidentialité.',
       consentA11y: 'Accepter les conditions d’utilisation et la politique de confidentialité',
       submit: 'Envoyer ma candidature',
+      // Short label for the wizard footer button (the full phrase truncates at half-width); the
+      // long `submit` stays the accessible name.
+      submitShort: 'Postuler',
       haveAccount: 'Vous avez déjà un compte ?',
       login: 'Se connecter',
       backA11y: 'Retour',
       // "Check" (not "fill in") — a field can be highlighted because it's invalid, not just empty.
       error: 'Vérifiez les champs en surbrillance pour envoyer votre candidature.',
+
+      // ── Multi-step application wizard (Identité → Documents → Zone & dispos → Tarif) ──
+      // Mirrors the back-office "Inviter un coach" flow, adapted to self-onboarding (no admin
+      // recap / invitation). Mode de transport + temps de trajet max are intentionally omitted
+      // from the Zone step (the coach sets zones + availability; transport is back-office-managed).
+      stepTitles: ['Identité du coach', 'Vos documents', 'Zone & disponibilités', 'Tarif & préférences'],
+      stepOfPrefix: 'Étape ',
+      stepOfMid: ' sur ',
+      back: 'Précédent',
+      cancel: 'Annuler',
+      cont: 'Continuer',
+      kyc: {
+        intro: 'Ajoutez les justificatifs que vous avez déjà — vous pourrez compléter le reste depuis votre espace.',
+        tagMandatory: 'obligatoire',
+        tagMandatory6m: 'obligatoire · 6 mois',
+        tagOptional: 'optionnel',
+        statusReceived: 'Reçu',
+        statusWaiting: 'En attente',
+        statusOptional: 'Optionnel',
+        add: 'Ajouter',
+        view: 'Voir',
+        renewTitle: 'Attestation de vigilance · relance 6 mois',
+        renewBody: 'Le système vous relance automatiquement pour fournir une attestation à jour tous les 6 mois.',
+        docs: {
+          cv: { label: 'CV', desc: 'Parcours professionnel · PDF' },
+          diploma: { label: 'Diplôme APA ou équivalent', desc: 'STAPS APA, BPJEPS APT, etc. · PDF' },
+          urssaf: { label: 'Attestation URSSAF / vigilance', desc: 'À jour de moins de 6 mois · PDF' },
+          insurance: { label: 'Assurance RC Pro', desc: 'En cours de validité · PDF' },
+          training: { label: 'Attestation de formation DS', desc: 'Formation Deuxième Souffle suivie · PDF' },
+          license: { label: 'Permis / pass Navigo', desc: 'Selon votre mode de transport · PDF' },
+          record: { label: 'Casier judiciaire (B3)', desc: 'Recommandé auprès des seniors · PDF' },
+        },
+      },
+      area: {
+        zonesLabel: 'Zones d’intervention favorites',
+        zonesHelp: 'Zones où vous souhaitez intervenir en priorité. Vous pouvez tout de même recevoir des propositions ailleurs.',
+        availLabel: 'Disponibilités hebdomadaires',
+        availHelp: 'Cochez les demi-journées où vous êtes habituellement disponible. Vous pourrez affiner plus tard.',
+        days: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+        slotAm: 'Matin (10–12h)',
+        slotPm: 'Après-midi (14–17h)',
+        cellOnA11y: 'disponible',
+        cellOffA11y: 'indisponible',
+      },
+      tariff: {
+        rateLabel: 'Tarif horaire souhaité',
+        rateHelp: 'Indicatif — l’équipe valide votre tarif avant la mise en ligne. Modifiable plus tard.',
+        rateSuffix: '€ HT / h',
+        presetJunior: 'junior',
+        presetStandard: 'standard',
+        presetSenior: 'sénior',
+        presetCustom: 'Personnalisé',
+        targetLabel: 'Objectif mensuel souhaité',
+        targetSuffix: 'séances / mois',
+        targetHelp: 'Indicatif — nous aide à vous proposer le bon volume de séances.',
+        caPrefix: '≈ ',
+        caSuffix: ' € de CA mensuel',
+        specialtiesLabel: 'Spécialités',
+        specialtiesHelp: 'Facultatif — aide l’équipe à vous affecter aux bonnes unités.',
+        specialties: {
+          classic: 'Unité classique',
+          protected: 'Unité protégée (UP / UHR)',
+          helpers: 'Aidants',
+          caregivers: 'Personnel soignant',
+          playful: 'Activité ludique',
+          memory: 'Travail de mémoire',
+          strength: 'Renforcement musculaire',
+        },
+      },
     },
     // Pending-approval screen (E01 — "Account pending validation" screen). After registration the
     // account is PENDING_APPROVAL and the rest of the app is locked until an admin validates the KYC
@@ -954,32 +1455,124 @@ export const copy = {
       complete: 'Compléter ma candidature',
       completeBody: 'L’envoi des documents est la prochaine étape. Votre candidature est enregistrée et l’équipe peut déjà la voir.',
       backA11y: 'Retour',
+      // PROTOTYPE-ONLY control: no validation backend yet, so this stands in for an admin approving
+      // the account. Clearly labelled "Aperçu" so it never reads as a real coach action.
+      demoApprove: 'Aperçu : simuler la validation',
+      // KYC document upload (AUTH-19) — the screen behind "Compléter ma candidature". PROTOTYPE:
+      // no native file picker (the app mocks pickers, like the profile photo), so picking simulates
+      // an upload. Doc names reuse `docs` above.
+      upload: {
+        title: 'Mes documents',
+        intro: 'Ajoutez vos justificatifs. L’équipe les vérifie dès qu’ils sont reçus.',
+        formats: 'Formats acceptés : PDF, JPG ou PNG · 10 Mo maximum.',
+        required: 'Requis',
+        received: 'Reçu',
+        missing: 'À ajouter',
+        uploading: 'Envoi…',
+        add: 'Ajouter',
+        replace: 'Remplacer',
+        remove: 'Supprimer',
+        removeA11y: 'Supprimer ce document',
+        // Mock picker (OptionSheet) — choose a source.
+        pickTitle: 'Ajouter un document',
+        pickFile: 'Choisir un fichier',
+        pickPhoto: 'Prendre une photo',
+        pickCloseA11y: 'Fermer le choix du document',
+        closeA11y: 'Fermer mes documents',
+        // Footer summary — {n} composed in-component.
+        remainingOne: 'document encore à ajouter',
+        remainingMany: 'documents encore à ajouter',
+        allIn: 'Tous vos documents sont reçus.',
+        done: 'Terminé',
+      },
+    },
+    // Email verification (AUTH-01/02) — the last step of email/password registration, before the
+    // application goes under review. Google sign-ups skip this (Google e-mails are pre-verified).
+    // PROTOTYPE: no e-mail backend — the "J’ai confirmé" CTA stands in for clicking the real link.
+    verify: {
+      eyebrow: 'Dernière étape',
+      title: 'Vérifiez votre e-mail',
+      // {email} is composed in-component.
+      bodyPrefix: 'Nous avons envoyé un lien de confirmation à ',
+      bodySuffix: '. Ouvrez-le pour finaliser votre candidature.',
+      hint: 'Pas reçu ? Vérifiez vos spams, ou renvoyez le lien.',
+      confirm: 'J’ai confirmé mon e-mail',
+      resend: 'Renvoyer l’e-mail',
+      resent: 'E-mail renvoyé',
+      // {n} = remaining seconds, composed in-component.
+      resendInPrefix: 'Renvoyer dans ',
+      resendInSuffix: ' s',
+      changeEmail: 'Modifier mon adresse e-mail',
+      closeA11y: 'Retour à l’inscription',
+    },
+    // Account approved (AUTH-07) — the welcome beat shown when the team validates a pending account,
+    // between the pending screen and the app. PROTOTYPE: reached via the pending screen's demo control.
+    accepted: {
+      eyebrow: 'Bienvenue dans le Mouvement',
+      statusChip: 'Compte validé',
+      // {name} is composed in-component.
+      titlePrefix: 'Bienvenue, ',
+      titleSuffix: ' !',
+      titleNoName: 'Vous êtes des nôtres !',
+      body: 'Votre candidature est acceptée. Votre espace coach est prêt.',
+      highlightsTitle: 'Ce qui vous attend',
+      highlights: {
+        matching: 'Des séances près de chez vous',
+        checkin: 'Check-in sur place en un geste',
+        revenue: 'Vos revenus, au même endroit',
+      },
+      cta: 'Accéder à mon espace',
     },
   },
-  // Badges & level (GAME-01 badge system · GAME-02 levels & progression). Counts, dates and the
-  // level number are mock placeholders composed in-component. The note keeps expectations honest:
-  // progression is recognition, not pay.
+  // Tiers (gamification). ONE progression: a five-rung session-count ladder — Bronze → Argent → Or →
+  // Platine → Diamant — climbed purely by completing sessions (no levels, no points, no other badge
+  // categories). Thresholds live in lib/gamification; copy here is recognition-only, never pay.
   game: {
     eyebrow: 'Progression',
-    title: 'Badges & niveau',
-    closeA11y: 'Fermer les badges et le niveau',
-    levelPrefix: 'Niveau',
-    // Composed in-component: "11 sessions to level 4".
-    toNextMid: 'séances avant le niveau',
-    totalSuffix: 'séances réalisées',
+    tierPrefix: 'Palier',                       // hero kicker / card pill prefix
+    totalSuffix: 'séances réalisées',           // "99 séances réalisées"
+    collected: '{n}/{total} obtenus',           // completion pill + section chip
+    // Progress caption, composed in-component: "{n} séance(s) avant {palier}".
+    toNextOne: 'séance avant',                  // singular (1 left)
+    toNextN: 'séances avant',                   // plural
+    maxedReadout: 'Palier max',                 // meter readout at the top rung
+    maxedCaption: 'Palier maximum atteint',     // caption at the top rung
+    closeA11y: 'Fermer la progression',         // modal-mode close button (Profil → progression sheet)
+    // Next-tier spotlight
+    nextTierEyebrow: 'Prochain palier',
+    gapOne: 'Bientôt débloqué',                 // 1 session left
+    gapN: 'Plus que {n}',                       // n sessions left
+    ofTarget: 'sur',                            // locked a11y: "99 sur 100"
+    lockedA11y: 'verrouillé',                   // locked-tile state, spoken
+    // Collection — the full ladder page + the tab preview
+    collectionTitle: 'Paliers',
+    seeAll: 'Voir tout',
+    collectionCloseA11y: 'Fermer les paliers',
     earnedTitle: 'Obtenus',
-    lockedTitle: 'En cours',
-    earnedPrefix: 'Obtenu',
-    note: 'Les badges et niveaux progressent avec les séances réalisées, les check-ins ponctuels et les avis des établissements. L’équipe DS les voit aussi, mais ils n’affectent jamais votre rémunération.',
-    badges: {
-      first: { name: 'Première séance', desc: 'Réalisez votre première séance' },
-      ten: { name: '10 séances', desc: 'Réalisez 10 séances' },
-      fifty: { name: '50 séances', desc: 'Réalisez 50 séances' },
-      punctual: { name: 'Toujours à l’heure', desc: '20 check-ins ponctuels d’affilée' },
-      favourite: { name: 'Coup de cœur des résidents', desc: 'Un mois au-dessus de 4,5 de note' },
-      hundred: { name: '100 séances', desc: 'Réalisez 100 séances' },
-      explorer: { name: 'Explorateur', desc: 'Coach dans 10 établissements différents' },
-      streak: { name: 'Mois complet', desc: 'Un mois calendaire sans aucune absence' },
+    lockedTitle: 'À débloquer',
+    reachedLabel: 'Atteint',                    // reached-tile chip
+    // How you climb (sessions only — punctuality/reviews no longer feed progression)
+    howTitle: 'Comment progresser',
+    how: {
+      sessions: { title: 'Réalisez des séances', desc: 'Chaque séance terminée vous rapproche du palier suivant.' },
+      climb: { title: 'Grimpez les paliers', desc: 'De Bronze à Diamant : cinq paliers à débloquer.' },
+    },
+    note: 'Vos paliers progressent uniquement avec les séances réalisées. L’équipe DS les voit aussi, mais ils n’affectent jamais votre rémunération.',
+    // The five rungs (desc = the session threshold that unlocks each).
+    tiers: {
+      bronze: { name: 'Bronze', desc: '1 séance réalisée' },
+      argent: { name: 'Argent', desc: '25 séances réalisées' },
+      or: { name: 'Or', desc: '50 séances réalisées' },
+      platine: { name: 'Platine', desc: '100 séances réalisées' },
+      diamant: { name: 'Diamant', desc: '200 séances réalisées' },
+    },
+    // Celebration overlay — the moment a tier is reached (after a completed session report).
+    celebrate: {
+      eyebrow: 'Palier débloqué',
+      today: 'Atteint aujourd’hui',
+      subtitle: 'La reconnaissance, jamais la rémunération.',
+      cta: 'Génial !',
+      announce: 'Palier débloqué :', // screen-reader announcement, prepended to the tier name
     },
   },
   // Report history (SESS-05) — chronological list of submitted reports, filterable by facility,
@@ -1009,6 +1602,15 @@ export const copy = {
     home: 'Accueil',
     sessions: 'Séances',
     available: 'Disponibles',
+    profile: 'Profil',
+    progress: 'Progression', // not a tab label anymore — reused as the level-card eyebrow on Profil
     earnings: 'Revenus',
   },
 } as const;
+
+/**
+ * Structural type of the copy tree — the localization contract. The French `copy` above is the
+ * source of truth; `copy.en.ts` provides a deep-partial English override (untranslated keys fall
+ * back to French), and `i18n.tsx` merges + serves the active locale via `useCopy()`.
+ */
+export type Copy = typeof copy;

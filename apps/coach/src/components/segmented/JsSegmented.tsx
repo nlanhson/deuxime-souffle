@@ -185,7 +185,7 @@ const st = StyleSheet.create({
   // pill
   track: { flexDirection: 'row', padding: PAD, gap: GAP, borderRadius: r.pill },
   thumb: { position: 'absolute', left: 0, top: PAD, bottom: PAD, borderRadius: r.pill },
-  seg: { flex: 1, minHeight: 40, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center' },
+  seg: { flex: 1, minHeight: 44, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center' },
   // underline
   tabRow: { flexDirection: 'row', justifyContent: 'center', gap: sp.sm, alignItems: 'flex-end' },
   // stretch: tabs split the full row width evenly (gap/center/minWidth dropped so each is exactly half)

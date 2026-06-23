@@ -1,0 +1,13 @@
+.tableCard {
+  padding: var(--space-lg);
+}
+.ratingCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.star {
+  color: var(--lc-or-500);
+  fill: var(--lc-or-500);
+}

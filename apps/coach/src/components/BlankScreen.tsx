@@ -81,5 +81,5 @@ const st = StyleSheet.create({
     backgroundColor: SUBTLE, marginBottom: sp.sm,
   },
   bigTitle: { fontFamily: F.bodyB, fontSize: 20, color: ON_CANVAS },
-  sub: { fontFamily: F.body, fontSize: 15, lineHeight: 22, color: ON_CANVAS_2, textAlign: 'center' },
+  sub: { fontFamily: F.body, fontSize: 16, lineHeight: 22, color: ON_CANVAS_2, textAlign: 'center' },
 });

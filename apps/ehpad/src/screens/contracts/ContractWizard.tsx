@@ -1,5 +1,6 @@
-import { useEffect, useReducer, useState } from 'react';
+import { Fragment, useEffect, useReducer, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { ArrowRight, ChevronDown, CircleCheck, Lightbulb, TriangleAlert } from 'lucide-react';
 import { useStrings } from '@/i18n';
 import * as api from '@/data/api';
 import { useAuth } from '@/context/AuthContext';
@@ -29,25 +30,29 @@ import type {
   Contract,
   ContractDraft,
   Frequency,
-  SessionType,
   SpecialPeriod,
   UnitType,
   WizardData,
 } from '@/types/models';
-import { ExclusionsStep } from './ExclusionsStep';
+import { ExclusionsStep, PROFILE_RANGES, rangeText } from './ExclusionsStep';
 import styles from './contracts.module.css';
 
 export const EMPTY_WIZARD: WizardData = {
   frequency: null,
-  sessionType: null,
+  // DT-E4 — les séances DS sont toujours collectives : type figé, plus de choix.
+  sessionType: 'collective',
   units: [],
   otherUnitLabel: '',
   multiUnitPlanning: null,
   weeklyExclusions: [],
   specialPeriods: [],
   planningNotes: '',
+  // DT-E3 — profil par défaut EHPAD (ajusté au type d'établissement au chargement).
+  availabilityProfile: 'ehpad',
   startDate: null,
   endDate: null,
+  // DT-E5 — contrat à durée définie par défaut (12 mois préappliqués à l'étape Période).
+  openEnded: false,
   selectedSlotId: null,
   removedSlotIds: [],
 };
@@ -83,8 +88,10 @@ export function dataFromContract(contract: Contract): WizardData {
     weeklyExclusions: weekly,
     specialPeriods: periods,
     planningNotes: contract.availabilityNotes ?? '',
+    availabilityProfile: contract.availabilityProfile ?? 'ehpad',
     startDate: contract.startDate,
-    endDate: contract.endDate,
+    endDate: contract.openEnded ? null : contract.endDate,
+    openEnded: contract.openEnded ?? false,
   };
 }
 
@@ -92,11 +99,16 @@ type WizardAction =
   | { type: 'patch'; patch: Partial<WizardData> }
   | { type: 'load'; data: WizardData }
   | { type: 'toggleWeekly'; weekday: number; part: 'matin' | 'apres_midi' }
+  | { type: 'blockRow'; part: 'matin' | 'apres_midi'; blocked: boolean }
   | { type: 'preset'; preset: 'wednesday' | 'mornings' | 'monfri' }
   | { type: 'resetExclusions' }
   | { type: 'addPeriod'; period: SpecialPeriod }
   | { type: 'updatePeriod'; period: SpecialPeriod }
   | { type: 'removePeriod'; id: string };
+
+/** Jours ouvrés cliquables dans la grille (lun→ven). Les week-ends (5,6) sont
+ *  prédéfinis non disponibles — jamais de séance DS le week-end en EHPAD. */
+const WORK_DAYS = [0, 1, 2, 3, 4];
 
 function reducer(data: WizardData, action: WizardAction): WizardData {
   switch (action.type) {
@@ -115,6 +127,16 @@ function reducer(data: WizardData, action: WizardAction): WizardData {
           : [...data.weeklyExclusions, { weekday: action.weekday, part: action.part }],
       };
     }
+    case 'blockRow': {
+      // Bloque / débloque tout le matin (ou l'après-midi) sur les jours ouvrés.
+      const others = data.weeklyExclusions.filter((e) => e.part !== action.part || !WORK_DAYS.includes(e.weekday));
+      return {
+        ...data,
+        weeklyExclusions: action.blocked
+          ? [...others, ...WORK_DAYS.map((weekday) => ({ weekday, part: action.part }))]
+          : others,
+      };
+    }
     case 'preset': {
       const add = (list: WizardData['weeklyExclusions'], weekday: number, part: 'matin' | 'apres_midi') =>
         list.some((e) => e.weekday === weekday && e.part === part) ? list : [...list, { weekday, part }];
@@ -122,7 +144,7 @@ function reducer(data: WizardData, action: WizardAction): WizardData {
       if (action.preset === 'wednesday') {
         list = add(add(list, 2, 'matin'), 2, 'apres_midi');
       } else if (action.preset === 'mornings') {
-        for (let d = 0; d < 7; d += 1) list = add(list, d, 'matin');
+        for (const d of WORK_DAYS) list = add(list, d, 'matin');
       } else {
         list = add(add(list, 0, 'matin'), 4, 'matin');
       }
@@ -166,6 +188,8 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
     () => (mode === 'create' && !renewalOf ? api.getContractDraft() : Promise.resolve(null)),
     [mode, renewalOf],
   );
+  // DT-E3 — type d'établissement, pour choisir le profil de disponibilité par défaut.
+  const facilityState = useAsync(() => api.getFacility(), []);
 
   const [data, dispatch] = useReducer(reducer, EMPTY_WIZARD);
   const [step, setStep] = useState(0);
@@ -187,24 +211,51 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
     if (draftState.data && loadedFrom === 'none') setDraftBanner(draftState.data);
   }, [draftState.data, loadedFrom]);
 
+  // DT-E3 — création neuve : profil de disponibilité par défaut selon le type
+  // d'établissement (EHPAD → créneaux resserrés, autre → journée étendue).
+  // En resoumission/renouvellement, le profil vient du contrat source (load).
+  useEffect(() => {
+    if (mode === 'create' && !sourceId && facilityState.data && loadedFrom === 'none') {
+      const isEhpad = /ehpad/i.test(facilityState.data.category);
+      dispatch({ type: 'patch', patch: { availabilityProfile: isEhpad ? 'ehpad' : 'etendu' } });
+    }
+  }, [facilityState.data, loadedFrom, mode, sourceId]);
+
+  // DT-E5 — « 12 mois » est la durée recommandée par défaut : on préremplit la
+  // période à l'arrivée sur l'étape 3 si rien n'est encore saisi (création neuve).
+  useEffect(() => {
+    if (step === 4 && !data.startDate && !data.endDate && !data.openEnded) {
+      const start = toIso(addDays(new Date(), 1));
+      const end = toIso(addDays(addMonths(parseDate(start), 12), -1));
+      dispatch({ type: 'patch', patch: { startDate: start, endDate: end } });
+    }
+  }, [step, data.startDate, data.endDate, data.openEnded]);
+
+  // 7 étapes internes ; seules les 5 premières (Fréquence → Période) sont des
+  // pastilles dans la barre. Créneaux + Récap sont des écrans de continuation
+  // (après « Voir les créneaux suggérés »), affichés barre « tout fait ».
   const steps: WizardStepDef[] = [
-    { id: 'needs', title: fr.contracts.wizard.steps.needs },
-    { id: 'availability', title: fr.contracts.wizard.steps.availability },
+    { id: 'frequency', title: fr.contracts.wizard.steps.frequency },
+    { id: 'units', title: fr.contracts.wizard.steps.units },
+    { id: 'consecutivity', title: fr.contracts.wizard.steps.consecutivity },
+    { id: 'indispos', title: fr.contracts.wizard.steps.indispos },
     { id: 'period', title: fr.contracts.wizard.steps.period },
     { id: 'slots', title: fr.contracts.wizard.steps.slots },
     { id: 'summary', title: fr.contracts.wizard.steps.summary },
   ];
+  const VISIBLE_STEPS = 5;
+  const S = { frequency: 0, units: 1, consecutivity: 2, indispos: 3, period: 4, slots: 5, summary: 6 } as const;
 
-  // CON-08 — suggestions chargées à l'entrée de l'étape 4
+  // CON-08 — suggestions chargées à l'entrée de l'étape Créneaux
   const suggestions = useAsync(
-    () => (step === 3 ? api.getSlotSuggestions(data) : Promise.resolve([])),
-    [step === 3],
+    () => (step === S.slots ? api.getSlotSuggestions(data) : Promise.resolve([])),
+    [step === S.slots],
   );
   const visibleSlots = (suggestions.data ?? []).filter((s) => !data.removedSlotIds.includes(s.id));
 
   // Le meilleur créneau est présélectionné
   useEffect(() => {
-    if (step === 3 && data.selectedSlotId === null && visibleSlots.length > 0) {
+    if (step === S.slots && data.selectedSlotId === null && visibleSlots.length > 0) {
       const first = visibleSlots[0];
       if (first) dispatch({ type: 'patch', patch: { selectedSlotId: first.id } });
     }
@@ -310,21 +361,24 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
   /* ---------- validation par étape (le bouton dit toujours pourquoi) ---------- */
 
   const stepBlocker = (): string | null => {
-    if (step === 0) {
-      if (!data.frequency) return fr.contracts.wizard.frequencyError;
-      if (!data.sessionType) return fr.contracts.wizard.sessionTypeError;
+    if (step === S.frequency && !data.frequency) return fr.contracts.wizard.frequencyError;
+    if (step === S.units) {
       if (data.units.length === 0) return fr.contracts.wizard.unitsError;
       if (data.units.includes('AUTRE') && data.otherUnitLabel.trim() === '')
         return fr.contracts.wizard.otherUnitError;
-      if (data.units.length > 1 && !data.multiUnitPlanning) return fr.contracts.wizard.multiUnitError;
     }
-    if (step === 2) {
+    // Enchaînement : requis seulement à partir de 2 unités (sinon rien à enchaîner).
+    if (step === S.consecutivity && data.units.length > 1 && !data.multiUnitPlanning) {
+      return fr.contracts.wizard.multiUnitError;
+    }
+    if (step === S.period) {
       if (!data.startDate) return fr.contracts.wizard.period.startError;
-      if (!data.endDate || data.endDate <= data.startDate) return fr.contracts.wizard.period.endError;
+      // DT-E5 — contrat sans fin : pas de date de fin à valider.
+      if (!data.openEnded && (!data.endDate || data.endDate <= data.startDate))
+        return fr.contracts.wizard.period.endError;
     }
-    if (step === 3) {
-      if (visibleSlots.length > 0 && data.selectedSlotId === null)
-        return fr.contracts.wizard.slots.slotError;
+    if (step === S.slots && visibleSlots.length > 0 && data.selectedSlotId === null) {
+      return fr.contracts.wizard.slots.slotError;
     }
     return null;
   };
@@ -364,72 +418,154 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
 
   /* ---------- contenu des étapes ---------- */
 
+  const wiz = fr.contracts.wizard;
   const unitOptions: UnitType[] = ['UC', 'UP_UHR', 'AIDANTS', 'SOIGNANTS', 'AUTRE'];
+  const unitShortNames = data.units
+    .map((u) => (u === 'AUTRE' && data.otherUnitLabel.trim() ? data.otherUnitLabel.trim() : unitLabel(u)))
+    .join(' + ');
+  const hasMultiUnits = data.units.length > 1;
 
-  const stepNeeds = (
+  // Étape 1 — Fréquence (cartes radio + sous-libellé « ≈ 4 passages/mois · le plus courant »)
+  const stepFrequency = (
     <>
+      <h3 className={styles.stepTitle}>{wiz.frequencyTitle}</h3>
+      <p className={styles.stepIntro}>{wiz.frequencyIntro}</p>
       <RadioGroup<Frequency>
-        legend={fr.contracts.wizard.frequencyLabel}
+        legend={wiz.frequencyLabel}
+        hideLegend
         value={data.frequency}
         onChange={(frequency) => dispatch({ type: 'patch', patch: { frequency } })}
+        appearance="card"
         required
-        options={(['hebdo', 'bihebdo', 'bimensuel', 'mensuel', 'ponctuel'] as Frequency[]).map(
-          (f) => ({ value: f, label: fr.frequency[f] }),
-        )}
+        options={(['hebdo', 'bihebdo', 'bimensuel', 'mensuel', 'ponctuel'] as Frequency[]).map((f) => ({
+          value: f,
+          label: fr.frequency[f],
+          helper: wiz.frequencyHints[f],
+        }))}
       />
-      <RadioGroup<SessionType>
-        legend={fr.contracts.wizard.sessionTypeLabel}
-        value={data.sessionType}
-        onChange={(sessionType) => dispatch({ type: 'patch', patch: { sessionType } })}
+    </>
+  );
+
+  // Étape 2 — Unités (cartes à cocher avec descriptions + contrainte soignants + « Autre »)
+  const stepUnits = (
+    <>
+      <h3 className={styles.stepTitle}>{wiz.unitsTitle}</h3>
+      <p className={styles.stepIntro}>{wiz.unitsIntro}</p>
+      {data.frequency && (
+        <span className={styles.contextChip}>{wiz.chosenLabel} : {fr.frequency[data.frequency]}</span>
+      )}
+      <fieldset className={styles.unitsFieldset}>
+        <legend className="sr-only">{wiz.unitsLabel}</legend>
+        {unitOptions.map((unit) => {
+          const desc = wiz.unitDescriptions[unit];
+          const helper =
+            unit === 'SOIGNANTS' ? (
+              <span className={styles.unitWarn}>
+                <TriangleAlert className={styles.inlineWarnIcon} aria-hidden /> {desc}
+              </span>
+            ) : (
+              desc
+            );
+          return (
+            <Fragment key={unit}>
+              <Checkbox
+                appearance="card"
+                label={unitLabel(unit)}
+                helper={helper}
+                checked={data.units.includes(unit)}
+                onChange={(checked) =>
+                  dispatch({
+                    type: 'patch',
+                    patch: {
+                      units: checked ? [...data.units, unit] : data.units.filter((u) => u !== unit),
+                    },
+                  })
+                }
+              />
+              {unit === 'AUTRE' && data.units.includes('AUTRE') && (
+                <div className={styles.otherUnitField}>
+                  <TextField
+                    label={wiz.otherUnitLabel}
+                    value={data.otherUnitLabel}
+                    onChange={(otherUnitLabel) => dispatch({ type: 'patch', patch: { otherUnitLabel } })}
+                    placeholder={wiz.otherUnitPlaceholder}
+                    required
+                  />
+                </div>
+              )}
+            </Fragment>
+          );
+        })}
+      </fieldset>
+      {data.units.length > 0 && (
+        <InlineAlert variant="info" icon={Lightbulb}>
+          {wiz.unitsCountInfo(data.units.length, unitShortNames)}
+        </InlineAlert>
+      )}
+    </>
+  );
+
+  // Étape 3 — Enchaînement (conditionnel : seulement à partir de 2 unités)
+  const stepConsecutivity = hasMultiUnits ? (
+    <>
+      <h3 className={styles.stepTitle}>{wiz.consecutivityTitle(data.units.length)}</h3>
+      <p className={styles.stepIntro}>{wiz.consecutivityIntro(data.units.length, unitShortNames)}</p>
+      {data.frequency && (
+        <span className={styles.contextChip}>
+          {fr.frequency[data.frequency]} · {unitShortNames}
+        </span>
+      )}
+      <InlineAlert variant="success" icon={Lightbulb}>
+        {wiz.consecutivityTip}
+      </InlineAlert>
+      <RadioGroup<'meme_jour' | 'jours_separes'>
+        legend={wiz.multiUnitLabel}
+        hideLegend
+        value={data.multiUnitPlanning}
+        onChange={(multiUnitPlanning) => dispatch({ type: 'patch', patch: { multiUnitPlanning } })}
+        appearance="card"
         required
         options={[
-          { value: 'collective', label: fr.sessionTypes.collective },
-          { value: 'individuelle', label: fr.sessionTypes.individuelle },
+          {
+            value: 'meme_jour',
+            label: wiz.chainSameDay,
+            helper: (
+              <>
+                <span className={styles.chainChips}>
+                  {data.units.map((u, i) => (
+                    <Fragment key={u}>
+                      {i > 0 && <ArrowRight className={styles.chainArrow} aria-hidden />}
+                      <span className={styles.chainChip}>
+                        {unitLabel(u)} · 1h
+                      </span>
+                    </Fragment>
+                  ))}
+                </span>
+                <span className={styles.chainBenefit}>{wiz.chainSameDayBenefit}</span>
+              </>
+            ),
+          },
+          {
+            value: 'jours_separes',
+            label: wiz.chainSeparate,
+            helper: (
+              <>
+                <span>{wiz.chainSeparateExample}</span>
+                <span className={styles.chainWarn}>
+                  <TriangleAlert className={styles.inlineWarnIcon} aria-hidden /> {wiz.chainSeparateWarn}
+                </span>
+              </>
+            ),
+          },
         ]}
       />
-      <fieldset className={styles.unitsFieldset}>
-        <legend className={styles.formLegend}>
-          {fr.contracts.wizard.unitsLabel}{' '}
-          <span className={styles.legendHint}>({fr.contracts.wizard.unitsHelp.toLowerCase()})</span>
-        </legend>
-        {unitOptions.map((unit) => (
-          <Checkbox
-            key={unit}
-            label={unitLabel(unit)}
-            checked={data.units.includes(unit)}
-            onChange={(checked) =>
-              dispatch({
-                type: 'patch',
-                patch: {
-                  units: checked ? [...data.units, unit] : data.units.filter((u) => u !== unit),
-                },
-              })
-            }
-          />
-        ))}
-        {data.units.includes('AUTRE') && (
-          <div className={styles.otherUnitField}>
-            <TextField
-              label={fr.contracts.wizard.otherUnitLabel}
-              value={data.otherUnitLabel}
-              onChange={(otherUnitLabel) => dispatch({ type: 'patch', patch: { otherUnitLabel } })}
-              required
-            />
-          </div>
-        )}
-      </fieldset>
-      {data.units.length > 1 && (
-        <RadioGroup<'meme_jour' | 'jours_separes'>
-          legend={fr.contracts.wizard.multiUnitLabel}
-          value={data.multiUnitPlanning}
-          onChange={(multiUnitPlanning) => dispatch({ type: 'patch', patch: { multiUnitPlanning } })}
-          required
-          options={[
-            { value: 'meme_jour', label: fr.contracts.wizard.multiUnit.meme_jour },
-            { value: 'jours_separes', label: fr.contracts.wizard.multiUnit.jours_separes },
-          ]}
-        />
-      )}
+    </>
+  ) : (
+    <>
+      <h3 className={styles.stepTitle}>{wiz.consecutivitySingleTitle}</h3>
+      <InlineAlert variant="info" icon={Lightbulb}>
+        {wiz.consecutivitySingleNote}
+      </InlineAlert>
     </>
   );
 
@@ -441,45 +577,116 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
       months === 'school'
         ? new Date(startDate.getMonth() >= 8 ? startDate.getFullYear() + 1 : startDate.getFullYear(), 6, 4)
         : addDays(addMonths(startDate, months), -1);
-    dispatch({ type: 'patch', patch: { startDate: start, endDate: toIso(endDate) } });
+    // DT-E5 — une durée définie annule l'option « sans échéance ».
+    dispatch({ type: 'patch', patch: { startDate: start, endDate: toIso(endDate), openEnded: false } });
   };
+  // DT-E5 — contrat sans fin : on garde une date de début, la fin reste vide.
+  const applyNoEnd = () => {
+    dispatch({
+      type: 'patch',
+      patch: { startDate: data.startDate ?? tomorrow, endDate: null, openEnded: true },
+    });
+  };
+
+  const period = fr.contracts.wizard.period;
+
+  // DT-E3 — récap du profil de disponibilité choisi (résumé + panneau latéral).
+  const exCopy = fr.contracts.wizard.exclusions;
+  const availabilityProfileValue = exCopy.profileSummary(
+    data.availabilityProfile === 'ehpad' ? exCopy.profileEhpad : exCopy.profileEtendu,
+    data.availabilityProfile === 'ehpad'
+      ? `${exCopy.morning} ${rangeText(PROFILE_RANGES.ehpad.morning)} · ${exCopy.afternoon} ${rangeText(PROFILE_RANGES.ehpad.afternoon)}`
+      : `${formatTime('09:00')}–${formatTime('19:00')}`,
+  );
+
+  // Estimation de séances pour la carte recommandée (≈ passages/mois × 12 mois).
+  const perMonth: Record<Frequency, number> = { hebdo: 4, bihebdo: 8, bimensuel: 2, mensuel: 1, ponctuel: 1 };
+  const estSessions = data.frequency ? perMonth[data.frequency] * 12 : 48;
+  const recoEnd = data.startDate ? toIso(addDays(addMonths(parseDate(data.startDate), 12), -1)) : null;
+  // « 12 mois glissants » sélectionné = durée définie collée sur 12 mois pile.
+  const is12Months = !data.openEnded && !!data.startDate && data.endDate === recoEnd;
 
   const stepPeriod = (
     <>
-      <h3 className={styles.summaryTitle}>{fr.contracts.wizard.period.title}</h3>
-      <div className={styles.dateGrid}>
-        <DatePicker
-          label={fr.contracts.wizard.period.start}
-          value={data.startDate}
-          onChange={(startDate) => dispatch({ type: 'patch', patch: { startDate } })}
-          min={tomorrow}
-          helper={fr.contracts.wizard.period.startHelp}
-          required
-        />
-        <DatePicker
-          label={fr.contracts.wizard.period.end}
-          value={data.endDate}
-          onChange={(endDate) => dispatch({ type: 'patch', patch: { endDate } })}
-          min={data.startDate ? toIso(addDays(parseDate(data.startDate), 1)) : tomorrow}
-          required
-        />
+      <h3 className={styles.stepTitle}>{period.title}</h3>
+      <p className={styles.stepIntro}>{period.intro}</p>
+
+      {/* Carte « hero » recommandée : 12 mois glissants (sélectionnée par défaut). */}
+      <button
+        type="button"
+        className={styles.recoCard}
+        data-selected={is12Months || undefined}
+        aria-pressed={is12Months}
+        onClick={() => applyPreset(12)}
+      >
+        <span className={styles.recoMain}>
+          <span className={styles.recoHead}>
+            <span className={styles.recoTitle}>{period.recommendedTitle}</span>
+            <span className={styles.recommendedBadge}>{period.recommended}</span>
+          </span>
+          {data.startDate && recoEnd && (
+            <span className={styles.recoRange}>
+              {period.recommendedRange(capitalize(formatDate(data.startDate)), formatDate(recoEnd))}
+            </span>
+          )}
+          <span className={styles.recoDetail}>{period.recommendedDetail(estSessions)}</span>
+        </span>
+        <CircleCheck className={styles.recoCheck} data-on={is12Months || undefined} aria-hidden />
+      </button>
+
+      {/* Dates modifiables */}
+      <div className={styles.periodDates}>
+        <div className={styles.dateGrid}>
+          <DatePicker
+            label={period.start}
+            value={data.startDate}
+            onChange={(startDate) => dispatch({ type: 'patch', patch: { startDate } })}
+            min={tomorrow}
+            helper={period.startHelp}
+            required
+          />
+          {data.openEnded ? (
+            // DT-E5 — pas de date de fin : on l'explique à la place du sélecteur.
+            <div className={styles.fixedField}>
+              <p className={styles.groupLabel}>{period.end}</p>
+              <p className={styles.mutedIntro}>{period.openEndedNote}</p>
+            </div>
+          ) : (
+            <DatePicker
+              label={period.end}
+              value={data.endDate}
+              onChange={(endDate) => dispatch({ type: 'patch', patch: { endDate, openEnded: false } })}
+              min={data.startDate ? toIso(addDays(parseDate(data.startDate), 1)) : tomorrow}
+              required
+            />
+          )}
+        </div>
+        <p className={styles.mutedIntro}>{period.modifiableNote}</p>
       </div>
-      <div>
-        <p className={styles.groupLabel}>
-          {fr.contracts.wizard.period.preset}
-        </p>
+
+      {/* Autres options de durée (rare) — repliées par défaut */}
+      <details className={styles.otherOptions}>
+        <summary className={styles.otherOptionsSummary}>
+          <ChevronDown className={styles.otherOptionsChevron} aria-hidden />
+          {period.otherOptions}
+        </summary>
         <div className={styles.presetRow}>
-          <Button size="md" onClick={() => applyPreset(6)}>
-            {fr.contracts.wizard.period.presets.six}
-          </Button>
-          <Button size="md" onClick={() => applyPreset(12)}>
-            {fr.contracts.wizard.period.presets.twelve}
+          <Button size="md" onClick={() => applyPreset(24)}>
+            {period.presets.twentyFour}
           </Button>
           <Button size="md" onClick={() => applyPreset('school')}>
-            {fr.contracts.wizard.period.presets.school}
+            {period.presets.school}
+          </Button>
+          <Button
+            size="md"
+            variant={data.openEnded ? 'accent' : 'secondary'}
+            onClick={applyNoEnd}
+            aria-pressed={data.openEnded}
+          >
+            {period.presets.noEnd}
           </Button>
         </div>
-      </div>
+      </details>
     </>
   );
 
@@ -590,12 +797,16 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
           },
         ]
       : []),
+    { label: fr.contracts.wizard.exclusions.profileTitle, value: availabilityProfileValue },
     {
       label: fr.contracts.wizard.steps.period,
-      value:
-        data.startDate && data.endDate
-          ? `${capitalize(formatDate(data.startDate))} → ${formatDate(data.endDate)}`
-          : '—',
+      value: !data.startDate
+        ? '—'
+        : data.openEnded
+          ? `${capitalize(formatDate(data.startDate))} → ${period.openEndedValue}`
+          : data.endDate
+            ? `${capitalize(formatDate(data.startDate))} → ${formatDate(data.endDate)}`
+            : '—',
     },
     {
       label: fr.contracts.wizard.steps.slots,
@@ -626,20 +837,16 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
     </>
   );
 
-  const aside =
-    step === 0 ? undefined : (
-      <div>
-        <p className={styles.asideTitle}>{fr.contracts.wizard.runningSummary}</p>
-        <dl className={styles.summaryList}>
-          {summaryRows.slice(0, 5).map((row) => (
-            <div key={row.label}>
-              <dt className={styles.summaryLabel}>{row.label}</dt>
-              <dd>{row.value}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-    );
+  // Encart « Besoin d'aide ? » — affiché sous CHAQUE étape (cf. maquette Loïc).
+  const helpBox = (
+    <InlineAlert variant="info" icon={Lightbulb} title={wiz.help.title}>
+      {wiz.help.body}{' '}
+      <a href={`mailto:${wiz.help.email}`} className={styles.helpLink}>
+        {wiz.help.email}
+      </a>
+      .
+    </InlineAlert>
+  );
 
   const blocker = stepBlocker();
   const isLast = step === steps.length - 1;
@@ -668,7 +875,8 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
                 size="md"
                 onClick={() => {
                   dispatch({ type: 'load', data: draftBanner.data });
-                  setStep(draftBanner.step);
+                  // Borne l'index au cas où la structure d'étapes aurait changé depuis l'enregistrement.
+                  setStep(Math.min(Math.max(0, draftBanner.step), steps.length - 1));
                   setLoadedFrom('draft');
                 }}
               >
@@ -692,6 +900,8 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
       <Wizard
         steps={steps}
         current={step}
+        visibleStepCount={VISIBLE_STEPS}
+        help={helpBox}
         onBack={step > 0 ? () => setStep(step - 1) : undefined}
         onNext={next}
         nextLabel={
@@ -701,19 +911,22 @@ export default function ContractWizard({ mode }: ContractWizardProps) {
               : renewalOf
                 ? fr.contracts.wizard.summary.submitRenewal
                 : fr.contracts.wizard.summary.submit
-            : fr.contracts.wizard.next
+            : step === S.period
+              ? period.seeSlots
+              : fr.contracts.wizard.next
         }
         nextDisabled={blocker !== null}
         nextDisabledReason={blocker ?? undefined}
         busy={busy}
         onSaveDraft={mode === 'create' && !renewalOf ? saveDraft : undefined}
-        summary={aside}
       >
-        {step === 0 && stepNeeds}
-        {step === 1 && <ExclusionsStep data={data} dispatch={dispatch} />}
-        {step === 2 && stepPeriod}
-        {step === 3 && stepSlots}
-        {step === 4 && stepSummary}
+        {step === S.frequency && stepFrequency}
+        {step === S.units && stepUnits}
+        {step === S.consecutivity && stepConsecutivity}
+        {step === S.indispos && <ExclusionsStep data={data} dispatch={dispatch} />}
+        {step === S.period && stepPeriod}
+        {step === S.slots && stepSlots}
+        {step === S.summary && stepSummary}
       </Wizard>
     </>
   );

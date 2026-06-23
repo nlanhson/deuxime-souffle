@@ -1,7 +1,7 @@
 /**
  * Coach · Welcome — first interactive onboarding screen (E01 — Auth & Account).
  *
- * "Club" hero composition: a muted, looping clip of the brand's seniors-boxing film fills a rounded
+ * "Le Mouvement" hero composition: a muted, looping clip of the brand's seniors-boxing film fills a rounded
  * card across the top; the value proposition + the single primary CTA sit below on the ink canvas.
  * Contained (not full-bleed) on purpose — the source film is 16:9, so a card crops it cleanly and the
  * white Anton headline keeps a dark, legible ink backdrop instead of fighting the bright footage.
@@ -24,15 +24,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { VideoView, useVideoPlayer } from 'expo-video';
 
 import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
-import { copy } from '../copy';
+import { useCopy } from '../i18n';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { Logo } from '../components/Logo';
 import { ease, dur } from '../lib/motion';
 
 const S = surfaces.coach;
-const ON_2 = palette.neutral[300];
-const INK = palette.neutral[900];
+const ON_2 = palette.neutral[600];
+// Screen canvas (background + bottom-scrim target). Light theme: warm-paper canvas, matching the
+// other auth screens' S.canvas — the hero photo melts into the paper, not into ink.
+const INK = palette.neutral[50];
 const F = {
   display: 'Anton_400Regular',
   oswS: 'Oswald_600SemiBold',
@@ -71,6 +73,7 @@ function HeroVideoLayer() {
 }
 
 export function WelcomeScreen({ onLogin, onApply, reduced }: { onLogin: () => void; onApply: () => void; reduced: boolean }) {
+  const copy = useCopy();
   const c = copy.auth.welcome;
   const showVideo = !!HERO_VIDEO && !reduced;
 
@@ -109,7 +112,7 @@ export function WelcomeScreen({ onLogin, onApply, reduced }: { onLogin: () => vo
         {/* Brand lockup over the footage — logo only; the mark carries the brand. */}
         <SafeAreaView edges={['top']} style={st.brandSafe}>
           <View style={st.brand}>
-            <Logo size={48} glow />
+            <Logo size={48} glow color="#FFFFFF" />
           </View>
         </SafeAreaView>
       </View>
@@ -140,7 +143,7 @@ const st = StyleSheet.create({
   hero: {
     flex: 1,
     overflow: 'hidden',
-    backgroundColor: palette.neutral[800], // shows under the rounded corners before the poster paints
+    backgroundColor: palette.neutral[100], // shows under the rounded corners before the poster paints
     borderBottomLeftRadius: r['2xl'],
     borderBottomRightRadius: r['2xl'],
   },

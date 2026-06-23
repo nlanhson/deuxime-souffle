@@ -16,8 +16,15 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 
+import { surfaces } from '../../theme/theme';
 import { DEFAULT_SEGMENTED_THEME, SEGMENTED_FONT, type SegmentedProps } from './types';
 import { isLiquidGlassIOS } from './supportsNativeSegmented';
+
+// Appearance follows the coach surface (flipped dark → light on 2026-06-16). This matters on iOS 26
+// Liquid Glass, where the system owns label contrast: with a stale "dark" appearance the system
+// paints LIGHT labels on the light cream canvas, so the white selected capsule shows white-on-white
+// (invisible) text. Tying it to the token keeps a future scheme flip a one-liner.
+const APPEARANCE: 'light' | 'dark' = surfaces.coach.colorScheme === 'dark' ? 'dark' : 'light';
 
 export function NativeSegmented<T extends string>({
   options, value, onChange, accessibilityLabel, theme, style,
@@ -36,7 +43,7 @@ export function NativeSegmented<T extends string>({
           const opt = options[e.nativeEvent.selectedSegmentIndex];
           if (opt) onChange(opt.value);
         }}
-        appearance="dark"
+        appearance={APPEARANCE}
         backgroundColor={glass ? undefined : t.track}
         tintColor={t.selected}
         fontStyle={{ fontFamily: SEGMENTED_FONT, fontSize: 14, ...(glass ? null : { color: t.label }) }}

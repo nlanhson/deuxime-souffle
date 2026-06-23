@@ -32,7 +32,7 @@
 }
 
 .star:hover {
-  background: var(--color-info-soft);
+  background: var(--color-warning-soft); /* halo or doux (or-50) — l'étoile = métaphore récompense */
 }
 
 .star:has(:focus-visible) {
@@ -40,8 +40,11 @@
   outline-offset: 2px;
 }
 
+/* Étoile sélectionnée — OR (récompense), demandé sur le formulaire d'évaluation.
+   Remplissage or vif + contour or foncé : la teinte lit « doré » tout en gardant
+   un bord à contraste non-textuel AA (or-700 sur blanc ≈ 3,5:1, WCAG 1.4.11). */
 .star[data-filled] {
-  color: var(--color-accent); /* remplissage BLEU — jamais or sur cette surface */
+  color: var(--lc-or-700);
 }
 
 .star .icon {
@@ -50,7 +53,7 @@
 }
 
 .star[data-filled] .icon {
-  fill: currentcolor;
+  fill: var(--lc-or-400);
 }
 
 .srInput {
@@ -102,9 +105,11 @@
   height: 17px;
 }
 
+/* Étoiles de moyenne / notes envoyées — mêmes ors que la saisie (remplissage or
+   vif + bord or foncé) : cohérent avec « notes en étoiles dorées » attendu. */
 .display .icon[data-filled] {
-  color: var(--color-accent);
-  fill: var(--color-accent);
+  color: var(--lc-or-700);
+  fill: var(--lc-or-400);
 }
 
 .displayText {

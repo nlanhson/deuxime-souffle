@@ -1,4 +1,4 @@
-# Le Club — Design System Foundation
+# Le Mouvement — Design System Foundation
 
 Design-token foundation for **Deuxième Souffle**, codified from the moodboard
 ([`project/brief/Moodboard 1 App · Deuxième Souffle.pdf`](../brief/)).

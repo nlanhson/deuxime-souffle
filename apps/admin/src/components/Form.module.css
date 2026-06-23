@@ -1,0 +1,122 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.label {
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+}
+.req {
+  color: var(--color-accent);
+}
+.hint {
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  border: 1px solid var(--color-border-field);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+}
+.input,
+.select {
+  height: 44px;
+  padding: 0 var(--space-md);
+}
+.textarea {
+  padding: var(--space-sm) var(--space-md);
+  line-height: var(--lh-body);
+  resize: vertical;
+}
+.select {
+  background-image: var(--select-chevron);
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.input:focus-visible,
+.textarea:focus-visible,
+.select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+  border-color: var(--color-accent);
+}
+
+/* ---- Selectable cards ---- */
+.cards {
+  display: grid;
+  gap: var(--space-sm);
+}
+.cards[data-columns='2'] {
+  grid-template-columns: repeat(2, 1fr);
+}
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border-field);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+.card:hover {
+  border-color: var(--color-border-strong);
+}
+.card[data-selected] {
+  border-color: var(--color-accent);
+  background: var(--color-selected-soft);
+}
+.card:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+.control {
+  margin-top: 2px;
+  accent-color: var(--color-accent);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.cardText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cardLabel {
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+}
+.cardDesc {
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+  line-height: var(--lh-body);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md) var(--space-lg);
+}
+
+@media (max-width: 640px) {
+  .cards[data-columns='2'],
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

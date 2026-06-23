@@ -1,16 +1,17 @@
 /**
- * Le Club — Deuxième Souffle · Typed design tokens
+ * Le Mouvement — Deuxième Souffle · Typed design tokens
  * Shared across React Native (coach) and React (admin / EHPAD).
  * Destination once the Turborepo exists: packages/shared/theme.
  *
  * Principle: "une base, trois intensités" — one token set, three surface themes.
  * Rules baked in: body >= 16, touch targets >= 44, contrast AA.
  *
- * LOCKED DECISION (2026-06-08) — colour scheme is fixed per product, no user toggle in MVP:
- *   coach (mobile)  -> DARK
+ * COLOUR SCHEME (updated 2026-06-16) — fixed per product, no user toggle in MVP:
+ *   coach (mobile)  -> LIGHT   (flipped from dark on 2026-06-16)
  *   ehpad (web)     -> LIGHT
  *   admin/DS (web)  -> LIGHT
- * Rule of thumb: mobile = dark, web = light. Revisit only if the client requests a toggle.
+ * All three surfaces now sit on the warm-paper light canvas. Revisit only if the client
+ * requests a toggle. (The coach app renders from the vendored copy at apps/coach/src/theme/theme.ts.)
  */
 
 export const palette = {
@@ -85,21 +86,31 @@ export const motion = {
 export const surfaces = {
   coach: {
     platform: 'mobile',
-    colorScheme: 'dark',             // LOCKED — mobile = dark
-    canvas: palette.neutral[900],
-    surface: palette.neutral[800],
+    colorScheme: 'light',            // FLIPPED 2026-06-16 — coach moved to light
+    canvas: palette.neutral[50],     // warm paper, matches admin / ehpad
+    surface: palette.neutral[0],     // white cards
     surfaceRaised: palette.neutral[0],
-    surfaceInteractive: palette.neutral[700], // tappable chip/ghost inside a surface card — SPEC §4.7
-    textPrimary: palette.neutral[50],
-    textSecondary: palette.neutral[300],
+    surfaceInteractive: palette.neutral[100], // tappable chip/ghost inside a card — light inset
+    textPrimary: palette.neutral[900],
+    textSecondary: palette.neutral[600],
     accent: color.action,            // red dominant — the engine
-    // Raised-card text polarity — white cards (hero, session) sit on the ink canvas, so their
-    // text flips to dark ink rather than the crème textPrimary. SPEC §4.2.
+    // Raised-card text polarity — white cards sit on the paper canvas; text stays dark ink.
     textOnRaised: palette.neutral[900],
     textOnRaisedSecondary: palette.neutral[600],
-    // Status colors retuned for the ink canvas — the global semantic tokens are light-surface
-    // tuned and read muddy on #181715. These stay AA on the canvas (SPEC §4.1):
-    // vert-300 ≈ 8.3:1, or-300 ≈ 13:1, bleu-200 ≈ 7:1.
+    // Ink accent surface (DT-01, 2026-06-18) — the moodboard's "fond ink dramatique", DOSED as a
+    // hero band on the cream base (not the whole canvas). Cream breathes, ink dramatizes; white-on-
+    // ink is AA per the moodboard ("texte foncé sur crème, blanc sur ink"). Use for hero/identity
+    // moments only (Home top, next-session hero, level header) — never as a default background.
+    ink: {
+      bg:            palette.neutral[900],         // #181715 noir ring — the dramatic stage
+      surfaceRaised: 'rgba(255,255,255,0.06)',     // a nested panel one step up from the ink
+      textPrimary:   palette.neutral[0],           // white — headings + figures
+      textSecondary: palette.neutral[300],         // #C6BDAE — warm muted on ink (AA on #181715)
+      border:        'rgba(255,255,255,0.12)',     // hairline divider / nested-panel edge on ink
+      level:         palette.or[300],              // gold reads as reward on ink
+    },
+    // The *OnInk status tokens below were tuned for the old ink canvas. With DT-01 reintroducing
+    // dosed ink accents, they're live again on any ink surface (status chips on a hero band, etc.).
     successOnInk:       palette.vert[300],
     successOnInkBg:     'rgba(47,158,107,0.16)',
     warningOnInk:       palette.or[300],

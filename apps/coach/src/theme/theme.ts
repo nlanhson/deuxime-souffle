@@ -1,5 +1,5 @@
 /**
- * Le Club — Deuxième Souffle · Typed design tokens
+ * Le Mouvement — Deuxième Souffle · Typed design tokens
  *
  * ⚠️ VENDORED COPY of project/design-system/theme.ts (canonical source).
  *    When the Turborepo lands, delete this and import from packages/shared/theme.
@@ -11,11 +11,12 @@
  * Principle: "une base, trois intensités" — one token set, three surface themes.
  * Rules baked in: body >= 16, touch targets >= 44, contrast AA.
  *
- * LOCKED DECISION (2026-06-08) — colour scheme is fixed per product, no user toggle in MVP:
- *   coach (mobile)  -> DARK
+ * COLOUR SCHEME (updated 2026-06-16) — fixed per product, no user toggle in MVP:
+ *   coach (mobile)  -> LIGHT   (flipped from dark on 2026-06-16)
  *   ehpad (web)     -> LIGHT
  *   admin/DS (web)  -> LIGHT
- * Rule of thumb: mobile = dark, web = light. Revisit only if the client requests a toggle.
+ * All three surfaces now sit on the warm-paper light canvas. Revisit only if the client
+ * requests a toggle.
  */
 
 export const palette = {
@@ -23,14 +24,20 @@ export const palette = {
   or:    { 50:'#FEF9E0',100:'#FDEFB0',200:'#FBE27A',300:'#F8D544',400:'#F5CB1F',500:'#F2C200',600:'#CCA300',700:'#9E7E00',800:'#6E5800',900:'#463800' },
   bleu:  { 50:'#ECF0F8',100:'#CDD8EC',200:'#A6B7DB',300:'#7B93C7',400:'#4F6DAE',500:'#2F4F92',600:'#1F3B73',700:'#182E5A',800:'#122242',900:'#0B152A' },
   vert:  { 50:'#E8F7EF',100:'#C2EAD4',200:'#93D9B5',300:'#62C795',400:'#41B47E',500:'#2F9E6B',600:'#268158',700:'#1D6444',800:'#154A32',900:'#0D2F20' },
-  // Light end (0–200) stays warm — the brand "paper" for light surfaces (admin / ehpad).
-  // Dark end (300–900) is true-neutral grey at matched lightness — the dark coach app's
-  // canvas / surfaces / dividers / secondary text. Keeps dark mode neutral, not taupe.
-  neutral:{ 0:'#FFFFFF',50:'#F7F4EF',100:'#EDE8E0',200:'#DED7CB',300:'#BBBBBB',400:'#9C9C9C',500:'#818181',600:'#646464',700:'#484848',800:'#2B2B2B',900:'#171717' },
+  // Warm "paper" ramp — the brand light system (matches admin / ehpad and the brand palette:
+  // CREAM #F7F4EF = breathing/canvas, MOLE #8A8377 = secondary at 500, BLACK RING #181715 = text
+  // at 900). Now that coach is LIGHT (not dark), it shares this warm taupe ramp end-to-end rather
+  // than the cool true-greys the dark build used.
+  neutral:{ 0:'#FFFFFF',50:'#F7F4EF',100:'#EDE8E0',200:'#DED7CB',300:'#C6BDAE',400:'#A89E8D',500:'#8A8377',600:'#6B655B',700:'#4D4842',800:'#2E2B27',900:'#181715' },
 } as const;
 
 export const gradient = {
   movement: ['#E1322B', '#F2C200'] as const, // 135deg rouge -> or; signature, used on hero CTAs / medals / progress
+  // Primary-CTA fill (DT-02): rouge holds 0→70% of the diagonal, then a soft ramp into the brand
+  // gold in the bottom-right corner. A centred white label sits over the rouge field, so contrast
+  // holds. SINGLE SOURCE for every primary action button — consumed by <PrimaryButton/> and
+  // <GradientFill/>. Same rouge/or pair as `movement`, but corner-weighted for buttons.
+  cta: { colors: [palette.rouge[500], palette.or[500]] as const, locations: [0.7, 1] as const },
 };
 
 /** Shared semantic aliases — never reference palette.* directly in components. */
@@ -74,7 +81,7 @@ export const typography = {
 } as const;
 
 export const spacing = { xs:4, sm:8, md:16, lg:24, xl:32, '2xl':48, '3xl':64 } as const;
-export const radius  = { sm:8, md:12, lg:16, xl:24, '2xl':32, pill:999 } as const;
+export const radius  = { sm:8, md:12, lg:16, xl:24, '2xl':32, pill:999, button:14 } as const;
 export const size    = { touchTargetMin:44, iconSm:16, iconMd:20, iconLg:24, avatarSm:32, avatarMd:48 } as const;
 
 export const elevation = {
@@ -93,13 +100,28 @@ export const motion = {
 export const surfaces = {
   coach: {
     platform: 'mobile',
-    colorScheme: 'dark',             // LOCKED — mobile = dark
-    canvas: palette.neutral[900],
-    surface: palette.neutral[800],
+    // Typed as the wider union (not the 'light' literal) so screens can keep their
+    // `colorScheme === 'dark'` branches — those hold the correct light-mode values and make a
+    // future flip back to dark a one-line change. See VOLATILE colour-scheme history.
+    colorScheme: 'light' as 'light' | 'dark', // FLIPPED 2026-06-16 — coach moved to light
+    canvas: palette.neutral[50],     // warm paper, matches admin / ehpad
+    surface: palette.neutral[0],     // white cards
     surfaceRaised: palette.neutral[0],
-    textPrimary: palette.neutral[50],
-    textSecondary: palette.neutral[300],
+    textPrimary: palette.neutral[900],
+    textSecondary: palette.neutral[600],
     accent: color.action,            // red dominant — the engine
+    // Ink accent surface (DT-01) — the moodboard's "fond ink dramatique", DOSED as a hero band on
+    // the cream base rather than the whole canvas. Cream breathes, ink dramatizes; white-on-ink is
+    // AA per the moodboard ("texte foncé sur crème, blanc sur ink"). Use for hero/identity moments
+    // only (Home top, next-session hero, level header) — never as a default screen background.
+    ink: {
+      bg: palette.neutral[900],                 // #181715 noir ring — the dramatic stage
+      surfaceRaised: 'rgba(255,255,255,0.06)',  // a nested panel one step up from the ink
+      textPrimary: palette.neutral[0],          // white — headings + figures
+      textSecondary: palette.neutral[300],      // #C6BDAE — warm muted on ink (AA on #181715)
+      border: 'rgba(255,255,255,0.12)',         // hairline divider / nested-panel edge on ink
+      level: palette.or[300],                   // gold reads as reward on ink
+    },
   },
   admin: {
     platform: 'desktop',
@@ -123,11 +145,11 @@ export const surfaces = {
 
 export type SurfaceName = keyof typeof surfaces;
 
-/** Shared raised-card gradient (top-lit → base). True-neutral grey at matched lightness, centred
- *  on the neutral-800 card surface, so the dark cards read neutral rather than taupe — in step
- *  with the neutralised dark end of the ramp. Single source of truth — every dark card (Home,
- *  Séances, Disponibles, Revenus, modals) imports this. */
-export const cardGradient = ['#272727', '#1D1D1D'] as const;
+/** Shared raised-card gradient (top-lit → base). Light surface: white fading to a hair of warm
+ *  paper, so cards read as crisp white panels with the faintest top-lit depth. Cards still carry a
+ *  hairline border for separation against the paper canvas (house style = flat bordered cards).
+ *  Single source of truth — every card (Home, Séances, Disponibles, Revenus, modals) imports this. */
+export const cardGradient = ['#FFFFFF', '#FBFAF7'] as const;
 
 export const theme = { palette, gradient, color, typography, spacing, radius, size, elevation, motion, surfaces, cardGradient };
 export default theme;

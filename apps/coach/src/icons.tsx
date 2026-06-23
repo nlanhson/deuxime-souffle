@@ -1,169 +1,154 @@
 /**
- * Icon set — Heroicons (outline), exposed under the names the app already uses.
+ * Icon set — Lucide (`lucide-react-native`), the house icon system.
  *
- * Drop-in shim for the former `lucide-react-native` imports: every call site
- * keeps working with `<Bell size={20} color={...} strokeWidth={...} />`.
- * Heroicons outline render `stroke="currentColor"`, and react-native-svg
- * resolves `currentColor` from the `color` prop, so Lucide's
- * { size, color, strokeWidth } API maps over cleanly.
+ * The web apps (admin, ehpad) use `lucide-react`; the coach app uses
+ * `lucide-react-native`, so all three share one icon language. Every glyph
+ * takes Lucide's { size, color, strokeWidth, ...SvgProps } API, so call sites
+ * use `<Bell size={20} color={...} strokeWidth={...} />` unchanged.
  *
- * Most names are exact matches. A handful of Lucide glyphs have no Heroicon
- * equivalent (Heroicons has no calendar-x, alarm-clock, car, footprints,
- * map-pin-off, sticky-note); those fall back to the nearest match, flagged
- * with `// ~`. To switch to the filled style, change the import below to
- * 'react-native-heroicons/solid'.
+ * This file is the single seam: screens import from '../icons', never from the
+ * library directly. Swap or add a glyph here and the whole app follows.
+ *
+ * CaretDownSolid is the one custom glyph — a filled, rounded dropdown caret
+ * with no Lucide equivalent (Lucide's ChevronDown is an open stroke).
  */
 import type { ComponentType } from 'react';
 import type { SvgProps } from 'react-native-svg';
-import {
-  HomeIcon,
-  CalendarIcon,
-  CalendarDaysIcon,
-  MagnifyingGlassIcon,
-  XMarkIcon,
-  CheckIcon,
-  CheckCircleIcon,
-  MinusIcon,
-  PlusIcon,
-  StarIcon,
-  DocumentTextIcon,
-  MapPinIcon,
-  ExclamationTriangleIcon,
-  PaperAirplaneIcon,
-  PencilIcon,
-  PencilSquareIcon,
-  UsersIcon,
-  UserIcon,
-  UserCircleIcon,
-  BellIcon,
-  ClockIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  ChevronRightIcon,
-  ChevronLeftIcon,
-  NoSymbolIcon,
-  FaceSmileIcon,
-  WalletIcon,
-  ArrowTrendingUpIcon,
-  HandRaisedIcon,
-  SparklesIcon,
-  QueueListIcon,
-  AdjustmentsHorizontalIcon,
-  DocumentDuplicateIcon,
-  BuildingOffice2Icon,
-  ArrowRightEndOnRectangleIcon,
-  ArrowRightStartOnRectangleIcon,
-  TruckIcon,
-  MapIcon,
-  BoltIcon,
-  ViewfinderCircleIcon,
-  ShieldCheckIcon,
-  AcademicCapIcon,
-  KeyIcon,
-  QuestionMarkCircleIcon,
-  EnvelopeIcon,
-  CameraIcon,
-  ArrowTrendingDownIcon,
-  ArrowDownTrayIcon,
-  BanknotesIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  LockClosedIcon,
-  PhoneIcon,
-  IdentificationIcon,
-  BriefcaseIcon,
-  LightBulbIcon,
-  InformationCircleIcon,
-  TrophyIcon,
-  FireIcon,
-  TrashIcon,
-  ChatBubbleLeftRightIcon,
-  ClipboardDocumentListIcon,
-} from 'react-native-heroicons/outline';
+import Svg, { Path, Circle } from 'react-native-svg';
 
 export type LucideIcon = ComponentType<
   SvgProps & { size?: number; color?: string; strokeWidth?: number }
 >;
 
-// --- exact matches ---
-export const Home = HomeIcon;
-export const Calendar = CalendarIcon;
-export const CalendarDays = CalendarDaysIcon;
-export const Search = MagnifyingGlassIcon;
-export const X = XMarkIcon;
-export const Check = CheckIcon;
-export const CheckCircle2 = CheckCircleIcon;
-export const Minus = MinusIcon;
-export const Plus = PlusIcon;
-export const Star = StarIcon;
-export const FileText = DocumentTextIcon;
-export const MapPin = MapPinIcon;
-export const AlertTriangle = ExclamationTriangleIcon;
-export const TriangleAlert = ExclamationTriangleIcon;
-export const Edit3 = PencilIcon;
-export const Users = UsersIcon;
-export const User = UserIcon;
-export const Bell = BellIcon;
-export const Clock = ClockIcon;
-export const ChevronDown = ChevronDownIcon;
-export const ChevronUp = ChevronUpIcon;
-export const ChevronRight = ChevronRightIcon;
-export const ChevronLeft = ChevronLeftIcon;
-export const Ban = NoSymbolIcon;
-export const Send = PaperAirplaneIcon;
-export const Smile = FaceSmileIcon;
-export const Wallet = WalletIcon;
-export const TrendingUp = ArrowTrendingUpIcon;
-export const Hand = HandRaisedIcon;
-export const Sparkles = SparklesIcon;
-export const SlidersHorizontal = AdjustmentsHorizontalIcon;
-export const Copy = DocumentDuplicateIcon;
-export const Building2 = BuildingOffice2Icon;
+export {
+  // --- navigation / chrome ---
+  Home,
+  Calendar,
+  CalendarDays,
+  Search,
+  Bell,
+  Clock,
+  ChevronDown,
+  ChevronUp,
+  ChevronRight,
+  ChevronLeft,
+  Map,
+  Navigation,
+  LayoutList,
+  SlidersHorizontal,
+  Settings,
 
-// --- nearest match (no exact Heroicon) ---
-export const Navigation = PaperAirplaneIcon; // ~ directions arrow
-export const CalendarX = CalendarDaysIcon; // ~ no calendar-x
-export const CalendarCheck = CalendarDaysIcon; // ~ no calendar-check
-export const StickyNote = PencilSquareIcon; // ~ note
-export const Activity = BoltIcon; // ~ activity/effort
-export const AlarmClock = ClockIcon; // ~ no alarm clock
-export const LayoutList = QueueListIcon; // ~ list layout
-export const DoorOpen = ArrowRightEndOnRectangleIcon; // ~ door
-export const UserRound = UserCircleIcon; // ~ round user
-export const Car = TruckIcon; // ~ no car glyph
-export const Footprints = MapIcon; // ~ walking → map
-export const Bike = BoltIcon; // ~ no bicycle → bolt (two-wheel / speed)
-export const MapPinOff = MapPinIcon; // ~ no map-pin-off
+  // --- actions / controls ---
+  X,
+  Check,
+  CheckCircle2,
+  Minus,
+  Plus,
+  Send,
+  Copy,
+  Download,
+  Trash2,
+  Edit3,
+  Camera,
+  Eye,
+  EyeOff,
 
-// --- profile / revenue / notification screens ---
-export const Map = MapIcon;
-export const ShieldCheck = ShieldCheckIcon;
-export const GraduationCap = AcademicCapIcon;
-export const KeyRound = KeyIcon;
-export const CircleHelp = QuestionMarkCircleIcon;
-export const Mail = EnvelopeIcon;
-export const Camera = CameraIcon;
-export const TrendingDown = ArrowTrendingDownIcon;
-export const Download = ArrowDownTrayIcon;
-export const Banknote = BanknotesIcon;
-export const LogOut = ArrowRightStartOnRectangleIcon;
+  // --- status / feedback ---
+  AlertTriangle,
+  TriangleAlert,
+  Info,
+  CircleHelp,
+  Ban,
+  Star,
+  Sparkles,
+  Smile,
+  Lightbulb,
+  Heart,
 
-// --- auth / onboarding ---
-export const Eye = EyeIcon;
-export const EyeOff = EyeSlashIcon;
-export const Lock = LockClosedIcon;
-export const Phone = PhoneIcon;
-export const IdCard = IdentificationIcon;
-export const Target = ViewfinderCircleIcon; // ~ no bullseye → viewfinder
-export const ScrollText = DocumentTextIcon; // ~ scroll → document
-export const CalendarClock = CalendarDaysIcon; // ~ no calendar-clock
-export const CalendarPlus = CalendarDaysIcon; // ~ no calendar-plus
-export const Hourglass = ClockIcon; // ~ no hourglass → clock
-export const Briefcase = BriefcaseIcon;
-export const Lightbulb = LightBulbIcon;
-export const Info = InformationCircleIcon;
-export const Trophy = TrophyIcon;
-export const Flame = FireIcon;
-export const Trash2 = TrashIcon;
-export const MessageSquare = ChatBubbleLeftRightIcon;
-export const ClipboardList = ClipboardDocumentListIcon;
+  // --- content / documents ---
+  FileText,
+  Receipt,
+  ScrollText,
+  StickyNote,
+  ClipboardList,
+  MessageSquare,
+
+  // --- calendar / time ---
+  CalendarX,
+  CalendarCheck,
+  CalendarClock,
+  CalendarPlus,
+  AlarmClock,
+  Hourglass,
+
+  // --- people / identity ---
+  Users,
+  User,
+  UserRound,
+  CircleUserRound,
+  Hand,
+  ShieldCheck,
+  GraduationCap,
+  IdCard,
+  Briefcase,
+  KeyRound,
+  Lock,
+
+  // --- place / movement ---
+  MapPin,
+  MapPinOff,
+  Target,
+  DoorOpen,
+  Car,
+  Bike,
+  Bus,
+  Footprints,
+  Activity,
+
+  // --- money / progress ---
+  Wallet,
+  Banknote,
+  Euro,
+  TrendingUp,
+  TrendingDown,
+  Trophy,
+  Flame,
+  // tier-ladder medals (Bronze → Argent → Or → Platine → Diamant)
+  Medal,
+  Award,
+  Crown,
+  Gem,
+
+  // --- org / contact / meta ---
+  Building2,
+  Mail,
+  Phone,
+  Languages,
+  LogOut,
+} from 'lucide-react-native';
+
+// Filled rounded down-triangle — the dropdown "caret" (e.g. the calendar Week/Month switch). No
+// Lucide equivalent (its ChevronDown is an open stroke); rounded corners come from a same-colour
+// round line-join over the filled triangle. Matches the { size, color, style } icon API.
+export function CaretDownSolid({ size = 24, color = '#000', style }: { size?: number; color?: string; style?: SvgProps['style'] }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={style}>
+      <Path d="M7 9.5 L12 15.5 L17 9.5 Z" fill={color} stroke={color} strokeWidth={3} strokeLinejoin="round" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+// Scooter (the "2 roues" transport mode, mockup screen 3) — Lucide has no moped/scooter glyph, so
+// this is a custom line drawing in the same stroke language (24×24, round caps/joins): two wheels,
+// a floorboard rising to the handlebar, and a seat hump over the rear wheel. Typed like a Lucide
+// icon so it's interchangeable in the transport grid.
+export function Scooter({ size = 24, color = '#000', strokeWidth = 2, ...rest }: SvgProps & { size?: number; color?: string; strokeWidth?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...rest}>
+      <Circle cx="6" cy="17" r="3" stroke={color} strokeWidth={strokeWidth} />
+      <Circle cx="18" cy="17" r="3" stroke={color} strokeWidth={strokeWidth} />
+      <Path d="M9 17h5l3-8h2" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M14 17c0-4-2.4-6-6-5.6" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}

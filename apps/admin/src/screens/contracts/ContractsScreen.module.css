@@ -1,0 +1,124 @@
+.tableCard {
+  padding: var(--space-lg);
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+.detailTop {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.blockTitle {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.slots {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm);
+  padding: 0;
+}
+.slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+}
+
+@media (max-width: 560px) {
+  .slots {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Reject reason box ---- */
+.rejectBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid var(--lc-rouge-100);
+  background: var(--color-danger-soft);
+  border-radius: var(--radius-md);
+}
+
+/* ---- Create-contract wizard recap ---- */
+.recap {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+.recapList {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--space-lg);
+}
+.recapRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.recapRow:last-child {
+  border-bottom: none;
+}
+.recapLabel {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--ls-label);
+  color: var(--color-text-muted);
+}
+.recapValue {
+  font-size: var(--text-body-sm);
+  text-align: end;
+  color: var(--color-text-primary);
+}
+.mailCard {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.mailTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-semibold);
+}
+.mailBody {
+  font-size: var(--text-body-sm);
+  line-height: var(--lh-body);
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 640px) {
+  .recap {
+    grid-template-columns: 1fr;
+  }
+}

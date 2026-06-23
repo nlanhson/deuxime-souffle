@@ -19,7 +19,7 @@ Build the **EHPAD Manager web app** for **Deuxième Souffle**: the client space 
 | File | What it gives you |
 |---|---|
 | `project/ehpad_wbs_context.md` | The 27 user stories + acceptance criteria — **authoritative scope**. |
-| `/Users/du-mac/UnicornProjects/deuxime-souffle/project/design-system/README.md` | "Le Club" palette, type, the "une base, trois intensités" model. |
+| `/Users/du-mac/UnicornProjects/deuxime-souffle/project/design-system/README.md` | "Le Mouvement" palette, type, the "une base, trois intensités" model. |
 | `/Users/du-mac/UnicornProjects/deuxime-souffle/project/design-system/theme.ts` | Typed tokens; the `surfaces.ehpad` definition (light, accent = info blue, accentSecondary = progress green). |
 | `/Users/du-mac/UnicornProjects/deuxime-souffle/project/design-system/tokens.css` | CSS custom properties for the web apps; surface set via `<body data-surface="ehpad">`. |
 | `/Users/du-mac/UnicornProjects/deuxime-souffle/project/design-system/components.md` | Workhorse component specs (forms, structure, nav, feedback). |
@@ -32,7 +32,7 @@ Build the **EHPAD Manager web app** for **Deuxième Souffle**: the client space 
 
 ## 1.1 Stack (locked)
 
-Build a **Vite 5 + React 18 + TypeScript + React Router v6** single-page app, styled with the design-system **`tokens.css` + CSS Modules**. **Do not add a heavy UI kit** (no MUI, Chakra, Ant, Mantine) — they ship their own token/theming systems that fight "Le Club"; you would spend more effort overriding them than you save. Build the workhorse primitives yourself from `components.md`, bound to the CSS variables.
+Build a **Vite 5 + React 18 + TypeScript + React Router v6** single-page app, styled with the design-system **`tokens.css` + CSS Modules**. **Do not add a heavy UI kit** (no MUI, Chakra, Ant, Mantine) — they ship their own token/theming systems that fight "Le Mouvement"; you would spend more effort overriding them than you save. Build the workhorse primitives yourself from `components.md`, bound to the CSS variables.
 
 | Concern | Choice | Why |
 |---|---|---|
@@ -249,7 +249,7 @@ This is a hard requirement, not a nice-to-have. The whole point is that the user
 
 # 2 · DESIGN SYSTEM & VISUAL DIRECTION (ehpad)
 
-This is the **EHPAD face of "Le Club"** — the **apaisée** intensity (*rassurant, le soin*). Same tokens, same components, same grammar as the coach app; only the **dosage** changes. Where the coach app is a dark room with red as its engine, this is a calm, crème-lit, white-carded, **blue-led** clinical-warm web surface where **green marks what's healthy/done** and **red is rationed to a single CTA**.
+This is the **EHPAD face of "Le Mouvement"** — the **apaisée** intensity (*rassurant, le soin*). Same tokens, same components, same grammar as the coach app; only the **dosage** changes. Where the coach app is a dark room with red as its engine, this is a calm, crème-lit, white-carded, **blue-led** clinical-warm web surface where **green marks what's healthy/done** and **red is rationed to a single CTA**.
 
 > **Non-negotiable rules baked into every component:** body ≥ 16px · touch/click targets ≥ 44px · WCAG AA contrast · **color is never the only signal** (always pair with icon + text) · all motion respects `prefers-reduced-motion`.
 

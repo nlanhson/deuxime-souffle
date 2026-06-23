@@ -14,3 +14,20 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+
+# design-sync (staged scripts, regenerated bundle, machine state)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+.design-sync/previews/.cache/
+# coach RN-web pre-bundle: generated outputs (regenerable via build-all.mjs); keep the generators
+apps/coach/.ds-dist/web-dist.mjs
+apps/coach/.ds-dist/spike-*
+apps/coach/.ds-dist/harness*
+apps/coach/.ds-dist/index.tsx
+apps/coach/.ds-dist/component-src-map.json
+apps/coach/.ds-dist/fonts/
+apps/coach/.ds-dist/fonts.css
+apps/coach/ds-sync-types/

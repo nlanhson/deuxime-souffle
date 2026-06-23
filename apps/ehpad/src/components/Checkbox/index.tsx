@@ -6,15 +6,22 @@ interface CheckboxProps {
   label: ReactNode;
   checked: boolean;
   onChange: (checked: boolean) => void;
-  helper?: string | undefined;
+  helper?: ReactNode | undefined;
   disabled?: boolean | undefined;
+  /** `card` = carte bordée tappable (étape Unités du wizard), comme les radios `card`. */
+  appearance?: 'row' | 'card' | undefined;
 }
 
 /** Case à cocher — contrôle ≥ 24px, rangée entière cliquable (cible ≥ 44px),
  *  l'état coché = remplissage bleu ET coche. */
-export function Checkbox({ label, checked, onChange, helper, disabled }: CheckboxProps) {
+export function Checkbox({ label, checked, onChange, helper, disabled, appearance = 'row' }: CheckboxProps) {
+  const rowClass = appearance === 'card' ? styles.choiceCard : styles.choiceRow;
   return (
-    <label className={styles.choiceRow} data-disabled={disabled || undefined}>
+    <label
+      className={rowClass}
+      data-checked={(appearance === 'card' && checked) || undefined}
+      data-disabled={disabled || undefined}
+    >
       <input
         type="checkbox"
         className={styles.srInput}

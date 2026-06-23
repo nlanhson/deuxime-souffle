@@ -16,10 +16,10 @@ import { palette, color, spacing as sp, radius as r } from '../theme/theme';
 import { BottomSheet } from './BottomSheet';
 import { PrimaryButton } from './PrimaryButton';
 
-const ON_CARD = palette.neutral[50];
-const ON_CARD_2 = palette.neutral[300];
-const ON_CARD_3 = palette.neutral[500];
-const SUBTLE = palette.neutral[800];
+const ON_CARD = palette.neutral[900];
+const ON_CARD_2 = palette.neutral[600];
+const ON_CARD_3 = palette.neutral[600];
+const SUBTLE = palette.neutral[100];
 const F = { bodyB: 'Inter_700Bold', bodyS: 'Inter_600SemiBold', body: 'Inter_400Regular', oswS: 'Oswald_600SemiBold' };
 
 export type HalfDayValue = Record<string, { am: boolean; pm: boolean }>;
@@ -133,14 +133,14 @@ const st = StyleSheet.create({
 
   list: { marginTop: sp.sm, maxHeight: 420 },
   dayRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, minHeight: 56 },
-  dayDivider: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },
+  dayDivider: { borderTopWidth: 1, borderTopColor: 'rgba(24,23,21,0.07)' },
   dayBtn: { minWidth: 52, minHeight: 44, justifyContent: 'center' },
   dayTxt: { fontFamily: F.oswS, fontSize: 16, color: ON_CARD_3 },
   dayTxtOn: { color: ON_CARD },
   pills: { flex: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: sp.sm },
   pill: {
-    minHeight: 40, paddingVertical: 8, paddingHorizontal: 14, borderRadius: r.pill,
-    backgroundColor: palette.neutral[900], borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
+    minHeight: 44, paddingVertical: 8, paddingHorizontal: 14, borderRadius: r.pill,
+    backgroundColor: palette.neutral[100], borderWidth: 1, borderColor: 'rgba(24,23,21,0.10)',
     alignItems: 'center', justifyContent: 'center',
   },
   pillOn: { backgroundColor: color.action, borderColor: color.action },
@@ -148,6 +148,6 @@ const st = StyleSheet.create({
   pillTxtOn: { color: color.onAction },
 
   actions: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, marginTop: sp.lg },
-  cancel: { minHeight: 48, paddingHorizontal: sp.lg, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center' },
+  cancel: { minHeight: 48, paddingHorizontal: sp.lg, borderRadius: r.button, alignItems: 'center', justifyContent: 'center' },
   cancelTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: ON_CARD_3 },
 });

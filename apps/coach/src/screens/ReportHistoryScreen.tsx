@@ -25,16 +25,16 @@ import { ReportHistorySkeleton } from './skeletons';
 const S = surfaces.coach;
 const ON_CANVAS = S.textPrimary;
 const ON_CANVAS_2 = S.textSecondary;
-const ON_CARD = palette.neutral[50];
-const ON_CARD_2 = palette.neutral[300];
-const ON_CARD_3 = palette.neutral[500];
-const SUBTLE = palette.neutral[800];
+const ON_CARD = palette.neutral[900];
+const ON_CARD_2 = palette.neutral[600];
+const ON_CARD_3 = palette.neutral[600];
+const SUBTLE = palette.neutral[100];
 
 /* On-ink status tones (same ramp-reach as Revenus/Profile). */
 const INK = {
-  ok:      { fg: palette.vert[300], bg: 'rgba(47,158,107,0.16)' },
-  pending: { fg: palette.or[300], bg: 'rgba(242,194,0,0.13)' },
-  changes: { fg: palette.rouge[300], bg: 'rgba(225,50,43,0.14)' },
+  ok:      { fg: palette.vert[700], bg: 'rgba(47,158,107,0.16)' },
+  pending: { fg: palette.or[800], bg: 'rgba(242,194,0,0.13)' },
+  changes: { fg: palette.rouge[600], bg: 'rgba(225,50,43,0.14)' },
 };
 
 const F = {
@@ -196,8 +196,8 @@ const st = StyleSheet.create({
 
   chips: { paddingHorizontal: sp.lg, gap: sp.sm, paddingBottom: sp.sm },
   chip: {
-    minHeight: 40, paddingVertical: 8, paddingHorizontal: 14, borderRadius: r.pill,
-    backgroundColor: palette.neutral[800], borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
+    minHeight: 44, paddingVertical: 8, paddingHorizontal: 14, borderRadius: r.pill,
+    backgroundColor: palette.neutral[200], borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)',
     alignItems: 'center', justifyContent: 'center',
   },
   chipOn: { backgroundColor: palette.rouge[500], borderColor: palette.rouge[500] },
@@ -206,18 +206,18 @@ const st = StyleSheet.create({
 
   scroll: { paddingHorizontal: sp.lg, paddingBottom: sp['2xl'] },
   count: { fontFamily: F.body, fontSize: 13, color: ON_CANVAS_2, marginBottom: sp.sm },
-  empty: { fontFamily: F.body, fontSize: 15, lineHeight: 22, color: ON_CANVAS_2, marginTop: sp.md },
+  empty: { fontFamily: F.body, fontSize: 16, lineHeight: 22, color: ON_CANVAS_2, marginTop: sp.md },
 
   row: {
     flexDirection: 'row', alignItems: 'center', gap: sp.md,
     borderRadius: r.lg, padding: sp.md, marginBottom: sp.sm,
-    backgroundColor: palette.neutral[800], borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: palette.neutral[0], borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)',
   },
   rowIcon: {
     width: 36, height: 36, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: palette.neutral[700],
+    backgroundColor: palette.neutral[200],
   },
-  rowPlace: { fontFamily: F.bodyB, fontSize: 15, color: ON_CARD },
+  rowPlace: { fontFamily: F.bodyB, fontSize: 16, color: ON_CARD },
   rowMeta: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 },
   rowMetaTxt: { fontFamily: F.body, fontSize: 13, color: ON_CARD_3 },
   rowDot: { fontFamily: F.body, fontSize: 13, color: ON_CARD_3 },
@@ -226,11 +226,11 @@ const st = StyleSheet.create({
     flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingVertical: 5, paddingHorizontal: 10, borderRadius: r.pill,
   },
-  statusTxt: { fontFamily: F.body, fontSize: 12 },
+  statusTxt: { fontFamily: F.body, fontSize: 13 },
 
   more: {
-    minHeight: 48, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.18)', marginTop: sp.sm,
+    minHeight: 48, borderRadius: r.button, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: 'rgba(24,23,21,0.10)', marginTop: sp.sm,
   },
-  moreTxt: { fontFamily: F.bodyS, fontSize: 15, color: ON_CARD_2 },
+  moreTxt: { fontFamily: F.bodyS, fontSize: 16, color: ON_CARD_2 },
 });

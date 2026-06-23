@@ -25,13 +25,15 @@ import {
 import type { Contract, ContractStatus } from '@/types/models';
 import styles from './contracts.module.css';
 
+// « modification_en_attente » n'apparaît plus comme un filtre séparé (décision
+// client : il se présente comme « En attente »). Le filtre « En attente » couvre
+// les deux (cf. prédicat plus bas).
 const ALL_STATUSES: ContractStatus[] = [
   'active',
   'a_renouveler',
   'en_attente_validation',
   'expire',
   'rejete',
-  'modification_en_attente',
   'non_renouvele',
 ];
 
@@ -99,7 +101,14 @@ export default function ContractsScreen() {
     if (!state.data) return [];
     const q = search.trim().toLowerCase();
     return state.data.filter((c) => {
-      if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+      if (statusFilter !== 'all') {
+        // « En attente » couvre aussi « modification en attente » (présentés à
+        // l'identique côté client).
+        const matches =
+          c.status === statusFilter ||
+          (statusFilter === 'en_attente_validation' && c.status === 'modification_en_attente');
+        if (!matches) return false;
+      }
       if (q === '') return true;
       const haystack = [
         c.reference,
@@ -107,7 +116,7 @@ export default function ContractsScreen() {
         formatShortDateYear(c.endDate),
         formatDate(c.endDate),
         formatDate(c.startDate),
-        fr.status.contract[c.status],
+        contractStatusChip(c.status).label,
       ]
         .join(' ')
         .toLowerCase();
@@ -126,7 +135,7 @@ export default function ContractsScreen() {
     {
       key: 'reference',
       header: fr.contracts.columns.reference,
-      width: '16%',
+      width: '14%',
       sortValue: (c) => c.reference,
       render: (c) => (
         <Link className={styles.refLink} to={`/contrats/${c.id}`}>
@@ -137,7 +146,9 @@ export default function ContractsScreen() {
     {
       key: 'units',
       header: fr.contracts.columns.units,
-      width: '22%',
+      // Élargie (22→28 %) pour qu'une unité seule (« Unité standard (UC) ») tienne
+      // sans coupure ; les lignes multi-unités gardent l'info-bulle `title`.
+      width: '28%',
       sortValue: (c) => c.units.map(unitLabel).join(', '),
       render: (c) => {
         const label = c.units.map(unitLabel).join(', ');
@@ -151,7 +162,7 @@ export default function ContractsScreen() {
     {
       key: 'progress',
       header: fr.contracts.columns.progress,
-      width: '23%',
+      width: '20%',
       sortValue: completionRatio,
       render: (c) => (
         <MiniProgress
@@ -164,9 +175,14 @@ export default function ContractsScreen() {
     {
       key: 'endDate',
       header: fr.contracts.columns.endDate,
-      width: '16%',
+      width: '15%',
       sortValue: (c) => c.endDate,
-      render: (c) => <span className={styles.truncate}>{formatShortDateYear(c.endDate)}</span>,
+      render: (c) => (
+        <span className={styles.truncate}>
+          {/* DT-E5 — contrat sans fin : « Sans fin » plutôt que la date nominale. */}
+          {c.openEnded ? fr.contracts.wizard.period.openEndedShort : formatShortDateYear(c.endDate)}
+        </span>
+      ),
     },
     {
       key: 'status',

@@ -29,15 +29,19 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
-import { MapPin, Clock, Hand, Check, X, Bell, CalendarX, CalendarDays, Sparkles, AlarmClock, LayoutList, SlidersHorizontal, Copy, Building2, DoorOpen, UserRound, ChevronLeft, ChevronRight, Car, Footprints, TriangleAlert, type LucideIcon } from '../icons';
+import { MapPin, Clock, Hand, Check, X, Bell, CalendarX, CalendarDays, Sparkles, Star, AlarmClock, LayoutList, SlidersHorizontal, Copy, Building2, DoorOpen, UserRound, ChevronLeft, ChevronRight, CaretDownSolid, Car, Footprints, TriangleAlert, type LucideIcon } from '../icons';
 
 import { palette, color, spacing as sp, radius as r, surfaces, motion, cardGradient as RAISED_GRAD } from '../theme/theme';
-import { copy } from '../copy';
+import { useCopy } from '../i18n';
+import type { Copy as AppCopy } from '../copy';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { setStatusBarStyle } from 'expo-status-bar';
 import { NotificationCenter } from '../components/NotificationCenter';
-import { Segmented } from '../components/segmented';
+import { GradientFill } from '../components/GradientFill';
+import { CalendarLegend } from '../components/CalendarLegend';
+import { OptionSheet } from '../components/OptionSheet';
 import { ProfileAvatar } from '../components/ProfileAvatar';
 import { COACH_PHOTO } from '../lib/coachProfile';
-import { ProfileScreen } from './ProfileScreen';
 import { useTabBarInset } from '../navigation/tabBarInsets';
 import { useFirstLoad } from '../lib/useFirstLoad';
 import { Reveal } from '../components/Reveal';
@@ -48,22 +52,24 @@ const isDark = S.colorScheme === 'dark';
 const CANVAS = S.canvas;                                            // ink (dark) | cream (light)
 const CARD = S.surface;                                             // the dark ink card in both schemes
 const SUBTLE = isDark ? palette.neutral[800] : palette.neutral[100]; // subtle container on the canvas
-const DIVIDER = palette.neutral[700];                              // dividers inside dark cards
+const DIVIDER = palette.neutral[200];                              // dividers inside the (now light) card
 const ON_CANVAS = S.textPrimary;                                   // on-canvas text — adapts per scheme
 const ON_CANVAS_2 = S.textSecondary;
-const ON_CARD = palette.neutral[50];                              // light text inside the dark card
-const ON_CARD_2 = palette.neutral[300];
+const ON_CARD = palette.neutral[900];                             // primary text inside the (now light) card
+const ON_CARD_2 = palette.neutral[600];
 
-/* Status / accent colours used on the ink surface (the semantic status tokens are calibrated
-   for light surfaces, so we reach into the global ramp here, like Accueil/Séances). */
+/* Status / accent colours for the chips on the LIGHT card surface. DT-20: the foregrounds are the
+   AA-safe deep shades (≥4.5:1 on the warm-paper / white card), NOT the 300-level tints — those were
+   tuned for the old dark cards and fail contrast now that the coach app is light. The light tint
+   backgrounds carry the hue; the deep foreground keeps the 12–13px label legible. */
 const INK = {
-  applied: { fg: palette.vert[300], bg: 'rgba(47,158,107,0.16)' }, // on the shortlist (green)
-  info: { fg: palette.bleu[300], bg: 'rgba(123,147,199,0.14)' },   // open (blue)
+  applied: { fg: palette.vert[700], bg: 'rgba(47,158,107,0.16)' }, // on the shortlist (green) · 7.1:1
+  info: { fg: palette.bleu[600], bg: 'rgba(123,147,199,0.14)' },   // open (blue) · 10.9:1
 };
 
 /* Raised-surface effect for the metric tiles — a slight top-lit gradient + a dim hairline,
    copied from the Home calendar so the two screens' tiles read identically. */
-const RAISED_BORDER = 'rgba(255,255,255,0.07)';
+const RAISED_BORDER = 'rgba(24,23,21,0.07)';
 
 const F = {
   display: 'Anton_400Regular',
@@ -81,7 +87,8 @@ const F = {
 type ApplyState = 'open' | 'applied';
 type SessionType = 'first' | 'regular'; // 'first' = TEST / first session with this EHPAD; 'regular' = ongoing
 type Avail = {
-  dom: number;      // June day-of-month (the whole prototype is June 2026)
+  dom: number;      // seed day-of-month (offset against ANCHOR_TODAY) — kept for reference
+  date: Date;       // the session's real calendar date (materialised relative to today)
   time: string;
   end: string;
   dur: string;
@@ -97,11 +104,11 @@ type Avail = {
   sessionType: SessionType; // session type — label pulled from copy.availableScreen.type
 };
 
-// Mock open sessions — ONE source of truth, keyed by June day-of-month (like the Home calendar's
-// schedule map). The week strip, the month grid, the tile counts AND the under-calendar list all
-// read from this. Real code queries open sessions by date + locale. Names reused across screens
-// so the prototype reads as one world. The Cedars (June 12) is pre-seeded as already applied.
-const OPEN_BY_DAY: Record<number, Avail[]> = {
+// Mock open sessions — ONE source of truth, seeded by day-of-month against ANCHOR_TODAY (below) and
+// materialised onto real dates relative to today. The week strip, the month grid, the tile counts AND
+// the under-calendar list all read from this. Real code queries open sessions by date + locale. Names
+// reused across screens so the prototype reads as one world. Les Cèdres is pre-seeded as applied.
+const OPEN_BY_DAY: Record<number, Omit<Avail, 'date'>[]> = {
   10: [{ dom: 10, time: '09:30', end: '10:30', dur: '1h', place: 'Résidence des Berges', address: '14 Quai Rambaud, Lyon 7e', loc: 'Lyon 7e · 4.1 km', km: 4.1, state: 'open', unit: 'Soins longue durée · Rez-de-chaussée', access: 'Entrée principale, 14 Quai Rambaud', contact: 'Demandez Sophie Bernard · Coordinatrice', sessionType: 'first' }],
   11: [
     { dom: 11, time: '10:00', end: '11:00', dur: '1h', place: 'Résidence du Parc', address: '8 Rue Léon Blum, Villeurbanne', loc: 'Villeurbanne · 3.1 km', km: 3.1, state: 'open', unit: 'Unité protégée · 2e étage', access: 'Entrée du personnel, Rue Léon Blum (interphone APA)', contact: 'Demandez Marc Dubois · Responsable des activités', sessionType: 'regular' },
@@ -117,64 +124,82 @@ const OPEN_BY_DAY: Record<number, Avail[]> = {
   20: [{ dom: 20, time: '15:00', end: '16:00', dur: '1h', place: 'Résidence des Berges', address: '14 Quai Rambaud, Lyon 7e', loc: 'Lyon 7e · 4.1 km', km: 4.1, state: 'open', unit: 'Soins longue durée · Rez-de-chaussée', access: 'Entrée principale, 14 Quai Rambaud', contact: 'Demandez Sophie Bernard · Coordinatrice', sessionType: 'regular' }],
   25: [{ dom: 25, time: '11:00', end: '12:00', dur: '1h', place: 'Résidence Les Érables', address: '27 Cours Gambetta, Lyon 6e', loc: 'Lyon 6e · 1.9 km', km: 1.9, state: 'open', unit: 'Résidence services · 1er étage', access: 'Entrée des visiteurs, côté cour', contact: 'Demandez Claire Petit · Coordinatrice', sessionType: 'regular' }],
 };
-const OPEN: Avail[] = Object.values(OPEN_BY_DAY).flat();
-const keyOf = (a: Avail) => `${a.dom}-${a.time}-${a.place}`;
+// Live date anchor. The calendar is driven off the *real* current date, so "today", "this week" and
+// the month grid always reflect now. Each seeded session keeps its day-of-month key as an offset
+// against ANCHOR_TODAY (the prototype's original June-9 "today") and is materialised onto a real date
+// relative to today — so the demo always shows the same upcoming spread whatever day it is opened.
+const NOW = new Date();
+const TODAY_DATE = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());   // local midnight
+const addDays = (base: Date, n: number) => new Date(base.getFullYear(), base.getMonth(), base.getDate() + n);
+const dateKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+const mondayOf = (d: Date) => addDays(d, -((d.getDay() + 6) % 7));              // Mon-first week start
+const daysBetween = (a: Date, b: Date) => Math.round((a.getTime() - b.getTime()) / 86_400_000);
+const TODAY_KEY = dateKey(TODAY_DATE);
+const ANCHOR_TODAY = 9; // the seed day-of-month keys are offsets against this original "today"
 
-// June 2026 calendar maths. June 1 2026 is a Monday, so weekday index = (n-1) mod 7 (Mon-first).
-const TODAY = 9; // June 9 — the "today" marker
+// Materialise the seeded sessions onto real dates (date = today + (seedDom − ANCHOR_TODAY)). Keys
+// iterate in ascending day order, so OPEN stays date+time ascending (the list buckets rely on it).
+const OPEN_BY_KEY: Record<string, Avail[]> = {};
+const OPEN: Avail[] = [];
+Object.keys(OPEN_BY_DAY).map(Number).sort((a, b) => a - b).forEach((seedDom) => {
+  const date = addDays(TODAY_DATE, seedDom - ANCHOR_TODAY);
+  const list = OPEN_BY_DAY[seedDom].map((s) => ({ ...s, date }));
+  OPEN_BY_KEY[dateKey(date)] = list;
+  OPEN.push(...list);
+});
+const keyOf = (a: Avail) => `${dateKey(a.date)}-${a.time}-${a.place}`;
+
 const WEEKDAY_ABBR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const MONTHS_ABBR = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
 const MONTHS_FULL = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
-const weekMonday = (offset: number) => new Date(2026, 5, 8 + offset * 7);
-const openOn = (dom: number) => OPEN_BY_DAY[dom] ?? [];
-const dayLabel = (dom: number) => `${WEEKDAY_ABBR[(dom - 1) % 7]} · ${dom} juin`;
-const dayA11y = (dom: number, load: number) =>
-  `${dayLabel(dom)}, ${load === 0 ? copy.availableScreen.cal.a11yNone : `${load} ${copy.availableScreen.cal.a11ySessions}`}`;
-const firstOpenDom = Object.keys(OPEN_BY_DAY).map(Number).sort((a, b) => a - b)[0] ?? TODAY;
+const weekMonday = (offset: number) => addDays(mondayOf(TODAY_DATE), offset * 7);
+const openOn = (key: string) => OPEN_BY_KEY[key] ?? [];
+const dayLabel = (d: Date) => `${WEEKDAY_ABBR[(d.getDay() + 6) % 7]} · ${d.getDate()} ${MONTHS_ABBR[d.getMonth()]}`;
+const dayA11y = (d: Date, load: number, cal: AppCopy['availableScreen']['cal']) =>
+  `${dayLabel(d)}, ${load === 0 ? cal.a11yNone : `${load} ${load === 1 ? cal.a11ySessionsOne : cal.a11ySessions}`}`;
+const FIRST_OPEN_DATE = OPEN[0]?.date ?? TODAY_DATE;   // soonest open session — the default selected day
 
-// Week strip is date-driven so it can page to any week. Days outside June have no mock sessions
-// and render muted + non-selectable.
-type WeekDay = { wd: string; dom: number; isJune: boolean; today: boolean; load: number; empty: boolean; key: string };
-function weekEyebrow(offset: number) {
-  const c = copy.availableScreen.cal;
+// Week strip is date-driven so it can page to any week; every day is selectable and carries whatever
+// open sessions fall on its date.
+type WeekDay = { wd: string; date: Date; today: boolean; load: number; empty: boolean; key: string };
+function weekEyebrow(offset: number, c: AppCopy['availableScreen']['cal']) {
   if (offset === 0) return c.thisWeek;
   if (offset === -1) return c.lastWeek;
   if (offset === 1) return c.nextWeek;
   const mon = weekMonday(offset);
   return `${c.weekOf} ${MONTHS_ABBR[mon.getMonth()]} ${mon.getDate()}`;
 }
-function weekData(offset: number) {
+function weekData(offset: number, cal: AppCopy['availableScreen']['cal']) {
   const mon = weekMonday(offset);
   let openTotal = 0;
   const days: WeekDay[] = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i);
-    const isJune = date.getFullYear() === 2026 && date.getMonth() === 5;
-    const dom = date.getDate();
-    const load = isJune ? openOn(dom).length : 0;
+    const date = addDays(mon, i);
+    const key = dateKey(date);
+    const load = openOn(key).length;
     openTotal += load;
-    return { wd: WEEKDAY_ABBR[i], dom, isJune, today: isJune && dom === TODAY, load, empty: i >= 5, key: `${date.getMonth()}-${dom}` };
+    return { wd: WEEKDAY_ABBR[i], date, today: key === TODAY_KEY, load, empty: i >= 5, key };
   });
-  return { days, openTotal, eyebrow: weekEyebrow(offset) };
+  return { days, openTotal, eyebrow: weekEyebrow(offset, cal) };
 }
 
-// Month grid is date-driven so it can page to any month (offset 0 = June 2026, ± = prev/next), like
-// the Home calendar. Only June 2026 carries mock open sessions; other months render empty + muted
-// (PLA-05 "navigate between months" — honest for the prototype's June-only data).
-type MonthDay = { n: number; load: number; today: boolean; isData: boolean };
+// Month grid is date-driven so it can page to any month (offset 0 = this month, ± = prev/next), like
+// the Home calendar. Every day is selectable; sessions land on whichever days fall in range (PLA-05).
+type MonthDay = { n: number; date: Date; load: number; today: boolean; key: string };
 function monthData(offset: number) {
-  const base = new Date(2026, 5 + offset, 1);
+  const base = new Date(TODAY_DATE.getFullYear(), TODAY_DATE.getMonth() + offset, 1);
   const year = base.getFullYear(), mIdx = base.getMonth();
-  const isData = year === 2026 && mIdx === 5;            // June 2026 holds the mock open sessions
   const daysIn = new Date(year, mIdx + 1, 0).getDate();
   const lead = (base.getDay() + 6) % 7;                  // Mon-first leading blanks before day 1
   let openTotal = 0;
   const days: MonthDay[] = Array.from({ length: daysIn }, (_, i) => {
     const n = i + 1;
-    const load = isData ? openOn(n).length : 0;
+    const date = new Date(year, mIdx, n);
+    const key = dateKey(date);
+    const load = openOn(key).length;
     openTotal += load;
-    return { n, load, today: isData && n === TODAY, isData };
+    return { n, date, load, today: key === TODAY_KEY, key };
   });
-  return { days, lead, isData, openTotal, name: MONTHS_FULL[mIdx], label: `${MONTHS_FULL[mIdx]} ${year}` };
+  return { days, lead, openTotal, label: `${MONTHS_FULL[mIdx]} ${year}` };
 }
 
 // How far the calendar content slides on a Week/Month switch (vestibular-friendly: a moderate
@@ -197,6 +222,7 @@ function useReducedMotion() {
 /* ---------- small building blocks ---------- */
 
 function AppliedChip() {
+  const copy = useCopy();
   const c = INK.applied;
   return (
     <View style={[st.chip, { backgroundColor: c.bg }]}>
@@ -208,13 +234,19 @@ function AppliedChip() {
 
 // One open-session row + the circular Raise-hand / Withdraw action on the right. Red solid =
 // the primary engine; the red→gold gradient stays reserved for geolocated check-in elsewhere.
-// In the List view the row also carries its own date (no day-group header there) and, when it's
-// an urgent session, the remaining-days countdown — both optional so the day-list reuse is clean.
-function AvailCard({ a, applied, first, onToggle, onOpen, dateLabel, urgency }: {
+// In the calendar day-view the row is bare (the date comes from the day header); in the date-grouped
+// List view it carries its matching category as a triage tag (Recommended / Urgent). `dateLabel` +
+// `category` is optional so the calendar day-view reuse (which shows no tag) stays clean.
+function AvailCard({ a, applied, first, onToggle, onOpen, category }: {
   a: Avail; applied: boolean; first: boolean; onToggle: () => void; onOpen: () => void;
-  dateLabel?: string; urgency?: string;
+  category?: Category;
 }) {
+  const copy = useCopy();
+  const L = copy.availableScreen.list;
   const isFirstVisit = a.sessionType === 'first';
+  // The card's matching category, shown as a triage tag — Urgent (red) takes display precedence over
+  // Recommended (gold); 'available' shows none. The List view passes this; the day-view leaves it off.
+  const catTag = category === 'urgent' ? L.tag.urgent : category === 'recommended' ? L.tag.recommended : undefined;
   return (
     <View style={[st.card, first ? st.cardFirst : st.cardDivider]}>
       <View style={st.cardTop}>
@@ -223,18 +255,13 @@ function AvailCard({ a, applied, first, onToggle, onOpen, dateLabel, urgency }: 
           style={({ pressed }) => [st.headerTap, pressed && { opacity: 0.9 }]}
           onPress={onOpen}
           accessibilityRole="button"
-          accessibilityLabel={[dateLabel, `${a.place}, ${a.time}`, isFirstVisit ? copy.availableScreen.type.first : undefined, a.loc, urgency, applied ? copy.availableScreen.status.applied : undefined, 'View details.'].filter(Boolean).join(', ')}
+          accessibilityLabel={[`${a.place}, ${a.time}`, isFirstVisit ? copy.availableScreen.type.first : undefined, a.loc, catTag, applied ? copy.availableScreen.status.applied : undefined, 'View details.'].filter(Boolean).join(', ')}
         >
           <View style={st.timeRail}>
             <Text style={st.railTime} numberOfLines={1}>{a.time}</Text>
             <Text style={st.railEnd} numberOfLines={1}>{a.end}</Text>
           </View>
           <View style={st.cardBody}>
-            {dateLabel ? (
-              <View style={st.cardEyebrowRow}>
-                <Text style={st.cardDate} numberOfLines={1}>{dateLabel}</Text>
-              </View>
-            ) : null}
             <View style={st.bodyHead}>
               <Text style={st.place} numberOfLines={1}>{a.place}</Text>
             </View>
@@ -247,12 +274,17 @@ function AvailCard({ a, applied, first, onToggle, onOpen, dateLabel, urgency }: 
             {/* all status tags share one bottom line — urgency · session type · applied. Grouped
                 here (instead of by the date / place name) so the upper rows stay clean; wraps if
                 more than one is present. */}
-            {(urgency || isFirstVisit || applied) ? (
+            {(catTag || isFirstVisit || applied) ? (
               <View style={st.tagRow}>
-                {urgency ? (
+                {category === 'urgent' ? (
                   <View style={st.urgencyTag}>
                     <AlarmClock size={12} color={CAT_META.urgent.fg} strokeWidth={2.5} />
-                    <Text style={st.urgencyTxt} numberOfLines={1}>{urgency}</Text>
+                    <Text style={st.urgencyTxt} numberOfLines={1}>{L.tag.urgent}</Text>
+                  </View>
+                ) : category === 'recommended' ? (
+                  <View style={st.recoTag}>
+                    <Star size={12} color={CAT_META.recommended.fg} strokeWidth={2.5} />
+                    <Text style={st.recoTxt} numberOfLines={1}>{L.tag.recommended}</Text>
                   </View>
                 ) : null}
                 {isFirstVisit ? (
@@ -292,6 +324,7 @@ function AvailCard({ a, applied, first, onToggle, onOpen, dateLabel, urgency }: 
             accessibilityRole="button"
             accessibilityLabel={`${copy.availableScreen.action.apply}, ${a.place}, ${a.time}, ${a.loc}`}
           >
+            <GradientFill radius={999} />
             <Hand size={20} color={color.onAction} />
           </Pressable>
         )}
@@ -301,6 +334,7 @@ function AvailCard({ a, applied, first, onToggle, onOpen, dateLabel, urgency }: 
 }
 
 function EmptyState({ message }: { message?: string }) {
+  const copy = useCopy();
   return (
     <View style={st.empty}>
       <View style={st.emptyIcon}>
@@ -332,23 +366,21 @@ function CatChip({ label, count, selected, onPress }: { label: string; count: nu
   );
 }
 
-// One category block: a labelled header (icon chip + name + count + hint) followed by its cards.
-function CatSection({ cat, items, applied, onToggle, onOpen }: {
-  cat: Category; items: Avail[]; applied: Set<string>;
+// One day block in the date-grouped List view: a day header ("Aujourd'hui" / "Demain" / "Mer · 11
+// juin" + count) followed by that day's time-sorted cards. Each card carries its category as a tag.
+function DaySection({ date, items, applied, onToggle, onOpen }: {
+  date: Date; items: Avail[]; applied: Set<string>;
   onToggle: (a: Avail) => void; onOpen: (a: Avail) => void;
 }) {
-  const m = CAT_META[cat];
-  const L = copy.availableScreen.list;
-  const Icon = m.Icon;
+  const copy = useCopy();
+  const n = items.length;
+  const suffix = n === 1 ? copy.availableScreen.cal.dayCountSuffixOne : copy.availableScreen.cal.dayCountSuffix;
   return (
-    <View style={st.catBlock}>
-      <View style={st.catHead}>
-        <View style={[st.catIcon, { backgroundColor: m.bg }]}>
-          <Icon size={14} color={m.fg} strokeWidth={2.5} />
-        </View>
-        <Text style={[st.catTitle, { color: m.fg }]}>{L.cats[cat]}</Text>
-        <Text style={st.catCount}>{items.length}</Text>
-      </View>
+    <View style={st.group}>
+      <Text style={st.groupLabel}>
+        {dayGroupLabel(date, copy.availableScreen.list.urgency)}
+        {` · ${n} ${suffix}`}
+      </Text>
       {items.map((a, i) => (
         <AvailCard
           key={keyOf(a)}
@@ -357,8 +389,7 @@ function CatSection({ cat, items, applied, onToggle, onOpen }: {
           first={i === 0}
           onToggle={() => onToggle(a)}
           onOpen={() => onOpen(a)}
-          dateLabel={dayLabel(a.dom)}
-          urgency={cat === 'urgent' ? urgencyLabel(a.dom) : undefined}
+          category={categoryOf(a)}
         />
       ))}
     </View>
@@ -382,9 +413,9 @@ type Category = 'recommended' | 'urgent' | 'available';
 const CAT_ORDER: Category[] = ['recommended', 'urgent', 'available']; // section + chip order (spec order)
 const URGENT_WITHIN_DAYS = 3;   // starts within 3 days → urgent
 const NEAR_KM = 3.5;            // inside the coach's close range → recommended
-const daysUntil = (dom: number) => dom - TODAY; // June-only prototype: day-of-month delta
+const daysUntil = (d: Date) => daysBetween(d, TODAY_DATE); // whole-day delta from today
 function categoryOf(a: Avail): Category {
-  const d = daysUntil(a.dom);
+  const d = daysUntil(a.date);
   if (d >= 0 && d <= URGENT_WITHIN_DAYS) return 'urgent';
   if (a.km <= NEAR_KM) return 'recommended';
   return 'available';
@@ -395,22 +426,41 @@ function categoryOf(a: Avail): Category {
 const LIST_BY_CAT: Record<Category, Avail[]> = { recommended: [], urgent: [], available: [] };
 OPEN.forEach((a) => { LIST_BY_CAT[categoryOf(a)].push(a); });
 
-// Per-category accent on the ink surface (reaching into the ramp, like INK above): Recommended =
-// gold (a highlighted match), Urgent = red (time-critical), Available = neutral.
+// Per-category accent on the LIGHT card surface: Recommended = gold (a highlighted match),
+// Urgent = red (time-critical), Available = neutral. DT-20: foregrounds are AA-safe deep shades
+// (≥4.5:1 on warm paper); the light tints carry the hue. Gold can't be AA as light text, so the
+// "recommended" foreground is the deep amber or[800] (6.9:1) — still warm, still reads as gold.
 const CAT_META: Record<Category, { fg: string; bg: string; Icon: LucideIcon }> = {
-  recommended: { fg: palette.or[300], bg: 'rgba(248,213,68,0.15)', Icon: Sparkles },
-  urgent: { fg: palette.rouge[300], bg: 'rgba(238,123,114,0.16)', Icon: AlarmClock },
-  available: { fg: palette.neutral[300], bg: 'rgba(255,255,255,0.06)', Icon: LayoutList },
+  // Recommended = gold Star (item 12): distinct from the blue Sparkles "First visit" card tag, so
+  // the two no longer collide on a single glyph. Star reads as "featured/recommended"; Sparkles
+  // stays reserved for the "new / first visit" attribute.
+  recommended: { fg: palette.or[800], bg: 'rgba(248,213,68,0.15)', Icon: Star },   // 5.9:1 on tint
+  urgent: { fg: palette.rouge[700], bg: 'rgba(238,123,114,0.16)', Icon: AlarmClock },  // 5.7:1 on tint
+  available: { fg: palette.neutral[600], bg: 'rgba(24,23,21,0.04)', Icon: LayoutList },   // 5.8:1
 };
 type CatFilter = 'all' | Category;
 
-// "remaining days before the session date" for an urgent card (PLA-15).
-function urgencyLabel(dom: number): string {
-  const u = copy.availableScreen.list.urgency;
-  const d = daysUntil(dom);
+// Day-group header for the date-grouped List view: "Aujourd'hui" / "Demain" / "Mer · 11 juin".
+function dayGroupLabel(date: Date, u: AppCopy['availableScreen']['list']['urgency']): string {
+  const d = daysUntil(date);
   if (d <= 0) return u.today;
   if (d === 1) return u.tomorrow;
-  return `${u.inDays} ${d} ${u.days}`;
+  return dayLabel(date);
+}
+
+// Group an (already date+time ascending) list into day buckets, preserving order. Days with no open
+// session are simply absent — the List view shows only days that have opportunities, never a run of
+// empty dates (the Week / Month calendar views cover browsing empty days).
+function groupByDay(items: Avail[]): { key: string; date: Date; items: Avail[] }[] {
+  const groups: { key: string; date: Date; items: Avail[] }[] = [];
+  const index = new Map<string, number>();
+  for (const a of items) {
+    const k = dateKey(a.date);
+    let gi = index.get(k);
+    if (gi === undefined) { gi = groups.length; index.set(k, gi); groups.push({ key: k, date: a.date, items: [] }); }
+    groups[gi].items.push(a);
+  }
+  return groups;
 }
 
 /* ---------- travel time + over-limit warning (WBS PLA-06 / PLA-08) ----------
@@ -427,28 +477,20 @@ const TRAVEL_ICON: Record<TravelMode, LucideIcon> = { car: Car, foot: Footprints
 const travelMins = (km: number, mode: TravelMode = TRAVEL_PREF.mode) => Math.max(1, Math.ceil((km / TRAVEL_SPEED_KMH[mode]) * 60));
 const isOverLimit = (mins: number) => mins > TRAVEL_PREF.maxMin; // past the coach's configured max
 // "~12 min by car" / "~24 min on foot" — composed here (units are placeholders, like the km labels).
-function travelLabel(km: number): string {
-  const t = copy.availableScreen.travel;
+function travelLabel(km: number, t: AppCopy['availableScreen']['travel']): string {
   const phrase = TRAVEL_PREF.mode === 'car' ? `${t.by} ${t.car}` : t.onFoot;
   return `~${travelMins(km)} ${t.min} ${phrase}`;
 }
 // Amber "attention" accent for the over-limit treatment — reuse palette.or (gold), NEVER
 // color.action (red is reserved as the action/engine colour). Paired with text, never colour alone.
-const WARN = { fg: palette.or[300], bg: 'rgba(248,213,68,0.15)', border: 'rgba(248,213,68,0.30)' };
+const WARN = { fg: palette.or[800], bg: 'rgba(248,213,68,0.15)', border: 'rgba(248,213,68,0.30)' };
 
-/* ---------- list-view refine filter (Distance + Availability) ----------
-   A secondary refinement reached via the filter icon in the List view. Distance maps to the
-   coach's max-travel-time preference (WBS PLA-08); Availability is the coach's own application
-   state. Both are orthogonal to the Recommended/Urgent/Available buckets, so they narrow WITHIN
-   whatever category view is showing. The "≤ N km" labels are composed here (placeholder units). */
+/* ---------- list-view refine filter (Availability) ----------
+   A secondary refinement reached via the filter icon in the List view. Availability is the coach's
+   own application state. It is orthogonal to the Recommended/Urgent/Available buckets, so it narrows
+   WITHIN whatever category view is showing. */
 type StatusFilter = 'all' | 'open' | 'applied';
-const DIST_OPTIONS: { km: number | null; label: string }[] = [
-  { km: null, label: copy.availableScreen.filter.distAny },
-  { km: 2, label: '≤ 2 km' },
-  { km: 4, label: '≤ 4 km' },
-  { km: 6, label: '≤ 6 km' },
-];
-const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
+const statusOptions = (copy: AppCopy): { value: StatusFilter; label: string }[] => [
   { value: 'all', label: copy.availableScreen.filter.statusAll },
   { value: 'open', label: copy.availableScreen.filter.statusOpen },
   { value: 'applied', label: copy.availableScreen.filter.statusApplied },
@@ -478,19 +520,23 @@ function MetricTile({ label, value, unit, Icon, tint, tintBg, a11y, valueOpacity
 }
 
 function CalSummary({ open, applied, valueOpacity }: { open: number; applied: number; valueOpacity?: Animated.Value }) {
+  const copy = useCopy();
   const t = copy.availableScreen.cal.tiles;
+  // Singular/plural agreement on the unit noun (DT-19: "1 session", not "1 sessions").
+  const openUnit = open === 1 ? t.unitOne : t.unit;
+  const appliedUnit = applied === 1 ? t.unitOne : t.unit;
   return (
     <View style={st.tileRow}>
       <MetricTile
-        label={t.open} value={open} unit={t.unit}
+        label={t.open} value={open} unit={openUnit}
         Icon={CalendarDays} tint={INK.info.fg} tintBg={INK.info.bg}
-        a11y={`${open} ${t.unit} ${t.open.toLowerCase()}`}
+        a11y={`${open} ${openUnit} ${t.open.toLowerCase()}`}
         valueOpacity={valueOpacity}
       />
       <MetricTile
-        label={t.applied} value={applied} unit={t.unit}
+        label={t.applied} value={applied} unit={appliedUnit}
         Icon={Hand} tint={INK.applied.fg} tintBg={INK.applied.bg}
-        a11y={`${applied} ${t.unit} ${t.applied.toLowerCase()}`}
+        a11y={`${applied} ${appliedUnit} ${t.applied.toLowerCase()}`}
         valueOpacity={valueOpacity}
       />
     </View>
@@ -498,29 +544,29 @@ function CalSummary({ open, applied, valueOpacity }: { open: number; applied: nu
 }
 
 function WeekView({ days, selected, onSelect, fade, x, pan }: {
-  days: WeekDay[]; selected: number; onSelect: (n: number) => void;
+  days: WeekDay[]; selected: string; onSelect: (d: Date) => void;
   fade: Animated.Value; x: Animated.Value; pan: GestureResponderHandlers;
 }) {
+  const copy = useCopy();
   return (
     // Swipeable to page weeks: pan handlers capture only clear horizontal drags, so day taps and
     // vertical scroll pass through.
     <Animated.View style={{ opacity: fade, transform: [{ translateX: x }] }} {...pan}>
       <View style={st.weekStrip}>
         {days.map((day) => {
-          const on = day.isJune && day.dom === selected;
+          const on = day.key === selected;
           return (
             <Pressable
               key={day.key}
-              style={[st.day, !day.isJune && st.dayMuted]}
-              onPress={day.isJune ? () => onSelect(day.dom) : undefined}
-              disabled={!day.isJune}
+              style={st.day}
+              onPress={() => onSelect(day.date)}
               accessibilityRole="button"
-              accessibilityState={{ selected: on, disabled: !day.isJune }}
-              accessibilityLabel={day.isJune ? dayA11y(day.dom, day.load) : undefined}
+              accessibilityState={{ selected: on }}
+              accessibilityLabel={dayA11y(day.date, day.load, copy.availableScreen.cal)}
             >
               <Text style={st.dayD}>{day.wd}</Text>
               <View style={[st.dayNumWrap, on && st.dayNumSel]}>
-                <Text style={[st.dayN, on && st.dayNSelText, day.empty && !on && { color: S.textSecondary }, day.today && { color: palette.neutral[0] }]}>{day.dom}</Text>
+                <Text style={[st.dayN, on && st.dayNSelText, day.empty && !on && { color: S.textSecondary }, day.today && !on && { color: palette.rouge[600] }]}>{day.date.getDate()}</Text>
               </View>
               {/* Explicit per-day count (PLA-04) — a small red count pill, dot for one, blank for none. */}
               <View style={st.load}>
@@ -539,9 +585,10 @@ function WeekView({ days, selected, onSelect, fade, x, pan }: {
 }
 
 function MonthView({ days, lead, selected, onSelect, fade, x, pan }: {
-  days: MonthDay[]; lead: number; selected: number; onSelect: (n: number) => void;
+  days: MonthDay[]; lead: number; selected: string; onSelect: (d: Date) => void;
   fade: Animated.Value; x: Animated.Value; pan: GestureResponderHandlers;
 }) {
+  const copy = useCopy();
   return (
     // The weekday header is a static frame; only the day grid slides/fades when paging months. Pan
     // claims only clear horizontal drags, so day taps and vertical scroll pass through.
@@ -554,21 +601,20 @@ function MonthView({ days, lead, selected, onSelect, fade, x, pan }: {
           {/* leading blanks so day 1 lands under its weekday */}
           {Array.from({ length: lead }).map((_, i) => (<View key={`blank-${i}`} style={st.moCellWrap} />))}
           {days.map((day) => {
-            const on = day.isData && day.n === selected;
+            const on = day.key === selected;
             return (
               <Pressable
                 key={day.n}
-                style={[st.moCellWrap, !day.isData && st.dayMuted]}
+                style={st.moCellWrap}
                 hitSlop={4}
-                onPress={day.isData ? () => onSelect(day.n) : undefined}
-                disabled={!day.isData}
+                onPress={() => onSelect(day.date)}
                 accessibilityRole="button"
-                accessibilityState={{ selected: on, disabled: !day.isData }}
-                accessibilityLabel={day.isData ? dayA11y(day.n, day.load) : undefined}
+                accessibilityState={{ selected: on }}
+                accessibilityLabel={dayA11y(day.date, day.load, copy.availableScreen.cal)}
               >
                 <View style={st.moCell}>
                   <View style={[st.moNumWrap, on && st.moNumSel]}>
-                    <Text style={[st.moNum, on && st.moNumSelText, !day.load && !day.today && !on && { color: S.textSecondary }, day.today && { color: palette.neutral[0] }]}>{day.n}</Text>
+                    <Text style={[st.moNum, on && st.moNumSelText, !day.load && !day.today && !on && { color: S.textSecondary }, day.today && !on && { color: palette.rouge[600] }]}>{day.n}</Text>
                   </View>
                   {/* a single dot marks days with open sessions, regardless of count (PLA-05) */}
                   <View style={st.moDotRow}>{day.load ? <View style={st.loadDot} /> : null}</View>
@@ -582,56 +628,16 @@ function MonthView({ days, lead, selected, onSelect, fade, x, pan }: {
   );
 }
 
-/* ---------- calendar header chrome (week range + month label) ---------- */
+/* ---------- calendar header chrome (period label + view dropdown + pager) ---------- */
 
-// Week view: prev/next week chevrons + the centred week-range label (PLA-04). The chevrons drive
-// the SAME goWeek path as the swipe; the label crossfades with the strip via weekFade.
-function WeekNav({ label, onPrev, onNext, prevDisabled, nextDisabled, labelFade }: {
-  label: string; onPrev: () => void; onNext: () => void; prevDisabled: boolean; nextDisabled: boolean; labelFade: Animated.Value;
-}) {
-  const cc = copy.availableScreen.cal;
-  // disabled at the edge of the weeks that have open sessions — mirrors MonthNav's boundary discipline
-  const Chevron = ({ dir, onPress, disabled, a11y }: { dir: 'l' | 'r'; onPress: () => void; disabled: boolean; a11y: string }) => {
-    const Icon = dir === 'l' ? ChevronLeft : ChevronRight;
-    if (disabled) {
-      return (
-        <View style={[st.calNavBtn, st.calNavBtnOff]} accessible accessibilityRole="button" accessibilityState={{ disabled: true }} accessibilityLabel={a11y}>
-          <Icon size={20} color={palette.neutral[600]} />
-        </View>
-      );
-    }
-    return (
-      <Pressable onPress={onPress} hitSlop={6} style={({ pressed }) => [st.calNavBtn, pressed && { opacity: 0.6 }]} accessibilityRole="button" accessibilityLabel={a11y}>
-        <Icon size={20} color={ON_CANVAS} />
-      </Pressable>
-    );
-  };
+// Bare prev/next chevron (no circle chrome) — matches Home's calendar pager. Used for Week + Month
+// paging; same goWeek / goMonth path the swipe drives. hitSlop keeps the tap target ≥44pt.
+function CalChevron({ dir, onPress, a11y }: { dir: 'l' | 'r'; onPress: () => void; a11y: string }) {
+  const Icon = dir === 'l' ? ChevronLeft : ChevronRight;
   return (
-    <View style={st.calNav}>
-      <Chevron dir="l" onPress={onPrev} disabled={prevDisabled} a11y={cc.prevWeekA11y} />
-      <Animated.Text style={[st.calNavLabel, { opacity: labelFade }]} numberOfLines={1}>{label}</Animated.Text>
-      <Chevron dir="r" onPress={onNext} disabled={nextDisabled} a11y={cc.nextWeekA11y} />
-    </View>
-  );
-}
-
-// Month view: month label + prev/next chevrons. The calendar pages months freely (a live schedule,
-// like Home), so the chevrons always navigate; the label crossfades with the grid via monthFade
-// (PLA-05 "navigate between months"). Out-of-data months render empty + muted.
-function MonthNav({ label, onPrev, onNext, labelFade }: {
-  label: string; onPrev: () => void; onNext: () => void; labelFade: Animated.Value;
-}) {
-  const cc = copy.availableScreen.cal;
-  return (
-    <View style={st.calNav}>
-      <Pressable onPress={onPrev} hitSlop={6} style={({ pressed }) => [st.calNavBtn, pressed && { opacity: 0.6 }]} accessibilityRole="button" accessibilityLabel={cc.prevMonthA11y}>
-        <ChevronLeft size={20} color={ON_CANVAS} />
-      </Pressable>
-      <Animated.Text style={[st.calNavLabel, { opacity: labelFade }]} numberOfLines={1}>{label}</Animated.Text>
-      <Pressable onPress={onNext} hitSlop={6} style={({ pressed }) => [st.calNavBtn, pressed && { opacity: 0.6 }]} accessibilityRole="button" accessibilityLabel={cc.nextMonthA11y}>
-        <ChevronRight size={20} color={ON_CANVAS} />
-      </Pressable>
-    </View>
+    <Pressable onPress={onPress} hitSlop={8} style={({ pressed }) => [st.calNavBtn, pressed && { opacity: 0.5 }]} accessibilityRole="button" accessibilityLabel={a11y}>
+      <Icon size={22} color={ON_CANVAS} />
+    </Pressable>
   );
 }
 
@@ -692,7 +698,7 @@ function useToast(reduced: boolean) {
 function Toast({ content, anim, bottom }: { content: { msg: string; tone: ToastTone } | null; anim: Animated.Value; bottom: number }) {
   if (!content) return null;
   const Icon = content.tone === 'success' ? Check : X;
-  const tint = content.tone === 'success' ? palette.vert[300] : ON_CANVAS_2;
+  const tint = content.tone === 'success' ? palette.vert[700] : ON_CANVAS_2;
   return (
     <Animated.View
       pointerEvents="none"
@@ -707,6 +713,7 @@ function Toast({ content, anim, bottom }: { content: { msg: string; tone: ToastT
 }
 
 function AvailDetail({ a, applied, onToggle, onClose }: { a: Avail | null; applied: boolean; onToggle: () => void; onClose: () => void }) {
+  const copy = useCopy();
   const c = copy.availableScreen;
   const reduced = useReducedMotion();
   const insets = useSafeAreaInsets();
@@ -734,7 +741,7 @@ function AvailDetail({ a, applied, onToggle, onClose }: { a: Avail | null; appli
   // so the "new relationship" glyph/accent never contradicts a "Regular session" label.
   const isFirstVisit = a?.sessionType === 'first';
   const TypeIcon = isFirstVisit ? Sparkles : CalendarDays;
-  const typeAccent = isFirstVisit ? INK.info : { fg: ON_CARD_2, bg: 'rgba(255,255,255,0.06)' };
+  const typeAccent = isFirstVisit ? INK.info : { fg: ON_CARD_2, bg: 'rgba(24,23,21,0.04)' };
 
   return (
     <Modal visible={!!a} onRequestClose={onClose} animationType="slide" presentationStyle="pageSheet">
@@ -760,9 +767,9 @@ function AvailDetail({ a, applied, onToggle, onClose }: { a: Avail | null; appli
             {/* facts (deliberately no resident/candidate count — pre-assignment) */}
             <View style={st.dCard}>
               <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
-              <DetailRow Icon={Clock} label={c.detail.when} value={`${dayLabel(a.dom)} · ${a.time} → ${a.end} · ${a.dur}`} first />
+              <DetailRow Icon={Clock} label={c.detail.when} value={`${dayLabel(a.date)} · ${a.time} → ${a.end} · ${a.dur}`} first />
               <DetailRow Icon={MapPin} label={c.detail.where} value={a.address} onCopy={copyAddress} copyA11y={c.detail.copyA11y} />
-              <DetailRow Icon={TRAVEL_ICON[TRAVEL_PREF.mode]} label={c.travel.detailLabel} value={`${travelLabel(a.km)} · ${a.km} km`} />
+              <DetailRow Icon={TRAVEL_ICON[TRAVEL_PREF.mode]} label={c.travel.detailLabel} value={`${travelLabel(a.km, c.travel)} · ${a.km} km`} />
               <DetailRow Icon={Building2} label={c.detail.unit} value={a.unit} />
               <DetailRow Icon={DoorOpen} label={c.detail.access} value={a.access} />
               <DetailRow Icon={UserRound} label={c.detail.contact} value={a.contact} />
@@ -804,6 +811,7 @@ function AvailDetail({ a, applied, onToggle, onClose }: { a: Avail | null; appli
                   accessibilityLabel={`${c.action.apply}, ${a.place}`}
                 >
                   <View style={st.applyBtn}>
+                    <GradientFill />
                     <Hand size={17} color={color.onAction} style={{ marginRight: 8 }} />
                     <Text style={st.applyTxt}>{c.action.apply}</Text>
                   </View>
@@ -821,9 +829,9 @@ function AvailDetail({ a, applied, onToggle, onClose }: { a: Avail | null; appli
   );
 }
 
-/* ---------- refine-filter sheet (Distance + Availability) ---------- */
+/* ---------- refine-filter sheet (Availability) ---------- */
 
-// A plain selectable pill (no count) — used for the distance + availability options in the sheet.
+// A plain selectable pill (no count) — used for the availability options in the sheet.
 function OptChip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
   return (
     <Pressable
@@ -838,14 +846,15 @@ function OptChip({ label, selected, onPress }: { label: string; selected: boolea
   );
 }
 
-// Bottom sheet: narrow the List by distance + the coach's application status. Selections apply
+// Bottom sheet: narrow the List by the coach's application status. Selections apply
 // LIVE (the list behind updates), so the primary button just states the result and closes.
 // The panel slides up from the bottom (the usual bottom-sheet motion) while the tinted backdrop
 // fades in; kept mounted through the exit so the close animates too. Reduced motion → instant.
-function FilterSheet({ visible, reduced, distMax, status, count, onDist, onStatus, onReset, onClose }: {
-  visible: boolean; reduced: boolean; distMax: number | null; status: StatusFilter; count: number;
-  onDist: (d: number | null) => void; onStatus: (s: StatusFilter) => void; onReset: () => void; onClose: () => void;
+function FilterSheet({ visible, reduced, status, count, onStatus, onReset, onClose }: {
+  visible: boolean; reduced: boolean; status: StatusFilter; count: number;
+  onStatus: (s: StatusFilter) => void; onReset: () => void; onClose: () => void;
 }) {
+  const copy = useCopy();
   const f = copy.availableScreen.filter;
   const insets = useSafeAreaInsets();
   const showLabel = count === 0 ? f.showNone : count === 1 ? f.showOne : `${f.showPrefix} ${count} ${f.showSuffix}`;
@@ -886,16 +895,9 @@ function FilterSheet({ visible, reduced, distMax, status, count, onDist, onStatu
             </Pressable>
           </View>
 
-          <Text style={st.sheetLabel}>{f.distance}</Text>
+          <Text style={st.sheetLabel}>{f.status}</Text>
           <View style={st.optRow}>
-            {DIST_OPTIONS.map((o) => (
-              <OptChip key={String(o.km)} label={o.label} selected={distMax === o.km} onPress={() => onDist(o.km)} />
-            ))}
-          </View>
-
-          <Text style={[st.sheetLabel, { marginTop: sp.lg }]}>{f.status}</Text>
-          <View style={st.optRow}>
-            {STATUS_OPTIONS.map((o) => (
+            {statusOptions(copy).map((o) => (
               <OptChip key={o.value} label={o.label} selected={status === o.value} onPress={() => onStatus(o.value)} />
             ))}
           </View>
@@ -911,6 +913,8 @@ function FilterSheet({ visible, reduced, distMax, status, count, onDist, onStatu
               accessibilityRole="button"
               accessibilityLabel={showLabel}
             >
+              {/* Gradient only when there are results to show; the disabled state stays flat grey. */}
+              {count > 0 ? <GradientFill /> : null}
               <Text style={[st.showTxt, count === 0 && st.showTxtDisabled]}>{showLabel}</Text>
             </Pressable>
           </View>
@@ -923,20 +927,29 @@ function FilterSheet({ visible, reduced, distMax, status, count, onDist, onStatu
 /* ---------- screen ---------- */
 
 export function DisponiblesScreen() {
+  const copy = useCopy();
+  // Cream header (ink band removed) → dark status-bar glyphs while this tab is focused (the app
+  // default). Set explicitly so the glyphs are correct regardless of the previously focused screen.
+  useFocusEffect(
+    React.useCallback(() => {
+      setStatusBarStyle('dark');
+      return () => setStatusBarStyle('dark');
+    }, []),
+  );
   const [notifOpen, setNotifOpen] = React.useState(false);
-  const [profileOpen, setProfileOpen] = React.useState(false);
+  const navigation = useNavigation();                            // tab nav — header avatar → Profil tab
   const [selected, setSelected] = React.useState<Avail | null>(null);
   const [calMode, setCalMode] = React.useState<CalMode>('week');     // drives the toggle — updates instantly
+  const [calMenuOpen, setCalMenuOpen] = React.useState(false);       // Week/Month/All view dropdown (OptionSheet)
   const [shownMode, setShownMode] = React.useState<CalMode>('week'); // drives the content — lags one fade behind
-  const [selectedDate, setSelectedDate] = React.useState<number>(firstOpenDom); // tapped day (June day-of-month)
+  const [selectedDate, setSelectedDate] = React.useState<Date>(FIRST_OPEN_DATE); // tapped calendar day
   const [weekOffset, setWeekOffset] = React.useState(0);             // 0 = this week; ± = previous/next (swipe)
   const [monthOffset, setMonthOffset] = React.useState(0);          // 0 = this month (June 2026); ± = prev/next
   const [catFilter, setCatFilter] = React.useState<CatFilter>('all'); // List-view category filter (PLA-15) — drives the chips, updates instantly
   const [shownCat, setShownCat] = React.useState<CatFilter>('all');   // the rendered sections — lags one crossfade behind
   const [filterOpen, setFilterOpen] = React.useState(false);          // refine sheet open?
-  const [distMax, setDistMax] = React.useState<number | null>(null);  // distance ceiling (km); null = any
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('all'); // open / applied refine
-  const clearRefine = React.useCallback(() => { setDistMax(null); setStatusFilter('all'); }, []);
+  const clearRefine = React.useCallback(() => { setStatusFilter('all'); }, []);
   const reduced = useReducedMotion();
   const screenToast = useToast(reduced); // confirmation toast for card raise-hand / withdraw
 
@@ -958,7 +971,21 @@ export function DisponiblesScreen() {
     const willApply = !applied.has(keyOf(a));
     flip(a);
     screenToast.show(willApply ? copy.availableScreen.toast.applied : copy.availableScreen.toast.withdrawn, willApply ? 'success' : 'neutral');
-  }, [applied, flip, screenToast]);
+  }, [applied, flip, screenToast, copy]);
+
+  // Switch the calendar view (Week / Month / All) from the view dropdown. Mirrors the old Segmented
+  // onChange side-effects: entering Week resets to this week + a visible day; Month resets to now.
+  const changeCalMode = (m: CalMode) => {
+    setCalMode(m);
+    if (m === 'week') {
+      setWeekOffset(0);
+      // snap the selected day back into this week if it has drifted out (e.g. after Month paging)
+      const fromMon = daysBetween(selectedDate, weekMonday(0));
+      if (fromMon < 0 || fromMon > 6) setSelectedDate(FIRST_OPEN_DATE);
+    } else if (m === 'month') {
+      setMonthOffset(0);
+    }
+  };
 
   // Calendar transition animation (Week ↔ Month), copied from the Home calendar.
   const fade = React.useRef(new Animated.Value(1)).current;
@@ -1120,35 +1147,37 @@ export function DisponiblesScreen() {
     })
   ).current;
 
-  const wk = weekData(weekOffset);
+  const wk = weekData(weekOffset, copy.availableScreen.cal);
   const mo = monthData(monthOffset);
-  // Applied counts per period (runtime — depends on the live `applied` set). The mock data is
-  // June-only, so a paged-away month reports 0 applied.
-  const appliedThisWeek = wk.days.reduce((s, d) => s + (d.isJune ? openOn(d.dom).filter((o) => applied.has(keyOf(o))).length : 0), 0);
-  const appliedThisMonth = mo.isData ? OPEN.filter((o) => applied.has(keyOf(o))).length : 0;
-  const daySessions = openOn(selectedDate);
+  const selectedKey = dateKey(selectedDate);
+  // Applied counts per period (runtime — depends on the live `applied` set). Summed over the shown
+  // week / month's days, so paging to a period with no seeded sessions reports 0.
+  const appliedThisWeek = wk.days.reduce((s, d) => s + openOn(d.key).filter((o) => applied.has(keyOf(o))).length, 0);
+  const appliedThisMonth = mo.days.reduce((s, d) => s + openOn(d.key).filter((o) => applied.has(keyOf(o))).length, 0);
+  const daySessions = openOn(selectedKey);
 
-  // List-view refine filter (Distance + Availability) — narrows WITHIN the category sections, so
-  // the chip counts + sections reflect it. Status depends on the live `applied` set, hence here.
+  // List-view refine filter (Availability) — narrows WITHIN the category sections, so the chip
+  // counts + sections reflect it. Status depends on the live `applied` set, hence here.
   const passes = (a: Avail) =>
-    (distMax == null || a.km <= distMax) &&
-    (statusFilter === 'all' || (statusFilter === 'applied') === applied.has(keyOf(a)));
+    statusFilter === 'all' || (statusFilter === 'applied') === applied.has(keyOf(a));
   const visByCat: Record<Category, Avail[]> = {
     recommended: LIST_BY_CAT.recommended.filter(passes),
     urgent: LIST_BY_CAT.urgent.filter(passes),
     available: LIST_BY_CAT.available.filter(passes),
   };
   const totalVisible = visByCat.recommended.length + visByCat.urgent.length + visByCat.available.length;
-  const refineActive = distMax != null || statusFilter !== 'all';
+  const refineActive = statusFilter !== 'all';
+  // Date-grouped List view: take everything passing the refine filter AND the active category chip
+  // (shownCat lags catFilter by one crossfade, as the old sections did), then bucket by day.
+  const shownList = OPEN.filter(passes).filter((a) => shownCat === 'all' || categoryOf(a) === shownCat);
+  const shownDayGroups = groupByDay(shownList);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: CANVAS }} edges={['top', 'left', 'right']}>
-      <Reveal loading={loading} skeleton={<DisponiblesSkeleton />}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: sp.lg, paddingBottom: sp.xl + tabBarInset }}
-      >
-        {/* ===== Header — title left, notifications + profile right (per the locked IA) ===== */}
+      {/* ===== Fixed header — plain cream header (ink band removed): title left, notifications +
+           profile right. Sits OUTSIDE the ScrollView so it stays pinned while the body scrolls;
+           a bottom hairline separates it from the scrolling content. ===== */}
+      <View style={st.header}>
         <View style={st.appbar}>
           <View style={{ flex: 1 }}>
             <Text style={st.eyebrow}>{copy.availableScreen.eyebrow}</Text>
@@ -1158,19 +1187,19 @@ export function DisponiblesScreen() {
             <Bell size={22} color={ON_CANVAS} fill={ON_CANVAS} />
             <View style={st.badgeDot} />
           </Pressable>
-          <Pressable style={st.avatarWrap} hitSlop={6} onPress={() => setProfileOpen(true)} accessibilityLabel={copy.header.profileA11y}>
+          <Pressable style={[st.avatarWrap, { shadowOpacity: 0 }]} hitSlop={6} onPress={() => navigation.navigate('Profile' as never)} accessibilityLabel={copy.header.profileA11y}>
             <ProfileAvatar size={42} uri={COACH_PHOTO} />
           </Pressable>
         </View>
-
-        {/* ===== Near-you summary — count derived from the open set ===== */}
-        <View style={st.nearRow}>
-          <MapPin size={15} color={ON_CANVAS_2} />
-          <Text style={st.near}>
-            <Text style={st.nearCount}>{OPEN.length} </Text>
-            {copy.availableScreen.nearSuffix}
-          </Text>
-        </View>
+      </View>
+      <Reveal loading={loading} skeleton={<DisponiblesSkeleton />}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: sp.lg, paddingBottom: sp.xl + tabBarInset }}
+      >
+        {/* Near-you total removed (coach feedback / Q1): it duplicated the period tiles at a different
+            scope (total pool vs current period), reading as a 9-vs-5 mismatch. The full pool lives in
+            the "Tout" (List) view; the calendar tiles below own the period count. ===== */}
 
         {/* ===== Calendar — Week / Month (copied from Home) ===== */}
         <View style={st.section}>
@@ -1182,60 +1211,54 @@ export function DisponiblesScreen() {
             valueOpacity={titleFade}
           />
 
-          {/* Period toggle (filled pill) + refine-filter icon to its right. The refine filter
-              acts on the List ("All") only, so it's grayed + unclickable on Week / Month. */}
-          <View style={st.toggleRow}>
-            <Segmented
-              value={calMode}
-              onChange={(m) => {
-                setCalMode(m);
-                if (m === 'week') {
-                  setWeekOffset(0);
-                  if (selectedDate < 8 || selectedDate > 14) setSelectedDate(firstOpenDom);
-                } else if (m === 'month') {
-                  setMonthOffset(0); // entering Month → back to the current month
-                }
-              }}
-              options={[
-                { value: 'week' as const, label: copy.availableScreen.cal.seg.week },
-                { value: 'month' as const, label: mo.name }, // tracks the paged month
-                { value: 'all' as const, label: copy.availableScreen.cal.seg.all },
-              ]}
-              accessibilityLabel={copy.availableScreen.cal.toggleA11y}
-              variant="pill"
-              theme={{ track: SUBTLE, selected: palette.neutral[700] }}
-              style={{ flex: 1 }}
-            />
+          {/* Calendar nav band (ported from Home) — period label + a view-mode caret dropdown on the
+              left; the right side is the pager (Week / Month) or the refine-filter icon ("All", the
+              only mode the filter acts on). Replaces the old 3-way segmented + always-visible filter.
+              The band crossfades on the mode switch via titleFade; the label crossfades on paging via
+              weekFade / monthFade. Sits OUTSIDE the height-animated grid wrapper so it never perturbs
+              the gridH tween. */}
+          <Animated.View style={[st.calNav, { opacity: titleFade }]}>
             <Pressable
-              style={[
-                st.filterIconBtn,
-                calMode === 'all' && refineActive && st.filterIconBtnOn,
-                calMode !== 'all' && st.filterIconBtnDisabled,
-              ]}
-              disabled={calMode !== 'all'}
-              onPress={() => setFilterOpen(true)}
-              hitSlop={6}
+              onPress={() => setCalMenuOpen(true)}
+              hitSlop={8}
+              style={({ pressed }) => [st.calTitleBtn, pressed && { opacity: 0.6 }]}
               accessibilityRole="button"
-              accessibilityState={{ disabled: calMode !== 'all', expanded: filterOpen }}
-              accessibilityLabel={copy.availableScreen.filter.title}
+              accessibilityLabel={copy.availableScreen.cal.toggleA11y}
             >
-              <SlidersHorizontal size={18} color={calMode === 'all' && refineActive ? color.onAction : ON_CANVAS} />
+              <Animated.Text
+                style={[st.calNavLabel, { opacity: shownMode === 'week' ? weekFade : shownMode === 'month' ? monthFade : 1 }]}
+                numberOfLines={1}
+              >
+                {shownMode === 'week' ? wk.eyebrow : shownMode === 'month' ? mo.label : copy.availableScreen.cal.seg.all}
+              </Animated.Text>
+              <CaretDownSolid size={22} color={ON_CANVAS} style={st.calTitleChevron} />
             </Pressable>
-          </View>
-
-          {/* calendar header chrome — week range + prev/next (week) or month label + nav (month).
-              Sits OUTSIDE the height-animated grid wrapper so it never perturbs the gridH tween;
-              crossfades on the mode switch via titleFade (same driver as the tiles). */}
-          {shownMode === 'week' ? (
-            <Animated.View style={{ opacity: titleFade }}>
-              <WeekNav label={wk.eyebrow} onPrev={() => goWeek(-1)} onNext={() => goWeek(1)} prevDisabled={false} nextDisabled={false} labelFade={weekFade} />
-            </Animated.View>
-          ) : null}
-          {shownMode === 'month' ? (
-            <Animated.View style={{ opacity: titleFade }}>
-              <MonthNav label={mo.label} onPrev={() => goMonth(-1)} onNext={() => goMonth(1)} labelFade={monthFade} />
-            </Animated.View>
-          ) : null}
+            {shownMode === 'all' ? (
+              <Pressable
+                style={[st.filterIconBtn, refineActive && st.filterIconBtnOn]}
+                onPress={() => setFilterOpen(true)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: filterOpen }}
+                accessibilityLabel={copy.availableScreen.filter.title}
+              >
+                <SlidersHorizontal size={18} color={refineActive ? color.onAction : ON_CANVAS} />
+              </Pressable>
+            ) : (
+              <View style={st.calNavBtns}>
+                <CalChevron
+                  dir="l"
+                  onPress={() => (shownMode === 'week' ? goWeek(-1) : goMonth(-1))}
+                  a11y={shownMode === 'week' ? copy.availableScreen.cal.prevWeekA11y : copy.availableScreen.cal.prevMonthA11y}
+                />
+                <CalChevron
+                  dir="r"
+                  onPress={() => (shownMode === 'week' ? goWeek(1) : goMonth(1))}
+                  a11y={shownMode === 'week' ? copy.availableScreen.cal.nextWeekA11y : copy.availableScreen.cal.nextMonthA11y}
+                />
+              </View>
+            )}
+          </Animated.View>
 
           {/* grid (Week / Month only — "All" is a flat list with no calendar). Outer wrapper
               animates height + clips the slide; inner slides + fades on switch. */}
@@ -1243,16 +1266,23 @@ export function DisponiblesScreen() {
             <Animated.View style={[measured && { height: gridH }, { overflow: 'hidden' }]}>
               <Animated.View style={{ opacity: fade, transform: [{ translateX: slideX }] }} onLayout={onGridLayout}>
                 {shownMode === 'week'
-                  ? <WeekView days={wk.days} selected={selectedDate} onSelect={setSelectedDate} fade={weekFade} x={weekX} pan={weekPan.panHandlers} />
-                  : <MonthView days={mo.days} lead={mo.lead} selected={selectedDate} onSelect={setSelectedDate} fade={monthFade} x={monthX} pan={monthPan.panHandlers} />}
+                  ? <WeekView days={wk.days} selected={selectedKey} onSelect={setSelectedDate} fade={weekFade} x={weekX} pan={weekPan.panHandlers} />
+                  : <MonthView days={mo.days} lead={mo.lead} selected={selectedKey} onSelect={setSelectedDate} fade={monthFade} x={monthX} pan={monthPan.panHandlers} />}
               </Animated.View>
             </Animated.View>
+          ) : null}
+          {/* Dot legend (coach feedback) — only the Month grid carries the dot; clarify it marks
+              AVAILABLE (open) sessions here (vs Home, where the same dot means "confirmed"). */}
+          {shownMode === 'month' ? (
+            <CalendarLegend items={[{ color: color.action, label: copy.availableScreen.cal.legend }]} />
           ) : null}
         </View>
 
         {/* ===== Sessions — categorised List view in "All" (PLA-15), else the selected day's ===== */}
+        {/* No marginTop here: the nav band's marginBottom (sp.sm) is the single, uniform gap below
+            the title across all 3 views (Week strip / Month grid / All list all sit sp.sm below it). */}
         {shownMode === 'all' ? (
-          <View style={{ marginTop: sp.md }}>
+          <View>
             {/* category filter — All + the three buckets. Counts reflect the live refine filter
                 (set via the icon by the toggle above), so they stay honest about what's shown. */}
             <ScrollView
@@ -1286,33 +1316,31 @@ export function DisponiblesScreen() {
                 : `${totalVisible} ${copy.availableScreen.list.count.period}`}
             </Text>
 
-            {/* sections crossfade on a filter switch (shownCat lags catFilter by one fade) */}
+            {/* day groups crossfade on a filter switch (they follow shownCat, which lags catFilter
+                by one fade). Sorted by date — Today / Tomorrow / dated; empty days are absent. */}
             <Animated.View style={{ opacity: listFade, transform: [{ translateY: listY }] }}>
-              {/* all buckets when "All", else just the chosen one (empty ones skipped) */}
-              {CAT_ORDER.filter((c) => shownCat === 'all' || shownCat === c).map((c) =>
-                visByCat[c].length ? (
-                  <CatSection
-                    key={c}
-                    cat={c}
-                    items={visByCat[c]}
+              {shownDayGroups.length ? (
+                shownDayGroups.map((g) => (
+                  <DaySection
+                    key={g.key}
+                    date={g.date}
+                    items={g.items}
                     applied={applied}
                     onToggle={toggle}
                     onOpen={setSelected}
                   />
-                ) : null,
-              )}
-
-              {/* nothing matches — the chosen bucket, or the whole list under the refine filter */}
-              {(shownCat === 'all' ? totalVisible === 0 : visByCat[shownCat].length === 0) ? (
+                ))
+              ) : (
+                /* nothing matches — the chosen category, or the whole list under the refine filter */
                 <View style={st.group}>
-                  <Text style={st.emptyTitle}>{refineActive ? copy.availableScreen.emptyFiltered : copy.availableScreen.list.empty}</Text>
+                  <Text style={st.emptyTitle}>{refineActive ? copy.availableScreen.emptyFiltered : shownCat === 'all' ? copy.availableScreen.empty : copy.availableScreen.list.empty}</Text>
                   {refineActive ? (
                     <Pressable onPress={clearRefine} style={st.clearBtn} accessibilityRole="button" accessibilityLabel={copy.availableScreen.clearFilters}>
                       <Text style={st.clearTxt}>{copy.availableScreen.clearFilters}</Text>
                     </Pressable>
                   ) : null}
                 </View>
-              ) : null}
+              )}
             </Animated.View>
           </View>
         ) : (shownMode === 'week' ? wk.openTotal === 0 : mo.openTotal === 0) ? (
@@ -1326,7 +1354,7 @@ export function DisponiblesScreen() {
             {/* Day label + explicit count per day (PLA-04) */}
             <Text style={st.groupLabel}>
               {dayLabel(selectedDate)}
-              {daySessions.length > 0 ? ` · ${daySessions.length} ${copy.availableScreen.cal.dayCountSuffix}` : ''}
+              {daySessions.length > 0 ? ` · ${daySessions.length} ${daySessions.length === 1 ? copy.availableScreen.cal.dayCountSuffixOne : copy.availableScreen.cal.dayCountSuffix}` : ''}
             </Text>
             {daySessions.length === 0 ? (
               <EmptyState />
@@ -1359,16 +1387,28 @@ export function DisponiblesScreen() {
       <FilterSheet
         visible={filterOpen}
         reduced={reduced}
-        distMax={distMax}
         status={statusFilter}
         count={totalVisible}
-        onDist={setDistMax}
         onStatus={setStatusFilter}
         onReset={clearRefine}
         onClose={() => setFilterOpen(false)}
       />
+      {/* Calendar view switch (Week / Month / All) — opened from the dropdown in the nav band. */}
+      <OptionSheet
+        visible={calMenuOpen}
+        onClose={() => setCalMenuOpen(false)}
+        title={copy.availableScreen.cal.toggleA11y}
+        closeA11y={copy.availableScreen.cal.viewSheetCloseA11y}
+        options={[
+          { key: 'week', label: copy.availableScreen.cal.seg.week },
+          { key: 'month', label: copy.availableScreen.cal.seg.month },
+          { key: 'all', label: copy.availableScreen.cal.seg.all },
+        ]}
+        selectedKey={calMode}
+        onSelect={(k) => changeCalMode(k as CalMode)}
+      />
       <NotificationCenter visible={notifOpen} onClose={() => setNotifOpen(false)} />
-      <ProfileScreen visible={profileOpen} onClose={() => setProfileOpen(false)} />
+      {/* Profil is a tab now — the header avatar navigates to it (no inline sheet). */}
     </SafeAreaView>
   );
 }
@@ -1381,7 +1421,8 @@ export function DisponiblesScreen() {
 
 const st = StyleSheet.create({
   /* header */
-  appbar: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, paddingTop: sp.sm, paddingBottom: sp.sm },
+  header: { paddingHorizontal: sp.lg, paddingTop: sp.sm, paddingBottom: sp.md },
+  appbar: { flexDirection: 'row', alignItems: 'center', gap: sp.sm }, // vertical padding comes from st.header
   eyebrow: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 1, color: ON_CANVAS_2 },
   title: { fontFamily: F.oswS, fontSize: 28, lineHeight: 32, color: ON_CANVAS, marginTop: 2 },
   iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
@@ -1393,11 +1434,6 @@ const st = StyleSheet.create({
     shadowColor: palette.bleu[300], shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3, shadowRadius: 12,
   },
-
-  /* near-you summary */
-  nearRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: sp.xs },
-  near: { fontFamily: F.body, fontSize: 14, color: ON_CANVAS_2 },
-  nearCount: { fontFamily: F.bodyB, color: ON_CANVAS },
 
   /* calendar section */
   section: { marginTop: sp.xl },
@@ -1432,7 +1468,7 @@ const st = StyleSheet.create({
     minWidth: 16, height: 16, borderRadius: 999, paddingHorizontal: 4,
     backgroundColor: 'rgba(225,50,43,0.16)', alignItems: 'center', justifyContent: 'center',
   },
-  countTxt: { fontFamily: F.bodyS, fontSize: 11, color: palette.rouge[300] },
+  countTxt: { fontFamily: F.bodyS, fontSize: 13, color: palette.rouge[700] }, // DT-20: AA on the red-tint pill
 
   /* month grid — 7-column calendar; one red dot marks days with open sessions */
   moHead: { flexDirection: 'row', marginBottom: sp.xs },
@@ -1443,71 +1479,71 @@ const st = StyleSheet.create({
   moNumWrap: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   moNumSel: { backgroundColor: color.action },
   moNumSelText: { color: color.onAction },
-  moNum: { fontFamily: F.oswM, fontSize: 15, color: ON_CANVAS },
+  moNum: { fontFamily: F.oswM, fontSize: 16, color: ON_CANVAS },
   moDotRow: { flexDirection: 'row', gap: 3, marginTop: 4, minHeight: 5, alignItems: 'center' },
 
   /* calendar header chrome — week range / month label + prev-next chevrons */
-  calNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: sp.sm },
-  calNavBtn: { width: 40, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: SUBTLE, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)' },
-  calNavBtnOff: { opacity: 0.45 }, // disabled chevrons at the June boundary (June-only preview)
-  calNavLabel: { flex: 1, textAlign: 'center', fontFamily: F.oswS, fontSize: 14, letterSpacing: 0.8, color: ON_CANVAS },
+  // Calendar nav band (ported from Home) — period label + view caret left, pager / filter right.
+  calNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: sp.md, marginBottom: sp.sm },
+  calNavBtns: { flexDirection: 'row', alignItems: 'center', gap: sp.sm },
+  calNavBtn: { padding: 4, alignItems: 'center', justifyContent: 'center' }, // bare chevron, no circle chrome
+  calNavLabel: { flexShrink: 1, textAlign: 'left', fontFamily: F.oswS, fontSize: 16, letterSpacing: 0.8, color: ON_CANVAS },
+  // Title + caret dropdown = the view-switch tap target (Home parity). flexShrink lets the label
+  // truncate before it crowds the right cluster; the negative left margin offsets the padding so
+  // the title stays flush with the section gutter.
+  calTitleBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1, paddingVertical: 6, paddingHorizontal: 8, marginLeft: -8 },
+  calTitleChevron: { transform: [{ translateY: 1 }] },
 
   /* groups (selected-day list) */
   group: { marginTop: sp.lg },
   groupLabel: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 1, color: ON_CANVAS_2, marginBottom: sp.xs },
 
-  /* period toggle (pill) + refine-filter icon row */
-  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, marginTop: sp.md, marginBottom: sp.md },
+  /* refine-filter icon (right of the nav band in "All" mode) — bare like the pager chevrons (no
+     ring/fill); when a filter is applied it fills red (filterIconBtnOn) so "active" still reads. */
   filterIconBtn: {
     width: 44, height: 44, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)', backgroundColor: SUBTLE,
   },
-  filterIconBtnOn: { backgroundColor: color.action, borderColor: color.action },
-  filterIconBtnDisabled: { opacity: 0.4 },
+  filterIconBtnOn: { backgroundColor: color.action },
 
   /* list-view category filter (the "All" tab) */
   filterRow: { gap: sp.sm, paddingVertical: sp.xs, paddingRight: sp.lg },
   listCount: { fontFamily: F.body, fontSize: 13, color: ON_CANVAS_2, marginTop: sp.sm },
   chipF: {
     flexDirection: 'row', alignItems: 'center', gap: 7, paddingVertical: 7, paddingHorizontal: 12,
-    borderRadius: r.pill, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', backgroundColor: SUBTLE,
+    borderRadius: r.pill, borderWidth: 1, borderColor: 'rgba(24,23,21,0.08)', backgroundColor: SUBTLE,
   },
   chipFOn: { backgroundColor: color.action, borderColor: color.action },
   chipFTxt: { fontFamily: F.bodyS, fontSize: 13, color: ON_CANVAS_2 },
   chipFTxtOn: { color: color.onAction },
   chipFCount: {
     minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 5,
-    alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.10)',
+    alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(24,23,21,0.06)',
   },
   chipFCountOn: { backgroundColor: 'rgba(255,255,255,0.24)' },
-  chipFCountTxt: { fontFamily: F.bodyB, fontSize: 11, color: ON_CANVAS_2 },
+  chipFCountTxt: { fontFamily: F.bodyB, fontSize: 13, color: ON_CANVAS_2 },
   chipFCountTxtOn: { color: color.onAction },
 
-  /* list-view category section header */
-  catBlock: { marginTop: sp.lg },
-  catHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: sp.xs },
-  catIcon: { width: 24, height: 24, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
-  catTitle: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 1 }, // colour set inline per category
-  catCount: { fontFamily: F.bodyB, fontSize: 13, color: ON_CANVAS_2 },
-
-  /* card date + urgency countdown eyebrow (list view only) */
-  cardEyebrowRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: sp.sm, marginBottom: 4 },
-  cardDate: { flex: 1, fontFamily: F.oswS, fontSize: 12, letterSpacing: 0.8, color: ON_CARD_2 },
   urgencyTag: {
     flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8,
     borderRadius: r.pill, backgroundColor: CAT_META.urgent.bg,
   },
-  urgencyTxt: { fontFamily: F.bodyS, fontSize: 12, color: CAT_META.urgent.fg },
+  urgencyTxt: { fontFamily: F.bodyS, fontSize: 13, color: CAT_META.urgent.fg },
+  // "Recommended" triage tag — gold, mirrors the urgency tag's shape (Star + label on a gold tint).
+  recoTag: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8,
+    borderRadius: r.pill, backgroundColor: CAT_META.recommended.bg,
+  },
+  recoTxt: { fontFamily: F.bodyS, fontSize: 13, color: CAT_META.recommended.fg },
 
   /* open-session row — flat, matching the Séances list (hairline divider between rows) */
   card: { paddingVertical: sp.md },
   cardFirst: { paddingTop: sp.xs },   // first card hugs its day/category label (tighter red gap)
-  cardDivider: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },
+  cardDivider: { borderTopWidth: 1, borderTopColor: 'rgba(24,23,21,0.07)' },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm },
   headerTap: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: sp.md },
   timeRail: { width: 52, alignItems: 'flex-start' },
   railTime: { fontFamily: F.oswB, fontSize: 18, color: ON_CARD },
-  railEnd: { fontFamily: F.body, fontSize: 12, color: palette.neutral[400], marginTop: 1 },
+  railEnd: { fontFamily: F.body, fontSize: 13, color: palette.neutral[600], marginTop: 1 },
   cardBody: { flex: 1 },
   bodyHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: sp.sm },
   place: { flex: 1, fontFamily: F.bodyS, fontSize: 18, color: ON_CARD },
@@ -1516,23 +1552,23 @@ const st = StyleSheet.create({
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: sp.sm, marginTop: 8 },
   // session-type tag (first visit) — blue, matches the detail context chip; sits in the tag row.
   typeTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: r.pill, backgroundColor: INK.info.bg },
-  typeTagTxt: { fontFamily: F.body, fontSize: 12, color: INK.info.fg },
+  typeTagTxt: { fontFamily: F.body, fontSize: 13, color: INK.info.fg },
   // applied status as a compact pill (card tag row) — same shape as the type / urgency tags so the
   // row reads as one set; green, matching AppliedChip's fuller detail-sheet form.
   appliedTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: r.pill, backgroundColor: INK.applied.bg },
-  appliedTagTxt: { fontFamily: F.bodyS, fontSize: 12, color: INK.applied.fg },
+  appliedTagTxt: { fontFamily: F.bodyS, fontSize: 13, color: INK.applied.fg },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 5 },
   meta: { fontFamily: F.body, fontSize: 14, color: ON_CARD_2 },
   appliedNote: { fontFamily: F.body, fontSize: 13, color: INK.applied.fg, marginTop: sp.sm },
 
   /* chip */
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 10, borderRadius: r.pill },
-  chipTxt: { fontFamily: F.body, fontSize: 12 },
+  chipTxt: { fontFamily: F.body, fontSize: 13 },
 
   /* detail-page tag row (session context + applied status, under the title) */
   dChips: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: sp.sm, marginTop: sp.sm },
   contextChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 10, borderRadius: r.pill, backgroundColor: INK.info.bg },
-  contextTxt: { fontFamily: F.body, fontSize: 12, color: INK.info.fg },
+  contextTxt: { fontFamily: F.body, fontSize: 13, color: INK.info.fg },
 
   /* circular action on the right of the row (≥44 touch target) */
   actionCircle: { width: 52, height: 52, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
@@ -1558,13 +1594,13 @@ const st = StyleSheet.create({
   dHeaderTitle: { fontFamily: F.oswS, fontSize: 22, color: ON_CANVAS },
   dClose: { width: 40, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: SUBTLE },
   dPlace: { fontFamily: F.bodyB, fontSize: 26, color: ON_CANVAS },
-  dCard: { backgroundColor: CARD, borderRadius: r.xl, paddingHorizontal: sp.lg, marginTop: sp.lg, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  dCard: { backgroundColor: CARD, borderRadius: r.xl, paddingHorizontal: sp.lg, marginTop: sp.lg, borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)' },
   dRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: sp.md },
   dRowDivider: { borderTopWidth: 1, borderTopColor: DIVIDER },
   dRowIcon: { width: 24, alignItems: 'center' },
-  dRowLabel: { fontFamily: F.body, fontSize: 12, color: palette.neutral[500] },
-  dRowValue: { fontFamily: F.bodyS, fontSize: 15, color: ON_CARD, marginTop: 2 },
-  dCopyBtn: { width: 36, height: 36, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.06)' },
+  dRowLabel: { fontFamily: F.body, fontSize: 13, color: palette.neutral[600] },
+  dRowValue: { fontFamily: F.bodyS, fontSize: 16, color: ON_CARD, marginTop: 2 },
+  dCopyBtn: { width: 36, height: 36, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(24,23,21,0.04)' },
 
   /* over-limit travel warning banner (detail page) — amber, non-blocking, text-backed (not colour-alone) */
   warnBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm, marginTop: sp.lg, padding: sp.md, borderRadius: r.lg, backgroundColor: WARN.bg, borderWidth: 1, borderColor: WARN.border },
@@ -1573,16 +1609,16 @@ const st = StyleSheet.create({
 
   /* full-width apply / withdraw buttons (detail page) */
   applyWrap: {
-    borderRadius: r.pill,
+    borderRadius: r.button,
     shadowColor: palette.rouge[500], shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 12,
   },
   applyBtn: {
-    minHeight: 48, borderRadius: r.pill, flexDirection: 'row',
+    minHeight: 48, borderRadius: r.button, flexDirection: 'row',
     alignItems: 'center', justifyContent: 'center', backgroundColor: color.action,
   },
   applyTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: color.onAction },
   withdrawBtn: {
-    minHeight: 48, borderRadius: r.pill, flexDirection: 'row',
+    minHeight: 48, borderRadius: r.button, flexDirection: 'row',
     alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: palette.neutral[600],
   },
   withdrawTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: ON_CARD },
@@ -1592,7 +1628,7 @@ const st = StyleSheet.create({
   sheetWrap: { flex: 1, justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: CANVAS, borderTopLeftRadius: r.xl, borderTopRightRadius: r.xl,
-    paddingHorizontal: sp.lg, paddingTop: sp.sm, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
+    paddingHorizontal: sp.lg, paddingTop: sp.sm, borderTopWidth: 1, borderColor: 'rgba(24,23,21,0.08)',
   },
   sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 999, backgroundColor: palette.neutral[600], marginTop: 6, marginBottom: sp.md },
   sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: sp.md },
@@ -1602,16 +1638,16 @@ const st = StyleSheet.create({
   optRow: { flexDirection: 'row', flexWrap: 'wrap', gap: sp.sm },
   opt: {
     paddingVertical: 9, paddingHorizontal: 14, borderRadius: r.pill,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)', backgroundColor: SUBTLE,
+    borderWidth: 1, borderColor: 'rgba(24,23,21,0.08)', backgroundColor: SUBTLE,
   },
   optOn: { backgroundColor: color.action, borderColor: color.action },
   optTxt: { fontFamily: F.bodyS, fontSize: 14, color: ON_CANVAS },
   optTxtOn: { color: color.onAction },
   sheetFooter: { flexDirection: 'row', alignItems: 'center', gap: sp.md, marginTop: sp.xl },
   resetBtn: { paddingVertical: 12, paddingHorizontal: sp.sm },
-  resetTxt: { fontFamily: F.bodyS, fontSize: 15, color: ON_CANVAS_2 },
+  resetTxt: { fontFamily: F.bodyS, fontSize: 16, color: ON_CANVAS_2 },
   showBtn: {
-    flex: 1, minHeight: 50, borderRadius: r.pill, backgroundColor: color.action,
+    flex: 1, minHeight: 50, borderRadius: r.button, backgroundColor: color.action,
     alignItems: 'center', justifyContent: 'center',
     shadowColor: palette.rouge[500], shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 12,
   },
@@ -1622,7 +1658,7 @@ const st = StyleSheet.create({
   /* "no matches" → clear the refine filter */
   clearBtn: {
     alignSelf: 'flex-start', marginTop: sp.md, paddingVertical: 10, paddingHorizontal: sp.md,
-    borderRadius: r.pill, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+    borderRadius: r.button, borderWidth: 1, borderColor: 'rgba(24,23,21,0.10)',
   },
   clearTxt: { fontFamily: F.bodyS, fontSize: 14, color: ON_CANVAS },
 
@@ -1630,7 +1666,7 @@ const st = StyleSheet.create({
   toastWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
   toast: {
     flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 18,
-    borderRadius: r.pill, backgroundColor: SUBTLE, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    borderRadius: r.pill, backgroundColor: SUBTLE, borderWidth: 1, borderColor: 'rgba(24,23,21,0.08)',
     shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12,
   },
   toastTxt: { fontFamily: F.bodyS, fontSize: 14, color: ON_CANVAS },

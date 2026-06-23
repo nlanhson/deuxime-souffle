@@ -22,11 +22,12 @@ import { WelcomeScreen } from '../screens/WelcomeScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { SignUpScreen } from '../screens/SignUpScreen';
 import { ForgotPasswordScreen } from '../screens/ForgotPasswordScreen';
+import { EmailVerifyScreen } from '../screens/EmailVerifyScreen';
 import { ease, dur } from '../lib/motion';
 
 const S = surfaces.coach;
 
-type Phase = 'splash' | 'welcome' | 'login' | 'signup' | 'forgot';
+type Phase = 'splash' | 'welcome' | 'login' | 'signup' | 'verify' | 'forgot';
 
 export function OnboardingFlow() {
   const reduced = useReducedMotion();
@@ -36,6 +37,9 @@ export function OnboardingFlow() {
   const [phase, setPhase] = useState<Phase>(onboardingEntry);
   // Carried from Login's "Forgot password?" so the reset screen can prefill the typed email.
   const [forgotEmail, setForgotEmail] = useState('');
+  // Stashed between the Apply form and the e-mail verification step: the email/password path goes
+  // signup → verify → register(name), so we hold the captured name + e-mail across that beat.
+  const [reg, setReg] = useState<{ name: string; email: string } | null>(null);
   const fade = useRef(new Animated.Value(1)).current;
   // Locks out a second tap while a fade is in flight, so we never start an overlapping transition
   // (no double-dip flicker) and the rendered phase can't desync from the opacity it's paired with.
@@ -85,7 +89,20 @@ export function OnboardingFlow() {
     );
   else if (phase === 'forgot')
     screen = <ForgotPasswordScreen reduced={reduced} initialEmail={forgotEmail} onBack={() => go('login')} onDone={() => go('login')} />;
-  else screen = <SignUpScreen reduced={reduced} onBack={() => go('welcome')} onLogin={() => go('login')} onRegister={register} />;
+  else if (phase === 'verify')
+    // Confirming the e-mail completes registration → register() flips App to the pending screen.
+    screen = <EmailVerifyScreen reduced={reduced} email={reg?.email ?? ''} onBack={() => go('signup')} onVerified={() => register(reg?.name)} />;
+  else
+    screen = (
+      <SignUpScreen
+        reduced={reduced}
+        onBack={() => go('welcome')}
+        onLogin={() => go('login')}
+        // Google sign-ups are already verified → straight to pending. Email/password → verify first.
+        onRegister={register}
+        onVerifyEmail={(name, email) => { setReg({ name, email }); go('verify'); }}
+      />
+    );
 
   return (
     <View style={{ flex: 1, backgroundColor: S.canvas }}>

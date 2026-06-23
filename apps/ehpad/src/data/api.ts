@@ -506,7 +506,13 @@ export async function submitContract(
     existing.sessionType = data.sessionType ?? existing.sessionType;
     existing.units = data.units.length > 0 ? data.units : existing.units;
     existing.startDate = data.startDate ?? existing.startDate;
-    existing.endDate = data.endDate ?? existing.endDate;
+    // DT-E5 — sans échéance : on garde un horizon nominal (24 mois) pour générer
+    // les séances, mais le drapeau openEnded pilote l'affichage.
+    existing.openEnded = data.openEnded;
+    existing.endDate = data.openEnded
+      ? toIso(addMonths(parseDate(data.startDate ?? existing.startDate), 24))
+      : data.endDate ?? existing.endDate;
+    existing.availabilityProfile = data.availabilityProfile; // DT-E3
     existing.excludedSlots = slotsFromWizard(data);
     if (data.planningNotes) existing.availabilityNotes = data.planningNotes;
     existing.history.push(historyEntry('resoumission', by, getStrings().history.resoumission));
@@ -523,7 +529,13 @@ export async function submitContract(
     frequency: data.frequency ?? 'hebdo',
     sessionType: data.sessionType ?? 'collective',
     startDate: data.startDate ?? toIso(new Date()),
-    endDate: data.endDate ?? toIso(addMonths(new Date(), 12)),
+    // DT-E5 — sans échéance : horizon nominal de 24 mois pour la génération, le
+    // drapeau openEnded pilote l'affichage « Sans échéance ».
+    endDate: data.openEnded
+      ? toIso(addMonths(parseDate(data.startDate ?? toIso(new Date())), 24))
+      : data.endDate ?? toIso(addMonths(new Date(), 12)),
+    ...(data.openEnded ? { openEnded: true } : {}),
+    availabilityProfile: data.availabilityProfile, // DT-E3
     ...(data.planningNotes ? { availabilityNotes: data.planningNotes } : {}),
     excludedSlots: slotsFromWizard(data),
     generatedSessionCount: 0,

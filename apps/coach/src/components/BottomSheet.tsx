@@ -128,12 +128,12 @@ const st = StyleSheet.create({
     borderTopLeftRadius: r['2xl'], borderTopRightRadius: r['2xl'],
     paddingHorizontal: sp.lg, paddingTop: sp.md, paddingBottom: sp.xl,
     // shadcn-style hairline edge so the sheet reads as a crisp panel above the dimmed backdrop.
-    borderWidth: 1, borderBottomWidth: 0, borderColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1, borderBottomWidth: 0, borderColor: 'rgba(24,23,21,0.07)',
     shadowColor: '#000', shadowOffset: { width: 0, height: -12 }, shadowOpacity: 0.4, shadowRadius: 28,
   },
   // Grabber handle — the bottom-sheet affordance that signals "slides up / swipe area".
   grabber: {
     alignSelf: 'center', width: 36, height: 4, borderRadius: 999,
-    backgroundColor: palette.neutral[700], marginBottom: sp.sm,
+    backgroundColor: palette.neutral[300], marginBottom: sp.sm,
   },
 });

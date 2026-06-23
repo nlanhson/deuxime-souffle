@@ -9,7 +9,7 @@ const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 export const en: Copy = {
   app: {
     name: 'Deuxième Souffle',
-    space: 'EHPAD space',
+    space: 'Partner space',
     skipToContent: 'Skip to content',
     language: 'Language',
   },
@@ -260,6 +260,14 @@ export const en: Copy = {
       tomorrow: 'tomorrow',
       inDays: (n: number) => `in ${n} days`,
     },
+    renew: {
+      title: 'Renewal coming up',
+      one: (date: string) => `1 contract to renew before ${date}.`,
+      many: (n: number, date: string) =>
+        `${n} contracts to renew — the soonest expires on ${date}.`,
+      actionOne: 'View the contract',
+      actionMany: 'View the contracts',
+    },
     widgets: {
       seeAll: 'View all sessions',
     },
@@ -494,6 +502,7 @@ export const en: Copy = {
       renew: 'Renew this contract',
       edit: 'Edit',
       resubmit: 'Edit and resubmit',
+      doNotRenew: 'Do not renew',
     },
 
     detail: {
@@ -518,6 +527,9 @@ export const en: Copy = {
         'A major change is awaiting validation by the DS team. It will be applied after approval.',
       nonRenewedInfo: (date: string) =>
         `This contract is not being renewed. It remains active until ${date}.`,
+      renewDeadlineTitle: 'Renewal coming up',
+      renewDeadline: (date: string) =>
+        `This contract expires on ${date}. To avoid interrupting sessions, renew it now.`,
     },
 
     wizard: {
@@ -526,8 +538,10 @@ export const en: Copy = {
       renewTitle: 'Customise the renewal',
       stepLabel: (n: number, total: number, name: string) => `Step ${n} of ${total}: ${name}`,
       steps: {
-        needs: 'Needs',
-        availability: 'Availability',
+        frequency: 'Frequency',
+        units: 'Units',
+        consecutivity: 'Consecutivity',
+        indispos: 'Indispos',
         period: 'Period',
         slots: 'Slots',
         summary: 'Summary',
@@ -543,8 +557,10 @@ export const en: Copy = {
       rejectedBanner: 'Reason for rejection',
 
       runningSummary: 'Your choices',
+      chosenLabel: 'Chosen',
       frequencyLabel: 'Session frequency',
       sessionTypeLabel: 'Session type',
+      sessionTypeFixed: 'Deuxième Souffle sessions are always group sessions.',
       unitsLabel: 'Units concerned',
       unitsHelp: 'Select at least one unit',
       otherUnitLabel: 'Specify the unit',
@@ -559,19 +575,80 @@ export const en: Copy = {
       otherUnitError: 'Specify the unit name to continue',
       multiUnitError: 'Indicate how to organise the sessions to continue',
 
+      // Step 1 — Frequency
+      frequencyTitle: 'Step 1 — Frequency desired',
+      frequencyIntro:
+        'How often do you want sessions? This determines the sequence (for once a month, there is no point proposing 2 sessions in a row, for example).',
+      frequencyHints: {
+        hebdo: '≈ 4 passes per month · most common',
+        bihebdo: '≈ 8 passes per month',
+        bimensuel: '≈ 2 passes per month',
+        mensuel: '≈ 1 pass per month',
+        ponctuel: 'Specified in the next step',
+      },
+
+      // Step 2 — Units
+      unitsTitle: 'Step 2 — Which units to target?',
+      unitsIntro:
+        'Select all the units where the coach will need to intervene. You can then decide whether they are chained on the same day.',
+      unitDescriptions: {
+        UC: 'Unprotected residents · 1h',
+        UP_UHR: 'Residents with cognitive impairment · 1h',
+        AIDANTS: 'Dedicated session · 1h',
+        SOIGNANTS: 'Must be attached · otherwise 2×30 min mandatory',
+        AUTRE: 'Specify the type below',
+      },
+      otherUnitPlaceholder: 'Specify (e.g. Daytime centre Les Cerisiers)',
+      unitsCountInfo: (count: number, names: string) =>
+        `You have selected ${count} ${count > 1 ? 'units' : 'unit'} (${names}). In the next step, you will choose whether they are done back to back on the same day.`,
+
+      // Step 3 — Consecutivity
+      consecutivityTitle: (count: number) => `Step 3 — Chain the ${count} units in a row?`,
+      consecutivityIntro: (count: number, names: string) =>
+        `You have selected ${count} units (${names}). Can we do them in a row on the same day?`,
+      consecutivityTip:
+        'Preferable to follow: a single trip for the coach, better rates, simpler schedule.',
+      consecutivitySingleTitle: 'Step 3 — Consecutivity',
+      consecutivitySingleNote:
+        'You have selected a single unit: there is nothing to chain. Continue to availability.',
+      chainSameDay: 'Yes, in a row on the same day',
+      chainSameDayBenefit: 'A single coach trip · better rates',
+      chainSeparate: 'No, on separate days',
+      chainSeparateExample: 'E.g. Monday + Thursday — 2 coach trips',
+      chainSeparateWarn: '+30% chance of having 2 different coaches',
+
+      // Step 4 — Unavailability (header; detail lives in `exclusions`)
+      indisposTitle: 'Step 4 — When can we intervene?',
+      indisposIntro:
+        '2 simple steps: (1) choose the time range, (2) mark the specific days and periods.',
+
       exclusions: {
         title: 'Days and slots to exclude',
         intro:
           'Tap a half-day to block it. Sessions will never be proposed in an excluded slot.',
+        profileTitle: 'Session time window',
+        profileIntro: 'Slots proposed based on the facility type. Adjust if no option fits.',
+        profileEhpad: 'Care home (EHPAD)',
+        profileEtendu: 'Residence / flexible structure',
+        profileSummary: (name: string, ranges: string) => `${name} · ${ranges}`,
         gridCaption: 'Half-days excluded by weekday',
         morning: 'Morning',
         afternoon: 'Afternoon',
         blocked: 'Excluded',
         available: 'Available',
+        // Numbered section headers (unavailability mockup)
+        section1: '1. Your facility’s time range',
+        section2: '2. Days and half-days unavailable',
+        section2Hint: 'Click a cell to block it (red = no session). Weekends are predefined.',
+        section3: '3. Special periods over 12 months (optional)',
+        weekend: 'Weekend',
+        blockRowAria: (part: string) => `Block the whole ${part} (weekdays)`,
+        blockRowHint: 'Tick the box to the left of a row to block every morning or afternoon in 1 click.',
         presets: 'Shortcuts',
         presetWednesday: 'Not on Wednesdays',
         presetMornings: 'No mornings',
         presetMonFri: 'Monday and Friday mornings excluded',
+        presetReset: 'Reset everything',
         specialTitle: 'Special periods',
         specialIntro: 'Closures, public holidays, building works… These periods will be avoided.',
         addPeriod: 'Add a period',
@@ -603,11 +680,29 @@ export const en: Copy = {
       },
 
       period: {
-        title: 'Contract period',
+        title: 'Step 5 — Contract period',
+        intro: 'Over what duration do you want to start the sessions?',
         start: 'Start date',
         end: 'End date',
         preset: 'Or choose a preset duration',
-        presets: { six: '6 months', twelve: '12 months', school: 'School year' },
+        presets: {
+          twelve: '12 months',
+          twentyFour: '24 months',
+          school: 'School year',
+          noEnd: 'No end date',
+        },
+        // Recommended "hero" card (12 sliding months)
+        recommendedTitle: '12 months sliding',
+        recommendedRange: (start: string, end: string) => `From ${start} to ${end}`,
+        recommendedDetail: (n: number) =>
+          `≈ ${n} sessions · Automatic renewal with validation 3 months before the deadline`,
+        otherOptions: 'Other duration options (rare)',
+        modifiableNote: 'Modifiable period — 12 sliding months by default from the start date',
+        seeSlots: 'See suggested slots',
+        recommended: 'Recommended',
+        openEndedNote: 'Endless contract: rolls over automatically, can be stopped at any time.',
+        openEndedValue: 'No end date (endless contract)',
+        openEndedShort: 'Endless',
         startError: 'Choose a start date to continue',
         endError: 'Choose an end date after the start date',
         startHelp: 'Choose a date from tomorrow onwards',
@@ -644,6 +739,13 @@ export const en: Copy = {
         success:
           'Your request has been sent. It can be scheduled once validated by the DS team.',
         estimatedRate: 'Rate per session (indicative)',
+      },
+
+      // Help box shown under EVERY step (cf. Loïc's mockup).
+      help: {
+        title: 'Need help?',
+        body: 'The DS team can take control of this configuration from its back-office if you prefer to do it by phone. Contact us via',
+        email: 'contact@deuxiemesouffle.fr',
       },
     },
 
@@ -766,7 +868,7 @@ export const en: Copy = {
     deleteConfirm: 'Delete the contact',
     deleted: 'Contact deleted.',
     cannotDeletePrincipal: 'The main contact cannot be deleted',
-    hasAccount: 'Has access to the EHPAD space',
+    hasAccount: 'Has access to the Partner space',
     accountInactive: 'Access not activated',
   },
 
@@ -812,6 +914,13 @@ export const en: Copy = {
       sessions: (n: number) => `${n} ${plural(n, 'session', 'sessions')}`,
       dueOn: (date: string) => `To pay before ${date}`,
       paidOn: (date: string) => `Paid on ${date}`,
+      breakdownTitle: 'Session breakdown',
+      breakdownIntro: 'A line-by-line view of the sessions billed in this period.',
+      breakdownDate: 'Date',
+      breakdownCoach: 'Coach',
+      breakdownType: 'Type',
+      breakdownAmount: 'Amount excl. VAT',
+      breakdownTotal: 'Total excl. VAT',
     },
   },
 
@@ -946,7 +1055,7 @@ export const en: Copy = {
         body: 'Last checked over 2 months ago. A quick review ensures the right people are notified.',
       },
       system: {
-        title: 'Welcome to your EHPAD space',
+        title: 'Welcome to your Partner space',
         body: 'Track your sessions, contracts, evaluations and invoices from this interface.',
       },
     },

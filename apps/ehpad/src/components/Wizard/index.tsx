@@ -13,8 +13,14 @@ interface WizardProps {
   steps: WizardStepDef[];
   current: number; // index 0-based
   children: ReactNode;
+  /** Nombre de pastilles affichées dans la barre de progression. Par défaut, toutes
+   *  les étapes. En deçà du total, les étapes au-delà (ex. créneaux, récap) sont des
+   *  écrans de continuation : la barre les montre toutes « faites », sans pastille. */
+  visibleStepCount?: number | undefined;
   /** Récapitulatif des choix déjà faits — mémoire externe de l'utilisateur. */
   summary?: ReactNode | undefined;
+  /** Encart d'aide affiché sous le contenu à CHAQUE étape (ex. « Besoin d'aide ? »). */
+  help?: ReactNode | undefined;
   onBack?: (() => void) | undefined;
   onNext: () => void;
   nextLabel?: string | undefined;
@@ -32,7 +38,9 @@ export function Wizard({
   steps,
   current,
   children,
+  visibleStepCount,
   summary,
+  help,
   onBack,
   onNext,
   nextLabel,
@@ -44,14 +52,18 @@ export function Wizard({
 }: WizardProps) {
   const fr = useStrings();
   const step = steps[current];
+  // Pastilles affichées (≤ total). Les étapes au-delà (créneaux, récap) sont des
+  // écrans de continuation : la barre montre alors les pastilles toutes « faites ».
+  const shown = steps.slice(0, visibleStepCount ?? steps.length);
+  const onContinuation = current >= shown.length;
   return (
     <div className={styles.wizard}>
       <nav aria-label={fr.contracts.wizard.title} className={styles.progress}>
         <p className={styles.stepLabel} aria-live="polite">
-          {step ? fr.contracts.wizard.stepLabel(current + 1, steps.length, step.title) : ''}
+          {step ? (onContinuation ? step.title : fr.contracts.wizard.stepLabel(current + 1, shown.length, step.title)) : ''}
         </p>
         <ol className={styles.stepList}>
-          {steps.map((s, index) => (
+          {shown.map((s, index) => (
             <li
               key={s.id}
               className={styles.stepItem}
@@ -68,7 +80,10 @@ export function Wizard({
       </nav>
 
       <div className={styles.layout}>
-        <section className={styles.content}>{children}</section>
+        <section className={styles.content}>
+          {children}
+          {help}
+        </section>
         {summary && <aside className={styles.summary}>{summary}</aside>}
       </div>
 

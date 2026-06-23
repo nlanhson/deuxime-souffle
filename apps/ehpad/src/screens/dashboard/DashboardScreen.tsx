@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarClock, CalendarPlus, ChevronRight, FileSpreadsheet } from 'lucide-react';
+import {
+  CalendarClock,
+  CalendarDays,
+  CalendarPlus,
+  ChevronRight,
+  ClipboardList,
+  FileSpreadsheet,
+  FileText,
+  Star,
+} from 'lucide-react';
 import { useStrings } from '@/i18n';
 import * as api from '@/data/api';
 import { useAuth } from '@/context/AuthContext';
@@ -21,8 +30,10 @@ import {
 import { unitLabel } from '@/lib/status';
 import {
   Button,
+  ButtonLink,
   Calendar,
   EmptyState,
+  InlineAlert,
   LoadError,
   RatingDisplay,
   Skeleton,
@@ -163,6 +174,17 @@ export default function DashboardScreen() {
     // `fr` : `unitLabel` lit la langue active — recalculer au basculement FR ⇄ EN.
   }, [state.data, fr]);
 
+  // DT-E6 — contrats « à renouveler », du plus proche au plus lointain : alimente
+  // la bannière d'échéance en tête d'Accueil (lien direct vers le contrat).
+  const renewals = useMemo(
+    () =>
+      (state.data?.contracts ?? [])
+        .filter((c) => c.status === 'a_renouveler')
+        .sort((a, b) => a.endDate.localeCompare(b.endDate)),
+    [state.data],
+  );
+  const nextRenewal = renewals[0];
+
   const exportExcel = () => {
     const data = state.data;
     if (!data || !kpis) return;
@@ -227,6 +249,7 @@ export default function DashboardScreen() {
           <div className={styles.statBand}>
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className={styles.stat}>
+                <Skeleton width={28} height={28} radius="var(--radius-sm)" />
                 <Skeleton width={80} height={14} radius="var(--radius-pill)" />
                 <Skeleton width={56} height={32} radius="var(--radius-md)" />
                 <Skeleton width={100} height={12} radius="var(--radius-pill)" />
@@ -257,6 +280,29 @@ export default function DashboardScreen() {
 
       {state.data && kpis && (
         <>
+          {/* DT-E6 — échéance de renouvellement, mise en évidence dès l'Accueil. */}
+          {nextRenewal && (
+            <InlineAlert
+              variant="warning"
+              title={fr.dashboard.renew.title}
+              action={
+                renewals.length === 1 ? (
+                  <ButtonLink size="md" to={`/contrats/${nextRenewal.id}`}>
+                    {fr.dashboard.renew.actionOne}
+                  </ButtonLink>
+                ) : (
+                  <ButtonLink size="md" to="/contrats">
+                    {fr.dashboard.renew.actionMany}
+                  </ButtonLink>
+                )
+              }
+            >
+              {renewals.length === 1
+                ? fr.dashboard.renew.one(formatDate(nextRenewal.endDate))
+                : fr.dashboard.renew.many(renewals.length, formatDate(nextRenewal.endDate))}
+            </InlineAlert>
+          )}
+
           {/* 1 · Le point focal : la prochaine séance, en toutes lettres */}
           {nextSession && (
             <button
@@ -283,6 +329,9 @@ export default function DashboardScreen() {
           {/* 2 · Vue d'ensemble — bandeau éditorial (un objet, filets internes) */}
           <div className={styles.statBand}>
             <div className={styles.stat}>
+              <span className={styles.statIcon} data-accent="blue" aria-hidden>
+                <CalendarDays />
+              </span>
               <p className={styles.statEyebrow}>{fr.dashboard.kpi.sessionsMonth}</p>
               <p className={styles.statNumber}>{kpis.inMonth.length}</p>
               <p className={styles.statDetail}>
@@ -293,6 +342,9 @@ export default function DashboardScreen() {
             </div>
 
             <div className={styles.stat}>
+              <span className={styles.statIcon} data-accent="green" aria-hidden>
+                <FileText />
+              </span>
               <p className={styles.statEyebrow}>{fr.dashboard.kpi.activeContracts}</p>
               <p className={styles.statNumber}>{kpis.actives.length}</p>
               {kpis.activeUnits.length > 0 && (
@@ -303,6 +355,9 @@ export default function DashboardScreen() {
             {/* Évaluations en attente : la seule cellule actionnable. Voile bleu +
                 lien « Évaluer » uniquement s'il reste des évals ; sinon « à jour ». */}
             <div className={styles.stat} data-action={kpis.pending > 0 || undefined}>
+              <span className={styles.statIcon} data-accent={kpis.pending > 0 ? 'red' : 'green'} aria-hidden>
+                <ClipboardList />
+              </span>
               <p className={styles.statEyebrow}>{fr.dashboard.kpi.pendingEvaluations}</p>
               <p className={styles.statNumber}>{kpis.pending}</p>
               {kpis.pending > 0 ? (
@@ -316,6 +371,9 @@ export default function DashboardScreen() {
             </div>
 
             <div className={styles.stat}>
+              <span className={styles.statIcon} data-accent="gold" aria-hidden>
+                <Star />
+              </span>
               <p className={styles.statEyebrow}>{fr.dashboard.kpi.avgRating}</p>
               {kpis.avg !== null ? (
                 <>

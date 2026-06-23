@@ -22,6 +22,7 @@ export interface AdminUser {
   email: string;
   role: 'admin';
   roleLabel: string;
+  avatarUrl?: string;
 }
 
 const DEMO_USER: AdminUser = {
@@ -31,6 +32,7 @@ const DEMO_USER: AdminUser = {
   email: 'camille.roussel@deuxiemesouffle.fr',
   role: 'admin',
   roleLabel: 'Opérations DS',
+  avatarUrl: 'https://i.pravatar.cc/84?u=camille.roussel',
 };
 
 const STORAGE_KEY = 'ds-admin-auth';
@@ -46,7 +48,9 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 function readStored(): AdminUser | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as AdminUser) : null;
+    if (!raw) return null;
+    // Merge with DEMO_USER so fields added after a session was stored are always present.
+    return { ...DEMO_USER, ...(JSON.parse(raw) as AdminUser) };
   } catch {
     return null;
   }

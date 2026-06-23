@@ -1,0 +1,34 @@
+.list {
+  display: grid;
+  gap: var(--space-md) var(--space-xl);
+}
+
+.list[data-columns='2'] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pair {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.term {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--ls-label);
+  color: var(--color-text-muted);
+}
+
+.value {
+  font-size: var(--text-body-sm);
+  color: var(--color-text-primary);
+  line-height: var(--lh-body);
+}
+
+@media (max-width: 640px) {
+  .list[data-columns='2'] {
+    grid-template-columns: 1fr;
+  }
+}

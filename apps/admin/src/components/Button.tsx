@@ -18,7 +18,7 @@ interface ButtonProps extends CommonProps, Omit<ButtonHTMLAttributes<HTMLButtonE
   disabledReason?: string | undefined;
 }
 
-/** « Le Club » button — the red→ember gradient is the default here because the
+/** « Le Mouvement » button — the red→ember gradient is the default here because the
  *  app's only unmarked buttons are hero CTAs; secondary/ghost are opt-in. Pill
  *  shape + ≥44px target (52px default), mirroring the EHPAD app. */
 export function Button({

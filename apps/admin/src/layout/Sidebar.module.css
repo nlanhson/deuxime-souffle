@@ -1,14 +1,15 @@
-/* White rail with a hairline right border (EHPAD idiom). The active item is the
-   one place red leads on this surface — soft red veil + red ink + left bar. */
+/* White rail with a hairline right border. GitBook idiom: monochrome and calm —
+   icons and text in neutral grey, a quiet grey fill marks "you are here", and
+   colour is held back for what needs attention (the pending-count badges). */
 .sidebar {
   width: 248px;
   flex-shrink: 0;
   background: var(--color-surface);
   border-right: 1px solid var(--color-border-subtle);
-  padding: var(--space-lg) var(--space-md);
+  padding: var(--space-lg) var(--space-sm);
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
+  gap: var(--space-lg);
   min-height: 100vh;
   position: sticky;
   top: 0;
@@ -51,7 +52,31 @@
 /* ---- Nav ---- */
 .nav {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
 }
+
+/* A labelled cluster of destinations (Pilotage, Opérations, …). */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+/* Quiet section header — sentence-case (brand rule: no all-caps), flush to the
+   row's left edge so it sits a gap to the left of the icons below it. Normal
+   tracking keeps it compact and legible — the label "weight" comes from colour
+   and size, not spaced-out letters. */
+.sectionLabel {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+}
+
 .list {
   list-style: none;
   margin: 0;
@@ -60,53 +85,62 @@
   flex-direction: column;
   gap: var(--space-xs);
 }
+
+/* Footer: Settings + language switcher, pushed to the bottom of the rail. */
+.footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.footerList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.langWrap {
+  padding: 0 0 var(--space-xs);
+}
 .link {
   position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  min-height: 48px;
-  padding: 0 var(--space-sm) 0 var(--space-md);
-  border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
+  min-height: 36px;
+  /* Symmetric breathing room around the icon — the left inset equals the gap to
+     the label, so the icon sits a clear gap inside the row, indented from the
+     group title which is flush to the row's left edge. */
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
   text-decoration: none;
   font-family: var(--font-body);
-  font-weight: var(--weight-medium);
-  font-size: var(--text-body);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-body-sm);
 }
 .link:hover {
   background: var(--color-surface-hover);
-  color: var(--color-text-primary);
 }
 
-/* Active: soft red veil + red ink + 600 + left bar — "you are here" carried by
-   three cues (fill, weight, bar), not colour alone (NavLink sets aria-current). */
+/* Active: a quiet neutral fill only — type stays identical to the resting link
+   (black, regular). "You are here" rides on the fill + aria-current alone. */
 .linkActive,
 .linkActive:hover {
-  background: var(--color-selected-soft);
-  color: var(--color-selected-ink);
-  font-weight: var(--weight-semibold);
-}
-.linkActive::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 24px;
-  border-radius: var(--radius-pill);
-  background: var(--color-accent);
+  background: var(--color-surface-hover);
 }
 
+/* Gray icons against the black labels — Lucide strokes follow this colour
+   (currentColor), independent of the link's text colour, on rest and active. */
 .icon {
   flex-shrink: 0;
+  color: var(--color-text-secondary);
 }
 .label {
   flex: 1;
 }
 
-/* Pending-queue badge — accent pill (alert → red, on-spec). */
+/* Pending-queue badge — the rail's one spot of colour, reserved for "needs
+   action" (alert → red, on-spec). */
 .badge {
   flex-shrink: 0;
   min-width: 20px;
@@ -121,14 +155,4 @@
   font-size: var(--text-caption);
   font-weight: var(--weight-bold);
   line-height: 1;
-}
-
-/* ---- Footer ---- */
-.footer {
-  padding: var(--space-md) var(--space-sm) 0;
-  border-top: 1px solid var(--color-border-subtle);
-}
-.version {
-  font-size: var(--text-caption);
-  color: var(--color-text-secondary);
 }

@@ -28,3 +28,4 @@ pnpm-debug.*
 .vscode/*
 !.vscode/extensions.json
 .idea/
+.vercel

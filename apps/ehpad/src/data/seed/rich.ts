@@ -52,13 +52,14 @@ export function buildRichSeed(): DB {
       },
     },
     defaultSessionRate: 65,
-    markers: ['Convention 2026', 'Tarif groupe'],
+    markers: ['Convention 2026', 'Tarif groupe', 'Salle Snoezelen'],
     standardSessions: [
       { id: 'ss-1', label: 'Gym douce résidents', weekday: 1, time: '10:30', durationMin: 60, unitType: 'UC' },
       { id: 'ss-2', label: 'Équilibre & mobilité', weekday: 3, time: '15:00', durationMin: 60, unitType: 'UP_UHR' },
       { id: 'ss-3', label: 'Atelier dos & posture', weekday: 4, time: '14:00', durationMin: 45, unitType: 'SOIGNANTS' },
+      { id: 'ss-4', label: 'Atelier mémoire & mouvement', weekday: 4, time: '11:00', durationMin: 45, unitType: 'AIDANTS' },
     ],
-    stats: { totalCompleted: 96, thisMonth: 0, coachCount: 3, upcoming: 0 },
+    stats: { totalCompleted: 140, thisMonth: 0, coachCount: 7, upcoming: 0 },
   };
 
   /* ---------- Contacts (3) — 2 comptes actifs + 1 invitation en attente ---------- */
@@ -69,7 +70,7 @@ export function buildRichSeed(): DB {
       civility: 'Mme',
       firstName: 'Sophie',
       lastName: 'Mercier',
-      avatarUrl: 'https://randomuser.me/api/portraits/women/68.jpg',
+      avatarUrl: '/avatars/c-sophie.jpg',
       email: 'sophie.mercier@les-tilleuls.fr',
       phone: '0612345678',
       type: 'principal',
@@ -82,7 +83,7 @@ export function buildRichSeed(): DB {
       civility: 'M',
       firstName: 'Thomas',
       lastName: 'Lefèvre',
-      avatarUrl: 'https://randomuser.me/api/portraits/men/75.jpg',
+      avatarUrl: '/avatars/c-thomas.jpg',
       email: 'thomas.lefevre@les-tilleuls.fr',
       phone: '0698765432',
       type: 'additionnel',
@@ -91,11 +92,50 @@ export function buildRichSeed(): DB {
       account: { role: 'user', active: true },
     },
     {
+      id: 'c-nathalie',
+      civility: 'Mme',
+      firstName: 'Nathalie',
+      lastName: 'Faure',
+      avatarUrl: '/avatars/c-nathalie.jpg',
+      email: 'nathalie.faure@les-tilleuls.fr',
+      phone: '0623456789',
+      type: 'additionnel',
+      isSessionCoordinator: false,
+      roles: ['psychologue'],
+      account: { role: 'user', active: true },
+    },
+    {
+      id: 'c-philippe',
+      civility: 'M',
+      firstName: 'Philippe',
+      lastName: 'Roy',
+      avatarUrl: '/avatars/c-philippe.jpg',
+      email: 'philippe.roy@les-tilleuls.fr',
+      phone: '0634567890',
+      type: 'additionnel',
+      isSessionCoordinator: false,
+      roles: ['comptable'],
+      account: { role: 'user', active: true },
+    },
+    {
+      id: 'c-david',
+      civility: 'M',
+      firstName: 'David',
+      lastName: 'Lemoine',
+      avatarUrl: '/avatars/c-david.jpg',
+      email: 'david.lemoine@les-tilleuls.fr',
+      phone: '0641239876',
+      type: 'additionnel',
+      isSessionCoordinator: false,
+      roles: ['directeur_adjoint'],
+      account: { role: 'user', active: true },
+    },
+    {
       id: 'c-claire',
       civility: 'Mme',
       firstName: 'Claire',
       lastName: 'Dubois',
-      avatarUrl: 'https://randomuser.me/api/portraits/women/65.jpg',
+      avatarUrl: '/avatars/c-claire.jpg',
       email: 'claire.dubois@les-tilleuls.fr',
       phone: '0655443322',
       type: 'additionnel',
@@ -108,9 +148,13 @@ export function buildRichSeed(): DB {
   /* ---------- Coachs ---------- */
 
   const coaches: Coach[] = [
-    { id: 'k-karim', firstName: 'Karim', lastName: 'Belkacem', avatarUrl: 'https://randomuser.me/api/portraits/men/32.jpg', avgRatingFromFacility: 4.8 },
-    { id: 'k-julie', firstName: 'Julie', lastName: 'Renard', avatarUrl: 'https://randomuser.me/api/portraits/women/44.jpg', avgRatingFromFacility: 4.5 },
-    { id: 'k-marc', firstName: 'Marc', lastName: 'Petit', avatarUrl: 'https://randomuser.me/api/portraits/men/52.jpg', avgRatingFromFacility: 4.2 },
+    { id: 'k-karim', firstName: 'Karim', lastName: 'Belkacem', avatarUrl: '/avatars/k-karim.jpg', avgRatingFromFacility: 4.8 },
+    { id: 'k-julie', firstName: 'Julie', lastName: 'Renard', avatarUrl: '/avatars/k-julie.jpg', avgRatingFromFacility: 4.5 },
+    { id: 'k-marc', firstName: 'Marc', lastName: 'Petit', avatarUrl: '/avatars/k-marc.jpg', avgRatingFromFacility: 4.2 },
+    { id: 'k-amelie', firstName: 'Amélie', lastName: 'Garnier', avatarUrl: '/avatars/k-amelie.jpg', avgRatingFromFacility: 4.9 },
+    { id: 'k-lucas', firstName: 'Lucas', lastName: 'Moreau', avatarUrl: '/avatars/k-lucas.jpg', avgRatingFromFacility: 4.4 },
+    { id: 'k-nadia', firstName: 'Nadia', lastName: 'Haddad', avatarUrl: '/avatars/k-nadia.jpg', avgRatingFromFacility: 4.6 },
+    { id: 'k-sofiane', firstName: 'Sofiane', lastName: 'Benali', avatarUrl: '/avatars/k-sofiane.jpg', avgRatingFromFacility: 4.7 },
   ];
 
   /* ---------- Contrats — les 7 statuts ---------- */
@@ -137,6 +181,48 @@ export function buildRichSeed(): DB {
         { id: 'h-14-1', at: at(d(-160), '10:05'), by: SOPHIE, kind: 'creation', label: getStrings().history.creation },
         { id: 'h-14-2', at: at(d(-160), '10:20'), by: SOPHIE, kind: 'soumission', label: getStrings().history.soumission },
         { id: 'h-14-3', at: at(d(-156), '09:00'), by: 'Équipe DS', kind: 'validation', label: 'Contrat validé par l’équipe DS' },
+      ],
+    },
+    {
+      id: 'ct-2026-022',
+      reference: 'CT-2026-022',
+      status: 'active',
+      units: ['UP_UHR'],
+      frequency: 'hebdo',
+      sessionType: 'collective',
+      startDate: d(-75),
+      endDate: d(+290),
+      availabilityNotes: 'Séances en salle Snoezelen quand elle est libre.',
+      excludedSlots: [],
+      generatedSessionCount: 22,
+      completedSessionCount: 11,
+      rate: 66,
+      avgRatingFromFacility: 4.9,
+      history: [
+        { id: 'h-22-1', at: at(d(-85), '14:30'), by: SOPHIE, kind: 'creation', label: getStrings().history.creation },
+        { id: 'h-22-2', at: at(d(-85), '14:45'), by: SOPHIE, kind: 'soumission', label: getStrings().history.soumission },
+        { id: 'h-22-3', at: at(d(-81), '10:30'), by: 'Équipe DS', kind: 'validation', label: 'Contrat validé par l’équipe DS' },
+      ],
+    },
+    {
+      id: 'ct-2026-025',
+      reference: 'CT-2026-025',
+      status: 'active',
+      units: ['AIDANTS'],
+      frequency: 'bimensuel',
+      sessionType: 'collective',
+      startDate: d(-40),
+      endDate: d(+325),
+      availabilityNotes: 'Ateliers familles le mardi en fin de journée.',
+      excludedSlots: [],
+      generatedSessionCount: 8,
+      completedSessionCount: 3,
+      rate: 70,
+      avgRatingFromFacility: 4.6,
+      history: [
+        { id: 'h-25-1', at: at(d(-50), '17:05'), by: THOMAS, kind: 'creation', label: getStrings().history.creation },
+        { id: 'h-25-2', at: at(d(-50), '17:20'), by: THOMAS, kind: 'soumission', label: getStrings().history.soumission },
+        { id: 'h-25-3', at: at(d(-46), '11:00'), by: 'Équipe DS', kind: 'validation', label: 'Contrat validé par l’équipe DS' },
       ],
     },
     {
@@ -471,6 +557,29 @@ export function buildRichSeed(): DB {
   pushUpcoming('s-aid-u0', 'ct-2025-027', 'k-julie', 0, 0, '11:00', 60, 'AIDANTS');
   pushUpcoming('s-aid-u1', 'ct-2025-027', 'k-julie', 0, 1, '11:00', 60, 'AIDANTS');
 
+  /* ---------- Nouveaux contrats actifs + remplaçants ---------- */
+
+  // Contrat UP/UHR « Snoezelen » (ct-2026-022) — vendredis 10:30, Amélie
+  pushPast({ id: 's-snz-p3', contractId: 'ct-2026-022', coachId: 'k-amelie', weekday: 4, weeksBack: 3, time: '10:30', durationMin: 60, unitType: 'UP_UHR', report: { participants: 7, stars: 5, emoji: '😊', summary: 'Éveil sensoriel en salle Snoezelen, résidents très apaisés.' }, evaluation: { stars: 5, impression: 'tres_bien', comment: 'Amélie a une approche remarquable en unité protégée.', by: SOPHIE } });
+  pushPast({ id: 's-snz-p2', contractId: 'ct-2026-022', coachId: 'k-amelie', weekday: 4, weeksBack: 2, time: '10:30', durationMin: 60, unitType: 'UP_UHR', report: { participants: 6, stars: 5, emoji: '😊', summary: 'Stimulation douce et musique, beaux sourires de Mme Lefort.' }, evaluation: { stars: 5, impression: 'tres_bien', by: THOMAS } });
+  pushPast({ id: 's-snz-p1', contractId: 'ct-2026-022', coachId: 'k-amelie', weekday: 4, weeksBack: 1, time: '10:30', durationMin: 60, unitType: 'UP_UHR', report: { participants: 7, stars: 4, emoji: '🙂', summary: 'Parcours tactile, bonne participation malgré quelques absences.' } });
+
+  pushUpcoming('s-snz-u0', 'ct-2026-022', 'k-amelie', 4, 0, '10:30', 60, 'UP_UHR');
+  pushUpcoming('s-snz-u1', 'ct-2026-022', 'k-amelie', 4, 1, '10:30', 60, 'UP_UHR');
+  pushUpcoming('s-snz-u2', 'ct-2026-022', 'k-amelie', 4, 2, '10:30', 60, 'UP_UHR');
+
+  // Contrat Aidants & familles (ct-2026-025) — mardis 17:00, Lucas
+  pushPast({ id: 's-fam-p1', contractId: 'ct-2026-025', coachId: 'k-lucas', weekday: 1, weeksBack: 1, time: '17:00', durationMin: 60, unitType: 'AIDANTS', isFirstTogether: true, report: { participants: 12, stars: 5, emoji: '😊', summary: 'Première séance familles : gestes du quotidien et transferts en sécurité.' }, evaluation: { stars: 5, impression: 'tres_bien', comment: 'Les familles étaient ravies, Lucas est très pédagogue.', by: SOPHIE } });
+  pushPast({ id: 's-fam-p0', contractId: 'ct-2026-025', coachId: 'k-lucas', weekday: 1, weeksBack: 0, time: '17:00', durationMin: 60, unitType: 'AIDANTS', report: { participants: 10, stars: 4, emoji: '🙂', summary: 'Atelier prévention des chutes à domicile, échanges riches.' } });
+
+  pushUpcoming('s-fam-u0', 'ct-2026-025', 'k-lucas', 1, 0, '17:00', 60, 'AIDANTS');
+  pushUpcoming('s-fam-u1', 'ct-2026-025', 'k-lucas', 1, 1, '17:00', 60, 'AIDANTS');
+
+  // Remplaçants ponctuels — Nadia (UC) et Sofiane (Soignants) : élargit les coachs
+  // « participants » des contrats existants (deux coachs par contrat).
+  pushPast({ id: 's-uc-sub', contractId: 'ct-2026-014', coachId: 'k-nadia', weekday: 1, weeksBack: 5, time: '10:30', durationMin: 60, unitType: 'UC', isFirstTogether: true, report: { participants: 9, stars: 4, emoji: '🙂', summary: 'Remplacement de Karim : gym douce et étirements, groupe accueillant.' }, evaluation: { stars: 4, impression: 'bien', by: SOPHIE } });
+  pushPast({ id: 's-soi-sub', contractId: 'ct-2026-011', coachId: 'k-sofiane', weekday: 4, weeksBack: 2, time: '14:00', durationMin: 45, unitType: 'SOIGNANTS', report: { participants: 8, stars: 4, emoji: '🙂', summary: 'Remplacement : réveil musculaire et prévention des TMS pour l’équipe.' } });
+
   /* ---------- Factures (6, montants HT) ---------- */
 
   // Ancre de mois au format ISO (YYYY-MM-01) — la période de facture est rendue
@@ -554,7 +663,7 @@ export function buildRichSeed(): DB {
     (s) => s.status === 'terminee' && s.date.slice(0, 7) === toIso(today).slice(0, 7),
   ).length;
   const upcoming = sessions.filter((s) => s.status === 'a_venir' || s.status === 'reportee').length;
-  facility.stats = { totalCompleted: 96, thisMonth, coachCount: 3, upcoming };
+  facility.stats = { totalCompleted: 140, thisMonth, coachCount: coaches.length, upcoming };
 
   return {
     facility,

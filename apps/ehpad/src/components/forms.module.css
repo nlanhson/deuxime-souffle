@@ -236,3 +236,11 @@ input:checked + .box {
   height: 1px;
   opacity: 0;
 }
+
+/* Sécurité vestibulaire (WCAG 2.3.3) : pas de transition de remplissage coche/radio
+   quand l'utilisateur demande moins de mouvement. */
+@media (prefers-reduced-motion: reduce) {
+  .box {
+    transition: none;
+  }
+}

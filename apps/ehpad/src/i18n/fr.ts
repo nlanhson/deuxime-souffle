@@ -6,7 +6,7 @@ const plural = (n: number, one: string, many: string) => (n > 1 ? many : one);
 export const fr = {
   app: {
     name: 'Deuxième Souffle',
-    space: 'Espace EHPAD',
+    space: 'Espace partenaire',
     skipToContent: 'Aller au contenu',
     language: 'Langue',
   },
@@ -261,6 +261,15 @@ export const fr = {
       tomorrow: 'demain',
       inDays: (n: number) => `dans ${n} jours`,
     },
+    /* DT-E6 — rappel d'échéance de renouvellement, en évidence dès l'Accueil. */
+    renew: {
+      title: 'Renouvellement à prévoir',
+      one: (date: string) => `1 contrat à renouveler avant le ${date}.`,
+      many: (n: number, date: string) =>
+        `${n} contrats à renouveler — le plus proche expire le ${date}.`,
+      actionOne: 'Voir le contrat',
+      actionMany: 'Voir les contrats',
+    },
     /* « Voir toutes les séances » — réutilisé par la fiche contrat ; les autres
        libellés de widgets ont été retirés avec les widgets sous le calendrier. */
     widgets: {
@@ -497,6 +506,7 @@ export const fr = {
       renew: 'Renouveler ce contrat',
       edit: 'Modifier',
       resubmit: 'Modifier et resoumettre',
+      doNotRenew: 'Ne pas renouveler',
     },
 
     detail: {
@@ -518,6 +528,9 @@ export const fr = {
       pendingInfo: 'Ce contrat est en attente de validation par l’équipe DS. Il ne peut pas encore être utilisé pour planifier des séances.',
       modifPendingInfo: 'Une modification majeure attend la validation de l’équipe DS. Elle sera appliquée après approbation.',
       nonRenewedInfo: (date: string) => `Ce contrat n’est pas reconduit. Il reste actif jusqu’au ${date}.`,
+      renewDeadlineTitle: 'Renouvellement à prévoir',
+      renewDeadline: (date: string) =>
+        `Ce contrat expire le ${date}. Pour ne pas interrompre les séances, renouvelez-le dès maintenant.`,
     },
 
     wizard: {
@@ -526,8 +539,10 @@ export const fr = {
       renewTitle: 'Personnaliser le renouvellement',
       stepLabel: (n: number, total: number, name: string) => `Étape ${n} sur ${total} : ${name}`,
       steps: {
-        needs: 'Besoins',
-        availability: 'Disponibilités',
+        frequency: 'Fréquence',
+        units: 'Unités',
+        consecutivity: 'Enchaînement',
+        indispos: 'Indispos',
         period: 'Période',
         slots: 'Créneaux',
         summary: 'Récapitulatif',
@@ -543,8 +558,10 @@ export const fr = {
       rejectedBanner: 'Motif du rejet',
 
       runningSummary: 'Vos choix',
+      chosenLabel: 'Choisi',
       frequencyLabel: 'Fréquence des séances',
       sessionTypeLabel: 'Type de séance',
+      sessionTypeFixed: 'Les séances Deuxième Souffle sont toujours collectives.',
       unitsLabel: 'Unités concernées',
       unitsHelp: 'Sélectionnez au moins une unité',
       otherUnitLabel: 'Précisez l’unité',
@@ -559,18 +576,80 @@ export const fr = {
       otherUnitError: 'Précisez le nom de l’unité pour continuer',
       multiUnitError: 'Indiquez comment organiser les séances pour continuer',
 
+      // Étape 1 — Fréquence
+      frequencyTitle: 'Étape 1 — Fréquence souhaitée',
+      frequencyIntro:
+        'À quelle fréquence souhaitez-vous des séances ? Cette information détermine l’enchaînement (pour 1 fois/mois, inutile de proposer 2 séances à la suite, par exemple).',
+      frequencyHints: {
+        hebdo: '≈ 4 passages par mois · le plus courant',
+        bihebdo: '≈ 8 passages par mois',
+        bimensuel: '≈ 2 passages par mois',
+        mensuel: '≈ 1 passage par mois',
+        ponctuel: 'Précisé à l’étape suivante',
+      },
+
+      // Étape 2 — Unités
+      unitsTitle: 'Étape 2 — Quelles unités cibler ?',
+      unitsIntro:
+        'Sélectionnez toutes les unités où le coach devra intervenir. Vous déciderez ensuite si elles sont enchaînées le même jour.',
+      unitDescriptions: {
+        UC: 'Résidents non protégés · 1 h',
+        UP_UHR: 'Résidents avec troubles cognitifs · 1 h',
+        AIDANTS: 'Séance dédiée · 1 h',
+        SOIGNANTS: 'Doit être rattachée · sinon 2×30 min obligatoires',
+        AUTRE: 'Précisez le type ci-dessous',
+      },
+      otherUnitPlaceholder: 'Précisez (ex : Accueil de jour Les Cerisiers)',
+      unitsCountInfo: (count: number, names: string) =>
+        `Vous avez sélectionné ${count} ${count > 1 ? 'unités' : 'unité'} (${names}). À l’étape suivante, vous choisirez si elles sont réalisées à la suite le même jour.`,
+
+      // Étape 3 — Enchaînement
+      consecutivityTitle: (count: number) => `Étape 3 — Enchaîner les ${count} unités à la suite ?`,
+      consecutivityIntro: (count: number, names: string) =>
+        `Vous avez sélectionné ${count} unités (${names}). Peut-on les faire à la suite le même jour ?`,
+      consecutivityTip:
+        'Préférable à suivre : 1 seul déplacement pour le coach, meilleurs tarifs, planning plus simple.',
+      consecutivitySingleTitle: 'Étape 3 — Enchaînement',
+      consecutivitySingleNote:
+        'Vous avez sélectionné une seule unité : il n’y a rien à enchaîner. Continuez vers les disponibilités.',
+      chainSameDay: 'Oui, à la suite le même jour',
+      chainSameDayBenefit: '1 seul déplacement coach · meilleurs tarifs',
+      chainSeparate: 'Non, sur des jours séparés',
+      chainSeparateExample: 'Ex : Lundi + Jeudi — 2 déplacements coach',
+      chainSeparateWarn: '+30 % de risque d’avoir 2 coachs différents',
+
+      // Étape 4 — Indisponibilités (en-tête ; le détail vit dans `exclusions`)
+      indisposTitle: 'Étape 4 — Quand peut-on intervenir ?',
+      indisposIntro:
+        '2 étapes simples : (1) choisissez la plage horaire, (2) marquez les jours et périodes spécifiques.',
+
       exclusions: {
         title: 'Jours et créneaux à exclure',
         intro: 'Touchez une demi-journée pour la bloquer. Les séances ne seront jamais proposées sur un créneau exclu.',
+        profileTitle: 'Plage horaire des séances',
+        profileIntro:
+          'Créneaux proposés selon le type d’établissement. Ajustez si aucune option ne correspond.',
+        profileEhpad: 'EHPAD',
+        profileEtendu: 'Résidence / structure souple',
+        profileSummary: (name: string, ranges: string) => `${name} · ${ranges}`,
         gridCaption: 'Demi-journées exclues par jour de semaine',
         morning: 'Matin',
         afternoon: 'Après-midi',
         blocked: 'Exclu',
         available: 'Disponible',
+        // En-têtes de section numérotées (maquette indispos)
+        section1: '1. Plage horaire de votre établissement',
+        section2: '2. Jours et demi-journées indisponibles',
+        section2Hint: 'Cliquez sur une case pour la bloquer (rouge = pas de séance). Les week-ends sont prédéfinis.',
+        section3: '3. Périodes spéciales sur 12 mois (facultatif)',
+        weekend: 'Week-end',
+        blockRowAria: (part: string) => `Bloquer tout le ${part} (jours ouvrés)`,
+        blockRowHint: 'Cochez la case à gauche d’une ligne pour bloquer tout le matin ou l’après-midi en 1 clic.',
         presets: 'Raccourcis',
         presetWednesday: 'Pas le mercredi',
         presetMornings: 'Pas le matin',
         presetMonFri: 'Lundi et vendredi matin exclus',
+        presetReset: 'Tout réinitialiser',
         specialTitle: 'Périodes spéciales',
         specialIntro: 'Fermetures, jours fériés, travaux… Ces périodes seront évitées.',
         addPeriod: 'Ajouter une période',
@@ -602,11 +681,29 @@ export const fr = {
       },
 
       period: {
-        title: 'Période du contrat',
+        title: 'Étape 5 — Période du contrat',
+        intro: 'Sur quelle durée souhaitez-vous démarrer les séances ?',
         start: 'Date de début',
         end: 'Date de fin',
         preset: 'Ou choisissez une durée prédéfinie',
-        presets: { six: '6 mois', twelve: '12 mois', school: 'Année scolaire' },
+        presets: {
+          twelve: '12 mois',
+          twentyFour: '24 mois',
+          school: 'Année scolaire',
+          noEnd: 'Sans échéance',
+        },
+        // Carte « hero » recommandée (12 mois glissants)
+        recommendedTitle: '12 mois glissants',
+        recommendedRange: (start: string, end: string) => `Du ${start} au ${end}`,
+        recommendedDetail: (n: number) =>
+          `≈ ${n} séances · Reconduction automatique avec validation 3 mois avant l’échéance`,
+        otherOptions: 'Autres options de durée (rare)',
+        modifiableNote: 'Période modifiable — 12 mois glissants par défaut à partir de la date de début',
+        seeSlots: 'Voir les créneaux suggérés',
+        recommended: 'Recommandé',
+        openEndedNote: 'Contrat sans fin : reconduction tacite, arrêtable à tout moment.',
+        openEndedValue: 'Sans échéance (contrat sans fin)',
+        openEndedShort: 'Sans fin',
         startError: 'Choisissez une date de début pour continuer',
         endError: 'Choisissez une date de fin postérieure au début',
         startHelp: 'Choisissez une date à partir de demain',
@@ -643,6 +740,13 @@ export const fr = {
         success:
           'Votre demande est envoyée. Elle sera planifiable une fois validée par l’équipe DS.',
         estimatedRate: 'Tarif par séance (indicatif)',
+      },
+
+      // Encart d'aide affiché sous CHAQUE étape (cf. maquette Loïc).
+      help: {
+        title: 'Besoin d’aide ?',
+        body: 'L’équipe DS peut prendre en main cette configuration depuis son back-office si vous préférez le faire par téléphone. Contactez-nous via',
+        email: 'contact@deuxiemesouffle.fr',
       },
     },
 
@@ -763,7 +867,7 @@ export const fr = {
     deleteConfirm: 'Supprimer le contact',
     deleted: 'Contact supprimé.',
     cannotDeletePrincipal: 'Le contact principal ne peut pas être supprimé',
-    hasAccount: 'Possède un accès à l’espace EHPAD',
+    hasAccount: 'Possède un accès à l’espace partenaire',
     accountInactive: 'Accès non activé',
   },
 
@@ -811,6 +915,13 @@ export const fr = {
       sessions: (n: number) => `${n} ${plural(n, 'séance', 'séances')}`,
       dueOn: (date: string) => `À régler avant le ${date}`,
       paidOn: (date: string) => `Payée le ${date}`,
+      breakdownTitle: 'Détail des séances',
+      breakdownIntro: 'Le détail des séances facturées sur la période.',
+      breakdownDate: 'Date',
+      breakdownCoach: 'Coach',
+      breakdownType: 'Type',
+      breakdownAmount: 'Montant HT',
+      breakdownTotal: 'Total HT',
     },
   },
 
@@ -946,7 +1057,7 @@ export const fr = {
         body: 'Dernière vérification il y a plus de 2 mois. Une vérification rapide garantit que les bonnes personnes sont prévenues.',
       },
       system: {
-        title: 'Bienvenue sur votre espace EHPAD',
+        title: 'Bienvenue sur votre espace partenaire',
         body: 'Suivez vos séances, contrats, évaluations et factures depuis cette interface.',
       },
     },

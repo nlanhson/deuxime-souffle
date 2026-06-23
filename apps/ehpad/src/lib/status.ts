@@ -23,7 +23,7 @@ import type {
   UnitType,
 } from '@/types/models';
 
-export type ChipVariant = 'info' | 'progress' | 'warning' | 'pending' | 'neutral';
+export type ChipVariant = 'info' | 'progress' | 'warning' | 'pending' | 'review' | 'neutral';
 
 export interface ChipSpec {
   label: string;
@@ -58,11 +58,17 @@ export function contractStatusChip(status: ContractStatus): ChipSpec {
       };
     case 'expire':
       return { label: getStrings().status.contract.expire, variant: 'neutral', icon: CircleSlash };
+    // Rejeté = état clos, sans urgence : gris « inactif » (comme expiré / non
+    // reconduit), pas de rouge qui crierait « agir maintenant ». L'icône triangle +
+    // le libellé le distinguent des autres états gris. La resoumission vit sur le détail.
     case 'rejete':
-      return { label: getStrings().status.contract.rejete, variant: 'warning', icon: AlertTriangle };
+      return { label: getStrings().status.contract.rejete, variant: 'neutral', icon: AlertTriangle };
+    // Décision client : on ne distingue plus « En révision » d'« En attente » — une
+    // modification en attente se présente comme un contrat « En attente » (même
+    // pastille, même libellé). Le détail garde sa bannière explicative propre.
     case 'modification_en_attente':
       return {
-        label: getStrings().status.contract.modification_en_attente,
+        label: getStrings().status.contract.en_attente_validation,
         variant: 'pending',
         icon: Hourglass,
       };

@@ -9,8 +9,8 @@ interface RatingInputProps {
   onChange: (value: number) => void;
 }
 
-/** Note 1–5 — radiogroup, chaque étoile ≥ 44px, étoiles BLEUES (jamais or),
- *  valeur toujours annoncée en toutes lettres. */
+/** Note 1–5 — radiogroup, chaque étoile ≥ 44px, étoiles OR à la sélection
+ *  (remplissage or vif + bord or foncé AA), valeur toujours annoncée en toutes lettres. */
 export function RatingInput({ legend, value, onChange }: RatingInputProps) {
   const fr = useStrings();
   const name = useId();

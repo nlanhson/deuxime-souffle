@@ -16,14 +16,14 @@ import {
 import { palette, spacing as sp, radius as r } from '../theme/theme';
 import { ChevronDown, type LucideIcon } from '../icons';
 
-const CARD = palette.neutral[800];
-const BORDER = 'rgba(255,255,255,0.10)';
+const CARD = palette.neutral[0];
+const BORDER = palette.neutral[200];
 const BORDER_ERR = 'rgba(225,50,43,0.65)';
-const ICON = palette.neutral[400];
-const PLACEHOLDER = palette.neutral[500];
-const TXT = palette.neutral[50];
-const ON_2 = palette.neutral[300];
-const MUTED = palette.neutral[500];
+const ICON = palette.neutral[500];
+const PLACEHOLDER = palette.neutral[600];
+const TXT = palette.neutral[900];
+const ON_2 = palette.neutral[600];
+const MUTED = palette.neutral[600];
 // Field labels use Inter (the body family), matching AuthTextField — Oswald reads cramped at label size.
 const F = { label: 'Inter_600SemiBold', body: 'Inter_400Regular' };
 
@@ -73,7 +73,7 @@ const st = StyleSheet.create({
     marginTop: sp.md, marginBottom: sp.xs,
   },
   label: { fontFamily: F.label, fontSize: 13, letterSpacing: 0.2, color: ON_2 },
-  optional: { fontFamily: F.body, fontSize: 12, color: MUTED },
+  optional: { fontFamily: F.body, fontSize: 13, color: MUTED },
   wrap: {
     flexDirection: 'row', alignItems: 'center', gap: sp.sm, minHeight: 54,
     paddingHorizontal: sp.md, borderRadius: r.lg, backgroundColor: CARD,
@@ -82,5 +82,5 @@ const st = StyleSheet.create({
   wrapError: { borderColor: BORDER_ERR },
   value: { flex: 1, fontFamily: F.body, fontSize: 16, color: TXT, paddingVertical: 14 },
   placeholderTxt: { color: PLACEHOLDER },
-  help: { fontFamily: F.body, fontSize: 12, lineHeight: 16, color: MUTED, marginTop: 6 },
+  help: { fontFamily: F.body, fontSize: 13, lineHeight: 16, color: MUTED, marginTop: 6 },
 });

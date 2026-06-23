@@ -12,31 +12,17 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Skeleton, SkeletonCircle } from '../components/Skeleton';
 import { surfaces, spacing as sp, radius as r, palette } from '../theme/theme';
 
 const S = surfaces.coach;
-const BORDER_INK = palette.neutral[700];
-const CARD_BG = S.surface;                      // #2B2B2B raised card
-const CARD_BORDER = 'rgba(255,255,255,0.07)';   // dim top-lit hairline
+const BORDER_INK = palette.neutral[200];
+const CARD_BG = S.surface;                      // white raised card
+const CARD_BORDER = 'rgba(24,23,21,0.07)';         // hairline
 
 /* ---------- shared building blocks ---------- */
-
-// App header — eyebrow + title left, bell + avatar right (Accueil / Séances / Disponibles).
-// `level` adds the gold coach-badge chip that only Accueil's header carries (PLA-01).
-function HeaderSkeleton({ level }: { level?: boolean }) {
-  return (
-    <View style={sk.appbar}>
-      <View style={{ flex: 1 }}>
-        <Skeleton w={84} h={12} r={4} />
-        <Skeleton w={170} h={26} r={7} style={{ marginTop: 9 }} />
-      </View>
-      {level ? <Skeleton w={58} h={32} r={r.pill} /> : null}
-      <SkeletonCircle d={24} />
-      <SkeletonCircle d={42} />
-    </View>
-  );
-}
 
 // A raised card placeholder matching the app's dark cards (neutral-800 + hairline + radius).
 function SkCard({ children, style }: { children?: React.ReactNode; style?: object }) {
@@ -122,9 +108,24 @@ function CardRowsSkeleton({ rows }: { rows: number }) {
 /* ---------- screen skeletons ---------- */
 
 export function AccueilSkeleton() {
+  // The ink hero is a fixed sibling (always on screen); the skeleton covers only the scroll body,
+  // which starts with the cream level card.
   return (
     <View style={sk.screen}>
-      <HeaderSkeleton level />
+      {/* Coach level — section title + cream level card (first scroll item below the fixed hero) */}
+      <View style={[sk.section, { marginTop: sp.lg }]}>
+        <View style={sk.secHead}>
+          <Skeleton w={96} h={14} r={5} />
+        </View>
+        <View style={sk.levelCardSk}>
+          <View style={sk.secHead}>
+            <Skeleton w={88} h={28} r={r.pill} />
+            <Skeleton w={64} h={16} r={5} />
+          </View>
+          <Skeleton w={'100%'} h={10} r={r.pill} style={{ marginTop: sp.md }} />
+          <Skeleton w={140} h={13} r={4} style={{ marginTop: sp.sm }} />
+        </View>
+      </View>
 
       {/* This month — earnings: title + chevron, then one condensed value line (no box) */}
       <View style={sk.section}>
@@ -153,8 +154,8 @@ export function AccueilSkeleton() {
           <Skeleton w={'66%'} h={14} r={5} style={{ marginTop: 8 }} />
           <Skeleton w={150} h={44} r={8} style={{ marginTop: sp.md }} />
           <View style={sk.ctaRow}>
-            <Skeleton w={'40%'} h={52} r={r.pill} />
-            <Skeleton style={{ flex: 1 }} h={52} r={r.pill} />
+            <Skeleton w={'40%'} h={52} r={r.button} />
+            <Skeleton style={{ flex: 1 }} h={52} r={r.button} />
           </View>
         </SkCard>
       </View>
@@ -178,10 +179,9 @@ export function AccueilSkeleton() {
 }
 
 export function SeancesSkeleton() {
+  // The ink header is a fixed sibling (always on screen), so the skeleton covers only the scroll body.
   return (
     <View style={sk.screen}>
-      <HeaderSkeleton />
-
       {/* Segmented (Confirmed / Past / Applications) */}
       <Skeleton w={'100%'} h={40} r={10} style={{ marginTop: sp.md }} />
 
@@ -208,17 +208,11 @@ export function SeancesSkeleton() {
 }
 
 export function DisponiblesSkeleton() {
+  // The ink header is a fixed sibling (always on screen), so the skeleton covers only the scroll body.
   return (
     <View style={sk.screen}>
-      <HeaderSkeleton />
-
-      {/* Near-you summary */}
-      <View style={sk.nearRow}>
-        <SkeletonCircle d={15} />
-        <Skeleton w={180} h={14} r={5} />
-      </View>
-
-      {/* Calendar (defaults to Week view) */}
+      {/* Calendar (defaults to Week view) — the near-you summary row was removed (Q1), so the
+          skeleton leads straight into the calendar to match the loaded screen. */}
       <View style={[sk.section, { marginTop: sp.xl }]}>
         <CalendarSkeleton />
       </View>
@@ -248,7 +242,7 @@ export function RevenusSkeleton() {
           <Skeleton w={120} h={12} r={4} />
           <Skeleton w={100} h={12} r={4} />
         </View>
-        <Skeleton w={'100%'} h={52} r={r.pill} style={{ marginTop: sp.lg }} />
+        <Skeleton w={'100%'} h={52} r={r.button} style={{ marginTop: sp.lg }} />
       </SkCard>
 
       {/* Three stat tiles */}
@@ -297,7 +291,7 @@ export function ProfileSkeleton() {
 
       {/* Availability (6 rows) + CTA */}
       <CardRowsSkeleton rows={6} />
-      <Skeleton w={'100%'} h={52} r={r.pill} style={{ marginTop: sp.md }} />
+      <Skeleton w={'100%'} h={52} r={r.button} style={{ marginTop: sp.md }} />
 
       {/* Goals & rate (2), Progression & activity (3), Documents (4), Account (4 — incl. delete) */}
       <CardRowsSkeleton rows={2} />
@@ -322,28 +316,38 @@ function BadgeCardSkeleton({ dated }: { dated?: boolean }) {
 }
 
 export function BadgesSkeleton() {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={sk.sheetBody}>
-      {/* Level card — chip + title/sub, progress meter, next-level line */}
-      <SkCard>
-        <View style={sk.levelHead}>
-          <SkeletonCircle d={52} />
-          <View style={{ flex: 1, gap: 8 }}>
-            <Skeleton w={'40%'} h={26} r={7} />
-            <Skeleton w={'62%'} h={13} r={4} />
-          </View>
+    <View style={{ flex: 1 }}>
+      {/* Ink hero band — medal, level numeral, identity line, level meter (matches the real header) */}
+      <View style={[sk.inkHero, { paddingTop: insets.top + sp.sm }]}>
+        <View style={sk.inkTop}>
+          <View style={[sk.inkGhost, { width: 120, height: 13, borderRadius: 4 }]} />
+          <View style={[sk.inkGhost, { width: 44, height: 22, borderRadius: r.pill }]} />
         </View>
-        <Skeleton w={'100%'} h={8} r={r.pill} style={{ marginTop: sp.md }} />
-        <Skeleton w={'56%'} h={13} r={4} style={{ marginTop: sp.sm }} />
-      </SkCard>
+        <View style={sk.inkCenter}>
+          <View style={[sk.inkGhost, { width: 112, height: 112, borderRadius: 999 }]} />
+          <View style={[sk.inkGhost, { width: 64, height: 52, borderRadius: 8, marginTop: sp.md }]} />
+          <View style={[sk.inkGhost, { width: 150, height: 14, borderRadius: 4, marginTop: 8 }]} />
+        </View>
+        <View style={[sk.inkGhost, { width: '100%', height: 12, borderRadius: r.pill, marginTop: sp.md }]} />
+        <View style={[sk.inkGhost, { width: '46%', height: 13, borderRadius: 4, marginTop: sp.sm }]} />
+      </View>
 
-      {/* Earned grid (4) */}
-      <View style={sk.sectionHead}><Skeleton w={90} h={18} r={5} /></View>
-      <View style={sk.grid}>{[0, 1, 2, 3].map((i) => <BadgeCardSkeleton key={i} dated />)}</View>
+      {/* Cream body — next-badge spotlight, then the 8-badge collection */}
+      <View style={sk.sheetBody}>
+        <SkCard style={{ flexDirection: 'row', alignItems: 'center', gap: sp.md, marginTop: sp.sm }}>
+          <SkeletonCircle d={56} />
+          <View style={{ flex: 1, gap: 7 }}>
+            <Skeleton w={'34%'} h={12} r={4} />
+            <Skeleton w={'58%'} h={17} r={5} />
+            <Skeleton w={'100%'} h={6} r={r.pill} />
+          </View>
+        </SkCard>
 
-      {/* In-progress grid (3) */}
-      <View style={sk.sectionHead}><Skeleton w={110} h={18} r={5} /></View>
-      <View style={sk.grid}>{[0, 1, 2].map((i) => <BadgeCardSkeleton key={i} />)}</View>
+        <View style={sk.sectionHead}><Skeleton w={120} h={18} r={5} /></View>
+        <View style={sk.grid}>{[0, 1, 2, 3].map((i) => <BadgeCardSkeleton key={i} dated />)}</View>
+      </View>
     </View>
   );
 }
@@ -431,7 +435,14 @@ const sk = StyleSheet.create({
   screen: { paddingHorizontal: sp.lg },
   sheetBody: { paddingHorizontal: sp.lg, paddingTop: sp.sm },
 
-  appbar: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, paddingTop: sp.sm, paddingBottom: sp.sm },
+  /* progression — ink hero placeholder (matches the real fixed ink header) */
+  inkHero: { backgroundColor: S.ink.bg, paddingHorizontal: sp.lg, paddingBottom: sp.lg, borderBottomLeftRadius: r.xl, borderBottomRightRadius: r.xl },
+  inkTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  inkCenter: { alignItems: 'center', marginTop: sp.md },
+  inkGhost: { backgroundColor: 'rgba(255,255,255,0.08)' },
+
+  // Cream level-card placeholder (first scroll item under Home's fixed ink hero).
+  levelCardSk: { backgroundColor: palette.neutral[0], borderRadius: r.lg, borderWidth: 1, borderColor: palette.neutral[200], padding: sp.md }, // top spacing from the section wrapper
   section: { marginTop: sp['2xl'] },
   secHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: sp.sm },
   spread: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: sp.sm },
@@ -461,9 +472,6 @@ const sk = StyleSheet.create({
   /* séances */
   sessionCard: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.md, paddingVertical: sp.md },
 
-  /* disponibles */
-  nearRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: sp.xs },
-
   /* revenus */
   monthStepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
 
@@ -473,7 +481,6 @@ const sk = StyleSheet.create({
   profileRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, minHeight: 56, paddingVertical: sp.sm },
 
   /* badges & level */
-  levelHead: { flexDirection: 'row', alignItems: 'center', gap: sp.md },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: sp.sm },
   badge: {
     width: '48%', flexGrow: 1, borderRadius: r.lg, padding: sp.md,

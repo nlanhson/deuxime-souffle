@@ -45,12 +45,12 @@ export type SegmentedProps<T extends string> = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** Coach ink defaults — a neutral track with a one-step-lighter selected pill. */
+/** Coach light defaults — a soft inset track with a white raised selected pill (iOS-style). */
 export const DEFAULT_SEGMENTED_THEME: Required<Omit<SegmentedTheme, 'trackBorder'>> = {
-  track: palette.neutral[800],
-  selected: palette.neutral[700],
-  label: palette.neutral[300],
-  selectedLabel: palette.neutral[50],
+  track: palette.neutral[100],
+  selected: palette.neutral[0],
+  label: palette.neutral[600],
+  selectedLabel: palette.neutral[900],
 };
 
 /** Shared label type face — Inter SemiBold, the app's body font. */

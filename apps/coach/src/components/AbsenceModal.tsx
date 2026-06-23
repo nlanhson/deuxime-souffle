@@ -14,30 +14,31 @@
  */
 import React from 'react';
 import {
-  KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 
 import { CalendarX, X } from '../icons';
+import { useKeyboardInset } from '../lib/useKeyboardInset';
 import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
-import { copy } from '../copy';
+import { useCopy } from '../i18n';
+import { GradientFill } from './GradientFill';
+import type { Copy } from '../copy';
 
 const S = surfaces.coach;
 const CANVAS = S.canvas;
 const CARD = S.surface;
-const SUBTLE = palette.neutral[800];
+const SUBTLE = palette.neutral[100];
 const ON_CANVAS = S.textPrimary;
 const ON_CANVAS_2 = S.textSecondary;
-const ON_CARD = palette.neutral[50];
-const ON_CARD_2 = palette.neutral[300];
-const ON_CARD_3 = palette.neutral[500];
-const DANGER = palette.rouge[300];
-const DIVIDER = 'rgba(255,255,255,0.08)';
+const ON_CARD = palette.neutral[900];
+const ON_CARD_2 = palette.neutral[600];
+const ON_CARD_3 = palette.neutral[600];
+const DANGER = palette.rouge[600];
+const DIVIDER = 'rgba(24,23,21,0.07)';
 
 const F = { oswS: 'Oswald_600SemiBold', body: 'Inter_400Regular', bodyS: 'Inter_600SemiBold', bodyB: 'Inter_700Bold' };
 
-const C = copy.sessions.absenceModal;
-
-export type AbsenceReason = keyof typeof C.reasons;
+export type AbsenceReason = keyof Copy['sessions']['absenceModal']['reasons'];
 const REASON_ORDER: AbsenceReason[] = ['illness', 'emergency', 'transport', 'other'];
 const STEPS = ['reason', 'details', 'confirm'] as const;
 type Step = (typeof STEPS)[number];
@@ -50,6 +51,9 @@ export function AbsenceModal({
   onClose: () => void;
   onConfirm: (reason: AbsenceReason, message?: string) => void;
 }) {
+  const copy = useCopy();
+  const kb = useKeyboardInset();
+  const C = copy.sessions.absenceModal;
   const [step, setStep] = React.useState<Step>('reason');
   const [reason, setReason] = React.useState<AbsenceReason | null>(null);
   const [message, setMessage] = React.useState('');
@@ -81,7 +85,9 @@ export function AbsenceModal({
           </Pressable>
         </View>
 
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        {/* Footer lifts above the keyboard via useKeyboardInset (KeyboardAvoidingView under-lifts
+            inside a pageSheet modal). iOS pads by the keyboard height; Android resizes natively (kb=0). */}
+        <View style={{ flex: 1, paddingBottom: kb }}>
           <ScrollView contentContainerStyle={st.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             {session ? <Text style={st.session}>{`${session.place} · ${session.day} · ${session.time}`}</Text> : null}
             <Text style={st.intro}>{C.body}</Text>
@@ -177,10 +183,13 @@ export function AbsenceModal({
               accessibilityRole="button"
               accessibilityState={{ disabled: !canContinue }}
             >
+              {/* "Next" steps carry the brand gradient (DT-02); the final destructive "Confirm
+                  absence" stays flat danger red. */}
+              {step !== 'confirm' ? <GradientFill /> : null}
               <Text style={st.primaryTxt}>{step === 'confirm' ? C.confirm : C.next}</Text>
             </Pressable>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       </View>
     </Modal>
   );
@@ -200,11 +209,11 @@ const st = StyleSheet.create({
   scroll: { paddingHorizontal: sp.lg, paddingBottom: sp.lg },
 
   session: { fontFamily: F.bodyS, fontSize: 14, color: ON_CANVAS_2 },
-  intro: { fontFamily: F.body, fontSize: 15, lineHeight: 22, color: ON_CANVAS_2, marginTop: sp.xs },
+  intro: { fontFamily: F.body, fontSize: 16, lineHeight: 22, color: ON_CANVAS_2, marginTop: sp.xs },
 
   stepHead: { marginTop: sp.lg, marginBottom: sp.sm },
   dots: { flexDirection: 'row', gap: 6 },
-  stepDot: { flex: 1, height: 4, borderRadius: 999, backgroundColor: palette.neutral[700] },
+  stepDot: { flex: 1, height: 4, borderRadius: 999, backgroundColor: palette.neutral[200] },
   stepDotOn: { backgroundColor: color.action },
   stepTxt: { fontFamily: F.oswS, fontSize: 14, letterSpacing: 0.3, color: ON_CANVAS, marginTop: sp.sm },
 
@@ -214,12 +223,12 @@ const st = StyleSheet.create({
   },
   labelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   fieldLabel: { fontFamily: F.bodyS, fontSize: 14, color: ON_CARD },
-  optional: { fontFamily: F.body, fontSize: 12, color: ON_CARD_3 },
+  optional: { fontFamily: F.body, fontSize: 13, color: ON_CARD_3 },
 
   reasonRow: { flexDirection: 'row', flexWrap: 'wrap', gap: sp.sm, marginTop: sp.sm },
   chip: {
     minHeight: 44, paddingVertical: 10, paddingHorizontal: 14, borderRadius: r.pill,
-    backgroundColor: palette.neutral[900], borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: palette.neutral[100], borderWidth: 1, borderColor: 'rgba(24,23,21,0.10)',
     alignItems: 'center', justifyContent: 'center',
   },
   chipOn: { borderColor: DANGER, backgroundColor: 'rgba(225,50,43,0.14)' },
@@ -227,17 +236,17 @@ const st = StyleSheet.create({
   chipTxtOn: { color: DANGER },
 
   input: {
-    minHeight: 96, maxHeight: 160, backgroundColor: palette.neutral[900], borderRadius: r.lg,
+    minHeight: 96, maxHeight: 160, backgroundColor: palette.neutral[100], borderRadius: r.lg,
     paddingHorizontal: sp.md, paddingTop: sp.sm, paddingBottom: sp.sm, marginTop: sp.sm,
-    fontFamily: F.body, fontSize: 15, color: ON_CARD, textAlignVertical: 'top',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
+    fontFamily: F.body, fontSize: 16, color: ON_CARD, textAlignVertical: 'top',
+    borderWidth: 1, borderColor: 'rgba(24,23,21,0.10)',
   },
-  helpTxt: { fontFamily: F.body, fontSize: 12, lineHeight: 17, color: ON_CARD_3, marginTop: sp.sm },
+  helpTxt: { fontFamily: F.body, fontSize: 13, lineHeight: 17, color: ON_CARD_3, marginTop: sp.sm },
 
   sumRow: { paddingVertical: sp.sm },
   sumDivider: { borderTopWidth: 1, borderTopColor: DIVIDER },
-  sumLabel: { fontFamily: F.body, fontSize: 12, color: ON_CARD_3 },
-  sumValue: { fontFamily: F.bodyS, fontSize: 15, lineHeight: 21, color: ON_CARD, marginTop: 2 },
+  sumLabel: { fontFamily: F.body, fontSize: 13, color: ON_CARD_3 },
+  sumValue: { fontFamily: F.bodyS, fontSize: 16, lineHeight: 21, color: ON_CARD, marginTop: 2 },
   noteWrap: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm, marginTop: sp.sm },
   noteTxt: { flex: 1, fontFamily: F.body, fontSize: 13, lineHeight: 19, color: ON_CARD_3 },
 
@@ -246,10 +255,10 @@ const st = StyleSheet.create({
     paddingHorizontal: sp.lg, paddingTop: sp.sm, paddingBottom: sp.xl,
     borderTopWidth: 1, borderTopColor: DIVIDER,
   },
-  backBtn: { minHeight: 48, paddingHorizontal: sp.lg, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { minHeight: 48, paddingHorizontal: sp.lg, borderRadius: r.button, alignItems: 'center', justifyContent: 'center' },
   backTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: ON_CANVAS_2 },
   primary: {
-    flex: 1, minHeight: 48, borderRadius: r.pill, backgroundColor: color.action,
+    flex: 1, minHeight: 48, borderRadius: r.button, backgroundColor: color.action,
     alignItems: 'center', justifyContent: 'center',
   },
   primaryDanger: { backgroundColor: palette.rouge[600] },

@@ -1,11 +1,20 @@
+import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Download } from 'lucide-react';
 import { useStrings } from '@/i18n';
 import * as api from '@/data/api';
 import { useAsync } from '@/hooks/useAsync';
 import { downloadStub } from '@/lib/pdf';
-import { capitalize, formatDate, formatEuro, formatMonthYear, parseDate } from '@/lib/format';
-import { invoiceStatusChip } from '@/lib/status';
+import { invoiceLineItems } from '@/lib/invoice';
+import {
+  capitalize,
+  formatDate,
+  formatEuro,
+  formatMonthYear,
+  formatShortDate,
+  parseDate,
+} from '@/lib/format';
+import { invoiceStatusChip, unitLabel } from '@/lib/status';
 import {
   Button,
   ButtonLink,
@@ -24,8 +33,23 @@ import styles from './invoices.module.css';
 export default function InvoiceDetailScreen() {
   const fr = useStrings();
   const { id = '' } = useParams();
-  const state = useAsync(() => api.getInvoice(id), [id]);
-  const invoice = state.data ?? null;
+  const state = useAsync(
+    () =>
+      Promise.all([api.getInvoice(id), api.listCoaches()]).then(([invoice, coaches]) => ({
+        invoice,
+        coaches,
+      })),
+    [id],
+  );
+  const invoice = state.data?.invoice ?? null;
+  const coaches = useMemo(() => state.data?.coaches ?? [], [state.data]);
+
+  // Détail séance-par-séance (simulé, déterministe) — cf. lib/invoice.ts.
+  const lines = useMemo(() => (invoice ? invoiceLineItems(invoice, coaches) : []), [invoice, coaches]);
+  const coachName = (coachId: string): string => {
+    const c = coaches.find((x) => x.id === coachId);
+    return c ? `${c.firstName} ${c.lastName}` : '—';
+  };
 
   if (state.loading) {
     return (
@@ -133,11 +157,53 @@ export default function InvoiceDetailScreen() {
           </div>
         </dl>
         <div className={styles.cardActions}>
-          <Button icon={Download} onClick={downloadPdf}>
+          {/* Action principale de la page : télécharger la facture → CTA primaire (dégradé). */}
+          <Button variant="primary" icon={Download} onClick={downloadPdf}>
             {fr.invoices.detail.downloadPdf}
           </Button>
         </div>
       </CardSection>
+
+      {/* QE-6 — détail séance-par-séance (transparence de facturation) : date, coach,
+          type, montant unitaire. Données simulées déterministes (cf. lib/invoice.ts) ;
+          la somme des lignes égale toujours le montant HT de la facture. */}
+      {lines.length > 0 && (
+        <CardSection title={fr.invoices.detail.breakdownTitle}>
+          <p className={styles.breakdownIntro}>{fr.invoices.detail.breakdownIntro}</p>
+          <div className={styles.breakdownScroll}>
+            <table className={styles.breakdownTable}>
+              <thead>
+                <tr>
+                  <th scope="col">{fr.invoices.detail.breakdownDate}</th>
+                  <th scope="col">{fr.invoices.detail.breakdownCoach}</th>
+                  <th scope="col">{fr.invoices.detail.breakdownType}</th>
+                  <th scope="col" className={styles.breakdownNum}>
+                    {fr.invoices.detail.breakdownAmount}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {lines.map((line, i) => (
+                  <tr key={`${line.date}-${i}`}>
+                    <td>{capitalize(formatShortDate(line.date))}</td>
+                    <td>{coachName(line.coachId)}</td>
+                    <td>{unitLabel(line.unitType)}</td>
+                    <td className={styles.breakdownNum}>{formatEuro(line.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th scope="row" colSpan={3}>
+                    {fr.invoices.detail.breakdownTotal}
+                  </th>
+                  <td className={styles.breakdownNum}>{formatEuro(invoice.amountHT)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </CardSection>
+      )}
     </>
   );
 }

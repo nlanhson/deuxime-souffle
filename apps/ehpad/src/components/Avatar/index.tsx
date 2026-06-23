@@ -7,7 +7,7 @@ interface AvatarProps {
   lastName: string;
   /** Photo réelle de la personne. Affichée en priorité ; repli sur les initiales si absente ou en erreur. */
   src?: string | undefined;
-  size?: 'sm' | 'md' | 'lg' | undefined;
+  size?: 'sm' | 'md' | 'lg' | 'topbar' | undefined;
   /** Décoratif quand le nom est déjà affiché à côté. */
   decorative?: boolean | undefined;
 }

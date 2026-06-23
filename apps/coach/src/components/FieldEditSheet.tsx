@@ -27,11 +27,11 @@ import { useReducedMotion } from '../lib/useReducedMotion';
 import { AuthTextField } from './AuthTextField';
 import { PrimaryButton } from './PrimaryButton';
 
-const CARD = palette.neutral[800];
-const ON_CARD = palette.neutral[50];
-const ON_CARD_2 = palette.neutral[300];
-const ON_CARD_3 = palette.neutral[500];
-const SUBTLE = palette.neutral[800];
+const CARD = palette.neutral[0];
+const ON_CARD = palette.neutral[900];
+const ON_CARD_2 = palette.neutral[600];
+const ON_CARD_3 = palette.neutral[600];
+const SUBTLE = palette.neutral[100];
 const TINT = 'rgba(0,0,0,0.6)';
 const FALLBACK_H = 600; // off-screen start until the card is measured
 const F = { bodyB: 'Inter_700Bold', bodyS: 'Inter_600SemiBold', body: 'Inter_400Regular' };
@@ -238,12 +238,12 @@ const st = StyleSheet.create({
     width: '100%', maxHeight: '88%', backgroundColor: CARD,
     borderTopLeftRadius: r['2xl'], borderTopRightRadius: r['2xl'],
     paddingHorizontal: sp.lg, paddingTop: sp.md, paddingBottom: sp.xl,
-    borderWidth: 1, borderBottomWidth: 0, borderColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1, borderBottomWidth: 0, borderColor: 'rgba(24,23,21,0.07)',
     shadowColor: '#000', shadowOffset: { width: 0, height: -12 }, shadowOpacity: 0.4, shadowRadius: 28,
   },
   grabber: {
     alignSelf: 'center', width: 36, height: 4, borderRadius: 999,
-    backgroundColor: palette.neutral[700], marginBottom: sp.sm,
+    backgroundColor: palette.neutral[300], marginBottom: sp.sm,
   },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: sp.sm },
   title: { flex: 1, fontFamily: F.bodyB, fontSize: 22, color: ON_CARD },
@@ -256,15 +256,15 @@ const st = StyleSheet.create({
   /* segmented choice (e.g. Strict / Flexible) */
   choiceBlock: { marginTop: sp.md },
   choiceLabel: { fontFamily: 'Oswald_600SemiBold', fontSize: 13, letterSpacing: 0.5, color: ON_CARD_2, marginBottom: sp.xs },
-  segTrack: { flexDirection: 'row', gap: 6, padding: 4, backgroundColor: palette.neutral[900], borderRadius: r.pill },
-  seg: { flex: 1, minHeight: 40, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center' },
+  segTrack: { flexDirection: 'row', gap: 6, padding: 4, backgroundColor: palette.neutral[100], borderRadius: r.pill },
+  seg: { flex: 1, minHeight: 44, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center' },
   segOn: { backgroundColor: color.action },
   segTxt: { fontFamily: F.bodyS, fontSize: 14, color: ON_CARD_2 },
   segTxtOn: { color: color.onAction },
 
-  error: { fontFamily: F.body, fontSize: 13, color: palette.rouge[300], marginTop: sp.sm },
+  error: { fontFamily: F.body, fontSize: 13, color: palette.rouge[700], marginTop: sp.sm }, // DT-20: AA error text on light
 
   actions: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, marginTop: sp.lg },
-  cancel: { minHeight: 48, paddingHorizontal: sp.lg, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center' },
+  cancel: { minHeight: 48, paddingHorizontal: sp.lg, borderRadius: r.button, alignItems: 'center', justifyContent: 'center' },
   cancelTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: ON_CARD_3 },
 });

@@ -2,7 +2,7 @@
 
 > **Status:** functional first draft (v0.1) · **Surface:** Coach (mobile, ink intensity)
 > **Implemented in:** React Native (Expo SDK 56) — [App.tsx](App.tsx), runs on the iOS Simulator.
-> Consumes the Le Club tokens from [theme.ts](theme.ts). MVP scope only.
+> Consumes the Le Mouvement tokens from [theme.ts](theme.ts). MVP scope only.
 >
 > *(A throwaway HTML/CSS prototype was used to pressure-test the tokens first; it has been retired
 > now that the RN app is the source of truth. This spec is implementation-agnostic — the story map,
@@ -12,7 +12,7 @@
 
 ## 1. Purpose
 
-First screen built on Le Club. Goals, in order:
+First screen built on Le Mouvement. Goals, in order:
 1. Surface the Coach's **daily job** (get to the next session, check in) above everything else.
 2. Prove the **ink / red-dominant** coach intensity reads well and stays AA.
 3. **Pressure-test the tokens** — find what's missing before it's expensive (see §4).
@@ -50,7 +50,7 @@ revenue breakdown) to the screens behind the tabs. Check-in (`C16`) and the repo
 ## 3. Scope decisions (read this before adding anything)
 
 ### ⚠️ Gamification is intentionally absent
-The "Le Club" moodboard leans hard into game mechanics — points, séries, médailles, levels,
+The "Le Mouvement" moodboard leans hard into game mechanics — points, séries, médailles, levels,
 leaderboards. **The PRD explicitly defers gamification to V2** ("Gamification … explicitly
 deferred to later product iterations", MoSCoW note) and **there is no gamification epic in the
 Coach feature list (C01–C35).** So this screen has **no badges, no points, no streak, no level**.

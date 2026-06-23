@@ -13,10 +13,11 @@ import {
 } from '../icons';
 
 import { palette, color, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
-import { copy } from '../copy';
+import { useCopy } from '../i18n';
 import { ReportScreen } from '../screens/ReportScreen';
 import { RevenusScreen } from '../screens/RevenusScreen';
 import { BottomSheet } from './BottomSheet';
+import { GradientFill } from './GradientFill';
 import { useFirstLoad } from '../lib/useFirstLoad';
 import { Reveal } from '../components/Reveal';
 import { NotificationsSkeleton } from '../screens/skeletons';
@@ -26,12 +27,12 @@ const isDark = S.colorScheme === 'dark';
 const CANVAS = S.canvas;                                            // ink (dark) | cream (light)
 const CARD = S.surface;                                             // dark ink card in both schemes
 const SUBTLE = isDark ? palette.neutral[800] : palette.neutral[100]; // subtle container on the canvas
-const DIVIDER = palette.neutral[700];
+const DIVIDER = palette.neutral[200];
 const ON_CANVAS = S.textPrimary;                                   // on-canvas text — adapts per scheme
 const ON_CANVAS_2 = S.textSecondary;
-const ON_CARD = palette.neutral[50];                              // light text inside the dark card
-const ON_CARD_2 = palette.neutral[300];
-const ON_CARD_3 = palette.neutral[500];
+const ON_CARD = palette.neutral[900];                            // dark text inside the white card
+const ON_CARD_2 = palette.neutral[600];
+const ON_CARD_3 = palette.neutral[600];
 
 const F = {
   oswR: 'Oswald_400Regular',
@@ -94,7 +95,7 @@ const SEED: Notif[] = [
   {
     id: 'n2', type: 'checkin', title: 'Fenêtre de check-in ouverte', body: 'Résidence Les Tilleuls · 14:30 · vous êtes sur place', time: '12m', unread: true,
     detail: 'Vous êtes arrivé à la Résidence Les Tilleuls. La fenêtre de check-in de votre séance de groupe de 14:30 est ouverte. Confirmez votre check-in géolocalisé pour démarrer la séance.',
-    action: 'Faire le check-in',
+    action: 'Je suis sur place',
   },
   {
     id: 'n3', type: 'reportDue', title: 'Compte rendu à compléter', body: 'Résidence Bellevue · séance d’hier', time: '1h', unread: true,
@@ -123,8 +124,8 @@ const SEED: Notif[] = [
 function Row({ n, first, onPress }: { n: Notif; first: boolean; onPress: () => void }) {
   const m = TYPE_META[n.type];
   const Icon = m.Icon;
-  // Read-state drives the icon tone now (not the per-type accent): unread = white, read = grey.
-  const iconColor = n.unread ? palette.neutral[50] : palette.neutral[500];
+  // Read-state drives the icon tone now (not the per-type accent): unread = ink, read = grey.
+  const iconColor = n.unread ? palette.neutral[900] : palette.neutral[500];
   return (
     <Pressable
       style={({ pressed }) => [st.row, !first && st.rowDivider, pressed && { opacity: 0.9 }]}
@@ -143,7 +144,7 @@ function Row({ n, first, onPress }: { n: Notif; first: boolean; onPress: () => v
         <Text style={st.body}>{n.body}</Text>
         {n.result ? (
           <View style={st.doneChip}>
-            <Check size={12} color={palette.vert[300]} />
+            <Check size={12} color={palette.vert[700]} />
             <Text style={st.doneChipTxt}>{n.result}</Text>
           </View>
         ) : null}
@@ -166,6 +167,7 @@ function Section({ label, items, onOpen }: { label: string; items: Notif[]; onOp
 /* ---------- modal ---------- */
 
 export function NotificationCenter({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const copy = useCopy();
   const [items, setItems] = React.useState<Notif[]>(SEED);
   const [selected, setSelected] = React.useState<Notif | null>(null);
   const [reportOpen, setReportOpen] = React.useState(false);   // the real 6-step report form
@@ -253,6 +255,7 @@ function NotificationDetail({
   onRoute: (n: Notif) => void;                          // open a real screen (report / earnings)
   onCompleteTask: (id: string, chip?: string) => void;  // mark a 'task' notification done
 }) {
+  const copy = useCopy();
   const m = notif ? TYPE_META[notif.type] : null;
   const Icon = m?.Icon;
   const cfg = notif ? TYPE_ACTION[notif.type] : null;
@@ -296,6 +299,7 @@ function NotificationDetail({
                 <Text style={st.detailTitle}>{cfg.doneTitle}</Text>
                 <Text style={st.detailBody}>{cfg.doneBody}</Text>
                 <Pressable style={st.detailCta} onPress={onClose} accessibilityRole="button">
+                  <GradientFill />
                   <Text style={st.detailCtaTxt}>{copy.notifications.actionDone}</Text>
                 </Pressable>
               </>
@@ -306,6 +310,7 @@ function NotificationDetail({
                 <Text style={st.detailBody}>{notif.detail}</Text>
 
                 <Pressable style={st.detailCta} onPress={onCta} accessibilityRole="button">
+                  <GradientFill />
                   <Text style={st.detailCtaTxt}>{notif.action}</Text>
                 </Pressable>
               </>
@@ -342,12 +347,12 @@ const st = StyleSheet.create({
   rowDivider: { borderTopWidth: 1, borderTopColor: DIVIDER },
   iconWrap: {
     width: 40, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',   // very dim, just enough to seat the icon
+    backgroundColor: 'rgba(24,23,21,0.04)',   // very dim, just enough to seat the icon
   },
   rowHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: sp.sm },
   title: { flex: 1, fontFamily: F.interM, fontSize: 16, color: ON_CARD },
-  time: { fontFamily: F.body, fontSize: 12, color: ON_CARD_3 },
-  body: { fontFamily: F.body, fontSize: 14, color: ON_CARD_2, marginTop: 2 },
+  time: { fontFamily: F.body, fontSize: 13, color: ON_CARD_3 },
+  body: { fontFamily: F.body, fontSize: 16, color: ON_CARD_2, marginTop: 2 },
   unreadDot: { width: 9, height: 9, borderRadius: 999, backgroundColor: color.action },
   // "task done" chip — green, on the row, replaces the unread dot once the CTA has run.
   doneChip: {
@@ -355,26 +360,26 @@ const st = StyleSheet.create({
     marginTop: 6, paddingVertical: 3, paddingHorizontal: 8, borderRadius: r.pill,
     backgroundColor: 'rgba(47,158,107,0.16)',
   },
-  doneChipTxt: { fontFamily: F.oswM, fontSize: 11, letterSpacing: 0.6, color: palette.vert[300] },
+  doneChipTxt: { fontFamily: F.oswM, fontSize: 13, letterSpacing: 0.6, color: palette.vert[700] }, // DT-20: AA on green-tint chip
 
-  empty: { fontFamily: F.body, fontSize: 15, color: ON_CANVAS_2, textAlign: 'center', marginTop: sp['2xl'] },
+  empty: { fontFamily: F.body, fontSize: 16, color: ON_CANVAS_2, textAlign: 'center', marginTop: sp['2xl'] },
 
   /* detail popup — content inside the shared BottomSheet (the sheet owns the card + backdrop) */
   detailTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  // Lighter than the card (neutral-800) so the white glyph sits on a clearly distinct chip.
+  // A soft light inset against the white card so the ink glyph sits on a clearly distinct chip.
   detailIcon: {
     width: 52, height: 52, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: palette.neutral[700], borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: palette.neutral[200], borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)',
   },
   detailClose: {
     width: 36, height: 36, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
     backgroundColor: SUBTLE,
   },
-  detailTime: { fontFamily: F.body, fontSize: 12, letterSpacing: 0.3, color: ON_CARD_3, marginTop: sp.md },
+  detailTime: { fontFamily: F.body, fontSize: 13, letterSpacing: 0.3, color: ON_CARD_3, marginTop: sp.md },
   detailTitle: { fontFamily: F.interM, fontSize: 22, color: ON_CARD, marginTop: 4 },
-  detailBody: { fontFamily: F.body, fontSize: 15, lineHeight: 22, color: ON_CARD_2, marginTop: sp.sm },
+  detailBody: { fontFamily: F.body, fontSize: 16, lineHeight: 22, color: ON_CARD_2, marginTop: sp.sm },
   detailCta: {
-    minHeight: 48, borderRadius: r.pill, backgroundColor: color.action,
+    minHeight: 48, borderRadius: r.button, backgroundColor: color.action,
     alignItems: 'center', justifyContent: 'center', marginTop: sp.lg,
   },
   detailCtaTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: color.onAction },

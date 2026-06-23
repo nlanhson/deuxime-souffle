@@ -18,29 +18,28 @@ import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-nati
 import { MapPin, CheckCircle2, AlertTriangle, Clock, MapPinOff, Navigation, X, type LucideIcon } from '../icons';
 
 import { palette, color, spacing as sp, radius as r } from '../theme/theme';
-import { copy } from '../copy';
+import { useCopy } from '../i18n';
 import { BottomSheet } from './BottomSheet';
+import { GradientFill } from './GradientFill';
 import { openDirections } from '../lib/openDirections';
 
-const SUBTLE = palette.neutral[800];
-const ON_CARD = palette.neutral[50];
-const ON_CARD_2 = palette.neutral[300];
-const ON_CARD_3 = palette.neutral[500];
+const SUBTLE = palette.neutral[100];
+const ON_CARD = palette.neutral[900];
+const ON_CARD_2 = palette.neutral[600];
+const ON_CARD_3 = palette.neutral[600];
 
 const F = { body: 'Inter_400Regular', bodyS: 'Inter_600SemiBold', bodyB: 'Inter_700Bold' };
 
 export type CheckInOutcome = 'success' | 'late' | 'tooFar' | 'tooEarly' | 'denied';
 type Phase = 'intro' | 'locating' | 'result';
 
-const C = copy.sessions.checkInModal;
-
 // Per-outcome accent + glyph. Success/late are "you're in"; the rest are blockers.
 const OUTCOME: Record<CheckInOutcome, { Icon: LucideIcon; fg: string; bg: string }> = {
-  success:  { Icon: CheckCircle2,  fg: palette.vert[300], bg: 'rgba(47,158,107,0.16)' },
-  late:     { Icon: AlertTriangle, fg: palette.or[300],   bg: 'rgba(242,194,0,0.13)' },
-  tooFar:   { Icon: MapPinOff,     fg: palette.bleu[200], bg: 'rgba(166,183,219,0.14)' },
-  tooEarly: { Icon: Clock,         fg: palette.bleu[200], bg: 'rgba(166,183,219,0.14)' },
-  denied:   { Icon: MapPinOff,     fg: palette.rouge[300], bg: 'rgba(225,50,43,0.14)' },
+  success:  { Icon: CheckCircle2,  fg: palette.vert[700], bg: 'rgba(47,158,107,0.16)' },
+  late:     { Icon: AlertTriangle, fg: palette.or[800],   bg: 'rgba(242,194,0,0.13)' },
+  tooFar:   { Icon: MapPinOff,     fg: palette.bleu[700], bg: 'rgba(166,183,219,0.14)' },
+  tooEarly: { Icon: Clock,         fg: palette.bleu[700], bg: 'rgba(166,183,219,0.14)' },
+  denied:   { Icon: MapPinOff,     fg: palette.rouge[600], bg: 'rgba(225,50,43,0.14)' },
 };
 
 const DEMO_ORDER: CheckInOutcome[] = ['success', 'late', 'tooFar', 'tooEarly', 'denied'];
@@ -54,6 +53,8 @@ export function CheckInModal({
   /** Fired when the coach is checked in (on time or late) so the card can flip status. */
   onConfirmed: (late: boolean) => void;
 }) {
+  const copy = useCopy();
+  const C = copy.sessions.checkInModal;
   const [phase, setPhase] = React.useState<Phase>('intro');
   const [scenario, setScenario] = React.useState<CheckInOutcome>('success');
 
@@ -117,6 +118,7 @@ export function CheckInModal({
               </View>
 
               <Pressable style={({ pressed }) => [st.primary, pressed && { opacity: 0.9 }]} onPress={() => setPhase('locating')} accessibilityRole="button">
+                <GradientFill />
                 <Text style={st.primaryTxt}>{C.confirm}</Text>
               </Pressable>
               <Pressable style={({ pressed }) => [st.secondary, pressed && { opacity: 0.6 }]} onPress={onClose} accessibilityRole="button">
@@ -128,7 +130,7 @@ export function CheckInModal({
           {/* ---------- locating ---------- */}
           {phase === 'locating' ? (
             <View style={st.locating}>
-              <ActivityIndicator size="large" color={palette.bleu[200]} />
+              <ActivityIndicator size="large" color={palette.bleu[700]} />
               <Text style={st.locatingTxt}>{C.locating}</Text>
             </View>
           ) : null}
@@ -156,6 +158,8 @@ function ResultView({
   onFinish: () => void;
   onDirections: () => void;
 }) {
+  const copy = useCopy();
+  const C = copy.sessions.checkInModal;
   const meta = OUTCOME[scenario];
   const txt = C.result[scenario];
   return (
@@ -175,6 +179,7 @@ function ResultView({
       {checkedIn ? (
         // success / late — acknowledging flips the card to "Checked in".
         <Pressable style={({ pressed }) => [st.primary, pressed && { opacity: 0.9 }]} onPress={onFinish} accessibilityRole="button">
+          <GradientFill />
           <Text style={st.primaryTxt}>{C.done}</Text>
         </Pressable>
       ) : scenario === 'tooFar' ? (
@@ -208,44 +213,44 @@ function ResultView({
 
 const st = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  // Lighter than the card (neutral-800) so the white glyph sits on a clearly distinct chip.
+  // Darker than the card (neutral-0) so the dark glyph sits on a clearly distinct chip.
   icon: {
     width: 52, height: 52, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: palette.neutral[700], borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: palette.neutral[200], borderWidth: 1, borderColor: 'rgba(24,23,21,0.04)',
   },
   close: {
     width: 36, height: 36, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
     backgroundColor: SUBTLE,
   },
-  eyebrow: { fontFamily: F.body, fontSize: 12, letterSpacing: 0.3, color: ON_CARD_3, marginTop: sp.md },
+  eyebrow: { fontFamily: F.body, fontSize: 13, letterSpacing: 0.3, color: ON_CARD_3, marginTop: sp.md },
   title: { fontFamily: F.bodyB, fontSize: 22, color: ON_CARD, marginTop: 4 },
-  body: { fontFamily: F.body, fontSize: 15, lineHeight: 22, color: ON_CARD_2, marginTop: sp.sm },
+  body: { fontFamily: F.body, fontSize: 16, lineHeight: 22, color: ON_CARD_2, marginTop: sp.sm },
 
   note: { marginTop: sp.md },
-  noteTxt: { fontFamily: F.bodyS, fontSize: 14, color: ON_CARD, letterSpacing: 0.2 },
+  noteTxt: { fontFamily: F.bodyS, fontSize: 16, color: ON_CARD, letterSpacing: 0.2 },
 
   // prototype-only outcome switcher (sentence case — brand rule: no all-caps)
-  demoLabel: { fontFamily: F.body, fontSize: 11, letterSpacing: 0.4, color: ON_CARD_3, marginTop: sp.lg },
+  demoLabel: { fontFamily: F.body, fontSize: 13, letterSpacing: 0.4, color: ON_CARD_3, marginTop: sp.lg },
   demoRow: { flexDirection: 'row', flexWrap: 'wrap', gap: sp.xs, marginTop: sp.sm },
   demoChip: {
     paddingVertical: 6, paddingHorizontal: 12, borderRadius: r.pill,
     backgroundColor: SUBTLE, borderWidth: 1, borderColor: 'transparent',
   },
-  demoChipOn: { borderColor: palette.bleu[200], backgroundColor: 'rgba(166,183,219,0.14)' },
+  demoChipOn: { borderColor: palette.bleu[700], backgroundColor: 'rgba(166,183,219,0.14)' },
   demoChipTxt: { fontFamily: F.bodyS, fontSize: 13, color: ON_CARD_2 },
-  demoChipTxtOn: { color: palette.bleu[200] },
+  demoChipTxtOn: { color: palette.bleu[700] },
 
   // locating
   locating: { alignItems: 'center', justifyContent: 'center', paddingVertical: sp.xl, gap: sp.md },
-  locatingTxt: { fontFamily: F.bodyS, fontSize: 15, color: ON_CARD_2 },
+  locatingTxt: { fontFamily: F.bodyS, fontSize: 16, color: ON_CARD_2 },
 
   primary: {
-    minHeight: 48, borderRadius: r.pill, backgroundColor: color.action,
+    minHeight: 48, borderRadius: r.button, backgroundColor: color.action,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: sp.lg,
   },
   // blockers use an outline primary (not the brand red, which means "you did the action")
   primaryOutline: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: palette.neutral[600] },
   primaryTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: color.onAction },
-  secondary: { minHeight: 44, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center', marginTop: sp.xs },
+  secondary: { minHeight: 44, borderRadius: r.button, alignItems: 'center', justifyContent: 'center', marginTop: sp.xs },
   secondaryTxt: { fontFamily: F.bodyS, fontSize: 14, letterSpacing: 0.2, color: ON_CARD_3 },
 });

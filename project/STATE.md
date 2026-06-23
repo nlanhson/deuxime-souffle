@@ -24,7 +24,7 @@
 Phase 0 (Discovery & Scoping) ✅ complete. All three foundational inputs in and reviewed:
 - **PRD** v0.2 (2026-05-21) — [project/brief/PRD_Deuxieme_Souffle (docx).docx](brief/)
 - **WBS** — 14 epics / ~155 user stories, ~14-week plan — [project/brief/WBS - Deuxième Souffle (eng).xlsx](brief/)
-- **Moodboard** "Le Club" — visual language defined — [project/brief/Moodboard 1 App · Deuxième Souffle.pdf](brief/)
+- **Moodboard** "Le Mouvement" — visual language defined — [project/brief/Moodboard 1 App · Deuxième Souffle.pdf](brief/)
 
 Design-system foundation codified from the moodboard → [project/design-system/](design-system/).
 Component specs deepened (2026-06-08) → [design-system/components.md](design-system/components.md):
@@ -42,7 +42,7 @@ run instructions in [coach-app/README.md](coach-app/README.md). 4-tab nav per th
 
 | Date | Decision |
 |------|----------|
-| 2026-06-08 | Visual language locked as **"Le Club"**: palette (Rouge `#E1322B`, Or `#F2C200`, Bleu `#1F3B73`, Vert `#2F9E6B`, Noir `#181715`, Crème `#F7F4EF`), fonts Anton / Oswald / Inter. |
+| 2026-06-08 | Visual language locked as **"Le Mouvement"**: palette (Rouge `#E1322B`, Or `#F2C200`, Bleu `#1F3B73`, Vert `#2F9E6B`, Noir `#181715`, Crème `#F7F4EF`), fonts Anton / Oswald / Inter. |
 | 2026-06-08 | Design model = **"une base, trois intensités"** — one token set, three surface themes (coach=ink/red-dominant, admin=cream/red-rare, ehpad=cream/red-absent + blue·green). |
 | 2026-06-08 | Design tokens authored as `tokens.json` + `tokens.css` (web) + `theme.ts` (RN+React, destined for `packages/shared`). |
 | — | **MVP Must-haves** (PRD MoSCoW): matching algorithm, geolocated check-in, 6-step post-session report, automated Pennylane billing. |

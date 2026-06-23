@@ -95,6 +95,36 @@
   margin-bottom: var(--space-xs);
 }
 
+/* Champ « figé » : un libellé + une note explicative à la place d'un contrôle
+   (type de séance toujours collectif · DT-E4 ; contrat sans fin · DT-E5). */
+.fixedField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* Bouton « 12 mois » + sa pastille « Recommandé » (DT-E5). */
+.presetWithBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+/* Pastille « Recommandé » — accent or doux (réintroduction de marque · DT-E2).
+   Texte en or-800 : seul palier de la rampe or qui tient AA (≥ 4,5:1) sur le
+   fond or-50 (standard « paper-tuning » de la maison ; or-600 échouerait). */
+.recommendedBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-xs);
+  border-radius: var(--radius-pill);
+  background: var(--color-warning-soft);
+  color: var(--lc-or-800);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
 .fieldGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -309,11 +339,28 @@
 
 .exGrid {
   display: grid;
-  grid-template-columns: 110px repeat(7, minmax(64px, 1fr));
+  /* 1re colonne : coche « tout bloquer » + libellé + plage horaire (DT-E3). */
+  grid-template-columns: 168px repeat(7, minmax(56px, 1fr));
   gap: var(--space-xs);
   align-items: stretch;
   overflow-x: auto;
   padding-bottom: var(--space-xs);
+}
+
+/* DT-E3 — sélecteur de profil de disponibilité (au-dessus de la grille). */
+.profileBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* Plage horaire sous le libellé matin / après-midi de la grille (DT-E3). */
+.exRowRange {
+  display: block;
+  font-size: var(--text-caption);
+  font-weight: var(--weight-regular);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .exHead {
@@ -327,28 +374,125 @@
   display: contents;
 }
 
+/* Cellule de libellé de rangée : coche « tout bloquer » + (libellé / plage). */
 .exRowLabel {
-  composes: exHead;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   align-self: center;
-  padding-bottom: 0;
+  text-align: left;
 }
 
-.exCell {
-  min-height: var(--touch-target-min);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
+.exRowLabelText {
+  display: flex;
+  flex-direction: column;
   font-size: var(--text-body-sm);
-  color: var(--color-progress-strong);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+  min-width: 0;
+}
+
+/* Coche « tout bloquer la rangée » (matin/après-midi des jours ouvrés). */
+.blockRowCheck {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
   cursor: pointer;
 }
 
-.exCell[aria-pressed='true'] {
-  background: var(--color-surface-hover);
-  border-color: var(--color-border-strong);
-  color: var(--color-text-secondary);
-  text-decoration: line-through;
+.blockRowInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.blockRowBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: transparent;
+}
+
+.blockRowInput:checked + .blockRowBox {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-action);
+}
+
+.blockRowInput:focus-visible + .blockRowBox {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Cellule de grille : vert clair ✓ = disponible ; rouge clair ✗ = exclu / week-end. */
+.exCell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-target-min);
+  border: 1px solid var(--color-progress-soft);
+  border-radius: var(--radius-sm);
+  background: var(--color-progress-soft);
+  color: var(--color-progress-strong);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.exCell:hover:not([data-weekend]) {
+  border-color: var(--color-progress-strong);
+}
+
+.exCell:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.exCell[data-blocked],
+.exCell[data-weekend] {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.exCell[data-weekend] {
+  cursor: default;
+}
+
+.exCellIcon {
+  width: 18px;
+  height: 18px;
+}
+
+/* En-tête de section numérotée (1. / 2. / 3.) de l'étape Indispos. */
+.indisposSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.sectionNumTitle {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body-lg);
+  color: var(--color-text-primary);
+}
+
+.blockRowHint {
+  font-size: var(--text-body-sm);
+  color: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exCell {
+    transition: none;
+  }
 }
 
 .presetRow {
@@ -456,7 +600,9 @@
   display: grid;
   gap: var(--space-lg);
   grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
-  align-items: start;
+  /* Cartes « actuel » vs « proposition » à hauteur égale (stretch) — largeur déjà
+     égale via 1fr. La carte la plus courte s'aligne sur la plus haute. */
+  align-items: stretch;
 }
 
 /* La proposition porte l'accent (équivalent de la prop accent de Card) ;
@@ -479,6 +625,16 @@
   align-items: center;
   gap: var(--space-sm);
   flex-wrap: wrap;
+}
+
+/* Pastilles de la chronologie à empreinte uniforme (comme la colonne « Statut »
+   des contrats) : « Rappel envoyé » et « À venir » occupent la même largeur, donc
+   le texte qui suit s'aligne d'une ligne à l'autre. La dernière ligne (échéance)
+   n'a pas de pastille (`<strong>`), elle n'est donc pas touchée. */
+.timelineItem > span:first-child {
+  min-width: 150px;
+  justify-content: flex-start;
+  white-space: nowrap;
 }
 
 .sessionPreview {
@@ -549,6 +705,241 @@
   display: inline-flex;
   gap: var(--space-sm);
   flex-wrap: wrap;
+}
+
+/* ===========================================================================
+   Wizard refondu (maquettes Loïc) — Fréquence · Unités · Enchaînement ·
+   Indispos · Période. Cartes radio/coche, encarts conseils, carte recommandée.
+   =========================================================================== */
+
+/* Titre « Étape N — … » + intro. Le titre porte le navy d'étape (comme .stepLabel
+   du wizard) ; sa marge basse négative resserre l'intro juste dessous (compense
+   le gap lg de .content). */
+.stepTitle {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-subheading);
+  color: var(--color-accent);
+  margin-bottom: calc(var(--space-sm) - var(--space-lg));
+}
+
+.stepIntro {
+  color: var(--color-text-secondary);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  max-width: 64ch;
+}
+
+/* Puce de contexte en tête d'étape (« Choisi : 1×/semaine », « 1×/sem · UC + UP »). */
+.contextChip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px var(--space-sm);
+  border-radius: var(--radius-pill);
+  background: var(--lc-bleu-50);
+  color: var(--lc-bleu-700);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+}
+
+/* Avertissements inline ambre (soignants ⚠ ; « jours séparés »). */
+.unitWarn,
+.chainWarn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--lc-or-800);
+}
+
+.inlineWarnIcon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: var(--lc-or-700);
+}
+
+/* Enchaînement : chips d'unités + flèche, puis ligne bénéfice (vert). */
+.chainChips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-bottom: 4px;
+}
+
+.chainChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-pill);
+  background: var(--color-info-soft);
+  color: var(--lc-bleu-800);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+}
+
+.chainArrow {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.chainBenefit {
+  display: block;
+  color: var(--color-progress-strong);
+  font-weight: var(--weight-medium);
+}
+
+/* Carte « hero » recommandée — 12 mois glissants (étape Période). */
+.recoCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  width: 100%;
+  text-align: left;
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.recoCard:hover {
+  border-color: var(--color-border-strong);
+}
+
+.recoCard[data-selected] {
+  border-color: var(--color-accent);
+  background: var(--color-info-soft);
+}
+
+.recoCard:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.recoMain {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.recoHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.recoTitle {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body-lg);
+  color: var(--color-text-primary);
+}
+
+.recoRange {
+  font-size: var(--text-body);
+  color: var(--color-text-primary);
+}
+
+.recoDetail {
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+
+.recoCheck {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  color: var(--color-border-strong);
+}
+
+.recoCheck[data-on] {
+  color: var(--color-accent);
+}
+
+/* Sous-panneau « dates modifiables » sous la carte recommandée. */
+.periodDates {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-hover);
+}
+
+/* « Autres options de durée (rare) » — repliable. */
+.otherOptions {
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: var(--space-md);
+}
+
+.otherOptionsSummary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  cursor: pointer;
+  color: var(--color-accent);
+  font-weight: var(--weight-medium);
+  list-style: none;
+}
+
+.otherOptionsSummary::-webkit-details-marker {
+  display: none;
+}
+
+.otherOptionsSummary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.otherOptionsChevron {
+  width: 18px;
+  height: 18px;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.otherOptions[open] .otherOptionsChevron {
+  transform: rotate(180deg);
+}
+
+.otherOptions[open] .presetRow {
+  margin-top: var(--space-md);
+}
+
+/* Lien e-mail dans l'encart « Besoin d'aide ? ». */
+.helpLink {
+  color: var(--color-info);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.helpLink:hover {
+  color: var(--lc-bleu-700);
+}
+
+.helpLink:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recoCard,
+  .otherOptionsChevron {
+    transition: none;
+  }
 }
 
 /* Pile de squelettes pendant le chargement. */

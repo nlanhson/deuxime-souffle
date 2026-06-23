@@ -30,6 +30,7 @@ import { useToast } from '@/context/ToastContext';
 import { useAsync } from '@/hooks/useAsync';
 import { formatPhone, formatSince } from '@/lib/format';
 import {
+  Avatar,
   Button,
   Card,
   Checkbox,
@@ -265,24 +266,32 @@ export default function ContactsScreen() {
     const lead = hero
       ? { icon: Star, label: fr.contactsPage.types.principal }
       : (fns[0] ?? { icon: UserRound, label: fr.contactsPage.types[contact.type] });
-    const LeadIcon = lead.icon;
     // Le reste des casquettes en une ligne calme — fini la « soupe de pastilles ».
     const extraLabels = (hero ? fns : fns.slice(1)).map((f) => f.label);
     const fullName = `${contact.firstName} ${contact.lastName}`;
 
+    // Photo en tête (annuaire « vrai site ») : le visage mène, la fonction reste en
+    // libellé d'attaque ; l'étoile dorée garde le repère « contact principal ».
     const identity = (
-      <>
-        <div className={`${styles.lead} ${hero ? styles.leadPrincipal : ''}`}>
-          <span className={styles.leadIcon}>
-            <LeadIcon aria-hidden />
+      <div className={styles.identity}>
+        <Avatar
+          firstName={contact.firstName}
+          lastName={contact.lastName}
+          src={contact.avatarUrl}
+          size={hero ? 'lg' : 'md'}
+          decorative
+        />
+        <div className={styles.identityText}>
+          <span className={`${styles.leadLabel} ${hero ? styles.leadLabelPrincipal : ''}`}>
+            {hero && <Star className={styles.principalStar} aria-hidden />}
+            {lead.label}
           </span>
-          <span className={styles.leadLabel}>{lead.label}</span>
+          <p className={`${styles.name} ${hero ? styles.heroName : ''}`}>
+            {fr.civility[contact.civility]} {fullName}
+          </p>
+          {extraLabels.length > 0 && <p className={styles.roleLine}>{extraLabels.join(' · ')}</p>}
         </div>
-        <p className={`${styles.name} ${hero ? styles.heroName : ''}`}>
-          {fr.civility[contact.civility]} {fullName}
-        </p>
-        {extraLabels.length > 0 && <p className={styles.roleLine}>{extraLabels.join(' · ')}</p>}
-      </>
+      </div>
     );
 
     const reach = (
