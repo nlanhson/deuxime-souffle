@@ -340,7 +340,7 @@ export function CancelModal({
                   </Pressable>
                   <Pressable
                     onPress={() => { setMaintainOpen(false); setStep('reason'); }}
-                    style={({ pressed }) => [st.ghostBtn, pressed && { opacity: 0.6 }]}
+                    style={({ pressed }) => [st.ghostBtn, { marginTop: sp.sm }, pressed && { opacity: 0.6 }]}
                     accessibilityRole="button"
                   >
                     <Text style={st.ghostTxt}>{c.maintain.no}</Text>
@@ -449,12 +449,12 @@ const st = StyleSheet.create({
   /* footers */
   footer: { paddingHorizontal: sp.lg, paddingTop: sp.sm, borderTopWidth: 1, borderTopColor: DIVIDER, flexDirection: 'row' },
   footerCol: { paddingHorizontal: sp.lg, paddingTop: sp.sm, borderTopWidth: 1, borderTopColor: DIVIDER, gap: sp.sm },
-  ghostBtn: { minHeight: 48, borderRadius: r.button, borderWidth: 1, borderColor: BORDER, alignItems: 'center', justifyContent: 'center', backgroundColor: CARD },
+  ghostBtn: { alignSelf: 'stretch', minHeight: 48, borderRadius: r.button, borderWidth: 1, borderColor: BORDER, alignItems: 'center', justifyContent: 'center', backgroundColor: CARD },
   ghostTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: ON_CANVAS_2 },
   ghostDanger: { color: palette.rouge[700] },
   inkBtn: { flex: 1, minHeight: 50, borderRadius: r.button, backgroundColor: INK, alignItems: 'center', justifyContent: 'center' },
   inkBtnTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: ON_INK },
-  greenBtn: { minHeight: 50, borderRadius: r.button, backgroundColor: palette.vert[500], alignItems: 'center', justifyContent: 'center' },
+  greenBtn: { alignSelf: 'stretch', minHeight: 50, borderRadius: r.button, backgroundColor: palette.vert[500], alignItems: 'center', justifyContent: 'center' },
   greenTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: palette.neutral[0] },
   btnDisabled: { opacity: 0.4 },
 

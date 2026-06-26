@@ -707,9 +707,12 @@ export function SignUpScreen({
             ) : null}
 
             {/* Footer nav — a consistent two-up pair on every step (Annuler/Précédent · Continuer/
-                Postuler), so the footer buttons are always the same size (each flex: 1). The long
-                "Envoyer ma candidature" stays the screen-reader name; the visible label is short so
-                it never truncates. The login link sits under the pair on the first step. */}
+                Postuler). Both buttons are flex: 1 (equal width) and 52pt tall (equal height); the
+                primary's brand glow is dropped here (st.ctaFlat) so its red halo doesn't spread below
+                and to the side and make it read taller/wider than the flat outline button — the pair
+                must look the same size. The long "Envoyer ma candidature" stays the screen-reader
+                name; the visible label is short so it never truncates. Login link under the pair on
+                step 1. */}
             <View style={st.navRow}>
               <SecondaryButton
                 label={step === 0 ? c.cancel : c.back}
@@ -718,9 +721,9 @@ export function SignUpScreen({
                 accessibilityLabel={step === 0 ? c.cancel : c.back}
               />
               {step < TOTAL - 1 ? (
-                <PrimaryButton label={c.cont} onPress={goNext} style={st.flex} accessibilityLabel={c.cont} />
+                <PrimaryButton label={c.cont} onPress={goNext} style={[st.flex, st.ctaFlat]} accessibilityLabel={c.cont} />
               ) : (
-                <PrimaryButton label={c.submitShort} onPress={submit} style={st.flex} accessibilityLabel={c.submit} />
+                <PrimaryButton label={c.submitShort} onPress={submit} style={[st.flex, st.ctaFlat]} accessibilityLabel={c.submit} />
               )}
             </View>
             {step === 0 ? (
@@ -906,6 +909,11 @@ const st = StyleSheet.create({
   noticeErr: { flex: 1, fontFamily: F.body, fontSize: 14, lineHeight: 20, color: ERR },
 
   navRow: { flexDirection: 'row', gap: sp.sm, marginTop: sp.lg },
+  // The footer primary sits beside the FLAT outline SecondaryButton (no shadow), so PrimaryButton's
+  // brand glow (a red halo: offset 8 / opacity .45 / radius 12) made it read taller + wider than its
+  // twin. Drop the glow entirely here so both are flat 52pt pills — identical box, just red fill vs
+  // outline. Merges over `st.wrap`'s shadow (caller `style` wins on iOS); size is untouched.
+  ctaFlat: { shadowOpacity: 0, shadowRadius: 0, shadowOffset: { width: 0, height: 0 }, elevation: 0 },
 
   altRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: sp.xs, marginTop: sp.lg },
   altTxt: { fontFamily: F.body, fontSize: 14, color: ON_2 },

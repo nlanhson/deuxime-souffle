@@ -104,10 +104,16 @@ export function ReportHistoryScreen({ visible, onClose }: { visible: boolean; on
         </View>
 
         <Reveal loading={loading} skeleton={<ReportHistorySkeleton />}>
-        {/* Facility filter — horizontal chips (the WBS's filter, in the mobile idiom). */}
+        {/* Facility filter — horizontal chips (the WBS's filter, in the mobile idiom).
+            A horizontal ScrollView inside Reveal's flex:1 column fills the whole height unless
+            constrained — and the content container then stretches each chip to that full height
+            (default alignItems:'stretch'), which `r.pill` rounds into giant ovals. `st.chipBar`
+            caps the bar height + `alignItems:'center'` (in st.chips) keeps chips at their own
+            44pt size. Don't drop either, or the ovals come back. */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          style={st.chipBar}
           contentContainerStyle={st.chips}
           accessibilityLabel={c.filterA11y}
         >
@@ -128,7 +134,7 @@ export function ReportHistoryScreen({ visible, onClose }: { visible: boolean; on
           })}
         </ScrollView>
 
-        <ScrollView contentContainerStyle={st.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView style={st.list} contentContainerStyle={st.scroll} showsVerticalScrollIndicator={false}>
           <Text style={st.count}>{`${filtered.length} ${c.countSuffix}`}</Text>
 
           {page.length === 0 ? (
@@ -194,7 +200,11 @@ const st = StyleSheet.create({
     backgroundColor: SUBTLE,
   },
 
-  chips: { paddingHorizontal: sp.lg, gap: sp.sm, paddingBottom: sp.sm },
+  // chipBar caps the horizontal ScrollView so it can't fill Reveal's flex:1 column (see JSX note);
+  // flexGrow:0 stops it claiming space, the list ScrollView (st.list, flex:1) owns the rest.
+  chipBar: { flexGrow: 0, maxHeight: 64 },
+  // alignItems:'center' is load-bearing: it stops chips stretching to the bar height (→ ovals).
+  chips: { paddingHorizontal: sp.lg, gap: sp.sm, paddingBottom: sp.sm, alignItems: 'center' },
   chip: {
     minHeight: 44, paddingVertical: 8, paddingHorizontal: 14, borderRadius: r.pill,
     backgroundColor: palette.neutral[200], borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)',
@@ -204,6 +214,7 @@ const st = StyleSheet.create({
   chipTxt: { fontFamily: F.bodyS, fontSize: 14, color: ON_CARD_2 },
   chipTxtOn: { color: palette.neutral[0] },
 
+  list: { flex: 1 },
   scroll: { paddingHorizontal: sp.lg, paddingBottom: sp['2xl'] },
   count: { fontFamily: F.body, fontSize: 13, color: ON_CANVAS_2, marginBottom: sp.sm },
   empty: { fontFamily: F.body, fontSize: 16, lineHeight: 22, color: ON_CANVAS_2, marginTop: sp.md },
