@@ -30,7 +30,7 @@ import {
   type LucideIcon,
 } from '../icons';
 
-import { palette, color, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
+import { palette, color, spacing as sp, radius as r, cardShape, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
 import { copy } from '../copy';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { recordSessionCompleted } from '../lib/badgeCelebration';
@@ -82,7 +82,7 @@ function Question({
 }) {
   return (
     <View style={[st.q, missing && st.qMissing]}>
-      <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
+      <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, cardShape]} pointerEvents="none" />
       <View style={st.qHead}>
         <View style={[st.qNum, missing && { backgroundColor: 'rgba(232,82,72,0.16)' }]}>
           <Text style={[st.qNumTxt, missing && { color: MISS.fg }]}>{n}</Text>
@@ -318,7 +318,7 @@ function Recipient({
   const len = value.length;
   return (
     <View style={[st.rcCard, missing && st.qMissing]}>
-      <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
+      <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, cardShape]} pointerEvents="none" />
       <View style={st.rcHead}>
         <View style={st.rcIcon}><Icon size={18} color={ON_CARD_2} /></View>
         <View style={{ flex: 1 }}>
@@ -676,7 +676,7 @@ const st = StyleSheet.create({
   bonusBanner: {
     flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm,
     backgroundColor: GOLD.bg, borderColor: GOLD.border, borderWidth: 1,
-    borderRadius: r.lg, padding: sp.md, marginBottom: sp.lg,
+    ...cardShape, padding: sp.md, marginBottom: sp.lg,
   },
   bonusBannerIcon: { width: 28, alignItems: 'center', marginTop: 1 },
   bonusBannerTitle: { fontFamily: F.bodyS, fontSize: 14, color: ON_CARD },
@@ -684,7 +684,7 @@ const st = StyleSheet.create({
 
   /* question card */
   q: {
-    backgroundColor: CARD, borderRadius: r.xl, padding: sp.lg, marginBottom: sp.md,
+    backgroundColor: CARD, ...cardShape, padding: sp.lg, marginBottom: sp.md,
     borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)',
   },
   qMissing: { borderColor: MISS.border },
@@ -778,7 +778,7 @@ const st = StyleSheet.create({
 
   /* recipient card (step 2) */
   rcCard: {
-    backgroundColor: CARD, borderRadius: r.xl, padding: sp.lg, marginBottom: sp.md,
+    backgroundColor: CARD, ...cardShape, padding: sp.lg, marginBottom: sp.md,
     borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)',
   },
   rcHead: { flexDirection: 'row', alignItems: 'center', gap: sp.sm },
@@ -827,7 +827,7 @@ const st = StyleSheet.create({
 
   bonusBox: {
     flexDirection: 'row', alignItems: 'center', gap: sp.sm, alignSelf: 'stretch',
-    backgroundColor: OK.bg, borderRadius: r.lg, padding: sp.md, marginTop: sp.lg,
+    backgroundColor: OK.bg, ...cardShape, padding: sp.md, marginTop: sp.lg,
   },
   bonusIcon: { width: 32, height: 32, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(47,158,107,0.18)' },
   bonusTitle: { fontFamily: F.bodyS, fontSize: 14, color: OK.fg },

@@ -1,8 +1,9 @@
 .sidebar {
   width: 248px;
   flex-shrink: 0;
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border-subtle);
+  /* Rail « Crème » de la charte : chaleur de marque, calme préservé (cf. tokens). */
+  background: var(--color-nav-surface);
+  border-right: 1px solid var(--color-nav-border);
   padding: var(--space-lg) var(--space-md);
   display: flex;
   flex-direction: column;
@@ -69,7 +70,7 @@
 .navSecondary {
   margin-top: auto;
   padding-top: var(--space-md);
-  border-top: 1px solid var(--color-border-subtle);
+  border-top: 1px solid var(--color-nav-border);
 }
 
 .navItem {
@@ -88,18 +89,23 @@
 }
 
 .navItem:hover {
-  background: var(--color-surface-hover);
+  /* Survol chaud sur la crème (un voile d'encre, pas le gris froid surface-hover). */
+  background: var(--color-nav-hover);
   color: var(--color-text-primary);
 }
 
-/* actif : voile bleu doux + encre bleue + barre gauche — « vous êtes ici » porté
-   par trois indices (fond, graisse, barre), pas par la couleur seule (NavLink pose
-   aria-current="page" ; le contraste reste lisible en niveaux de gris). Le bleu est
-   cohérent avec la règle maison « couleur = cliquable » : l'onglet est un lien. */
+/* actif : pastille BLANCHE surélevée + encre rouge AA + barre rouge vif — « vous êtes
+   ici » porté par TROIS indices (fond, graisse, barre), jamais par la couleur seule
+   (NavLink pose aria-current="page" ; reste lisible en niveaux de gris). Le blanc se
+   détache nettement de la crème (lift), là où le rosé d'avant se confondait avec le
+   rail chaud ; le rouge reste vif et calme (encre rouge-600 sur blanc = 5,3:1, barre
+   rouge exact). La pastille active « monte » comme une carte — cohérent avec le système
+   cartes-blanches-sur-page-chaude. */
 .active {
-  background: var(--color-selected-soft);
-  color: var(--color-selected-ink);
+  background: var(--color-nav-active-bg);
+  color: var(--color-nav-active-ink);
   font-weight: var(--weight-semibold); /* 600 — l'actif gagne en graisse, pas que le fond */
+  box-shadow: var(--elevation-1); /* léger lift de la pastille blanche sur la crème */
 }
 
 .active::before {
@@ -111,7 +117,7 @@
   width: 3px;
   height: 24px;
   border-radius: var(--radius-pill);
-  background: var(--color-accent);
+  background: var(--color-nav-red);
 }
 
 .icon {

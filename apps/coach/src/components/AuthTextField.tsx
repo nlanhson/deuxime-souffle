@@ -21,7 +21,7 @@ import { type LucideIcon } from '../icons';
 
 const CARD = palette.neutral[0];
 const BORDER = palette.neutral[200];
-const BORDER_ERR = 'rgba(225,50,43,0.65)';
+const BORDER_ERR = 'rgba(234,56,41,0.65)';
 const ICON = palette.neutral[500];
 const PLACEHOLDER = palette.neutral[600];
 const TXT = palette.neutral[900];

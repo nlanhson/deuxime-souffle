@@ -24,7 +24,6 @@ import {
   type NativeScrollEvent, type NativeSyntheticEvent,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { setStatusBarStyle } from 'expo-status-bar';
 
@@ -32,9 +31,10 @@ import {
   Settings, Camera, CheckCircle2, X, Flame, Users, CalendarDays, Trophy, ChevronRight,
   type LucideIcon,
 } from '../icons';
-import { palette, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
+import { palette, spacing as sp, radius as r, surfaces } from '../theme/theme';
 import { ease, dur } from '../lib/motion';
 import { useCopy } from '../i18n';
+import { StatusCard, StatusChip } from '../components/StatusCard';
 import { useFirstLoad } from '../lib/useFirstLoad';
 import { useReducedMotion } from '../lib/useReducedMotion';
 import { useChoreography } from '../lib/useChoreography';
@@ -70,7 +70,6 @@ const GOLD_WASH = 'rgba(242,194,0,0.13)';
 const GAP_FG = palette.rouge[600];     // the "engine" red — the actionable gap (AA on white)
 const INK_TRACK = 'rgba(255,255,255,0.14)';
 const INK_RAISED = 'rgba(255,255,255,0.06)';
-const OK_INK = { fg: palette.vert[300], bg: 'rgba(47,158,107,0.18)' }; // Active chip, on ink
 
 const F = {
   display: 'Anton_400Regular',
@@ -103,14 +102,15 @@ function Entrance({ delay, anim, style, children }: { delay: number; anim: Anim;
 /* ---------- stat tile ---------- */
 
 function StatTile({ Icon, value, label, gold }: { Icon: LucideIcon; value: string | number; label: string; gold?: boolean }) {
+  // Stat tile = info card → kind='neutral' (no liseré), flat (these never had a shadow).
   return (
-    <View style={st.statTile} accessible accessibilityLabel={`${value} ${label}`}>
+    <StatusCard kind="neutral" elevated={false} radius={r.lg} style={st.statTile} accessibilityLabel={`${value} ${label}`}>
       <View style={[st.statChip, { backgroundColor: gold ? GOLD_WASH : palette.neutral[100] }]}>
         <Icon size={16} color={gold ? GOLD_FG : ON_CARD_2} />
       </View>
       <Text style={st.statNum}>{value}</Text>
       <Text style={st.statLabel} numberOfLines={2}>{label}</Text>
-    </View>
+    </StatusCard>
   );
 }
 
@@ -223,10 +223,8 @@ export function ProfileScreen() {
               <View style={st.idText}>
                 <Text style={st.idName} numberOfLines={1}>{COACH_NAME}</Text>
                 <Text style={st.idRole} numberOfLines={1}>{pc.role}</Text>
-                <View style={st.idChip} accessible accessibilityLabel={pc.status.active}>
-                  <CheckCircle2 size={12} color={OK_INK.fg} />
-                  <Text style={st.idChipTxt}>{pc.status.active}</Text>
-                </View>
+                {/* Account standing = a status chip (Active → 'ok'), on the ink surface. */}
+                <StatusChip tone="ok" surface="ink" label={pc.status.active} icon={CheckCircle2} style={st.idChip} />
               </View>
 
               <Pressable
@@ -290,8 +288,15 @@ export function ProfileScreen() {
               const gap = left <= 1 ? g.gapOne : g.gapN.replace('{n}', String(left));
               return (
                 <Entrance delay={220} anim={anim}>
-                  <View style={st.spotlight} accessible accessibilityLabel={`${g.nextTierEyebrow}: ${g.tiers[nxt.key].name}, ${gap}, ${current} ${g.ofTarget} ${target}`}>
-                    <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
+                  {/* v2 card: the next rung you're about to unlock. Rail dropped on Profile (per design
+                      request) — keeps the white card + soft shadow + bespoke gold eyebrow + rouge[600] gap text. */}
+                  <StatusCard
+                    status="pending"
+                    leftBorder={false}
+                    padded={false}
+                    contentStyle={st.spotlight}
+                    accessibilityLabel={`${g.nextTierEyebrow}: ${g.tiers[nxt.key].name}, ${gap}, ${current} ${g.ofTarget} ${target}`}
+                  >
                     <HeroMedal Icon={nxt.icon} ringSize={56} ring={5} iconSize={24} innerColor={palette.neutral[100]} iconColor={palette.neutral[500]} />
                     <View style={st.spotlightBody}>
                       <Text style={st.spotlightEyebrow}>{g.nextTierEyebrow}</Text>
@@ -302,7 +307,7 @@ export function ProfileScreen() {
                         <Text style={st.spotlightCount}>{`${current} / ${target}`}</Text>
                       </View>
                     </View>
-                  </View>
+                  </StatusCard>
                 </Entrance>
               );
             })() : null}
@@ -326,9 +331,9 @@ export function ProfileScreen() {
               {preview.map((t, i) => (
                 <Entrance key={t.key} delay={320 + i * 70} anim={anim} style={st.slot}>
                   {isTierReached(t.key, completed) ? (
-                    <EarnedTile tier={t} name={g.tiers[t.key].name} desc={g.tiers[t.key].desc} reachedLabel={g.reachedLabel} />
+                    <EarnedTile tier={t} name={g.tiers[t.key].name} desc={g.tiers[t.key].desc} reachedLabel={g.reachedLabel} showRail={false} />
                   ) : (
-                    <LockedTile tier={t} name={g.tiers[t.key].name} desc={g.tiers[t.key].desc} sessions={completed} anim={anim} ofTarget={g.ofTarget} lockedA11y={g.lockedA11y} />
+                    <LockedTile tier={t} name={g.tiers[t.key].name} desc={g.tiers[t.key].desc} sessions={completed} anim={anim} ofTarget={g.ofTarget} lockedA11y={g.lockedA11y} isNext={nxt?.key === t.key} showRail={false} />
                   )}
                 </Entrance>
               ))}
@@ -346,12 +351,13 @@ export function ProfileScreen() {
               <ScoreCard />
             </View>
 
-            {/* How you progress + recognition-only note (verbatim — never affects pay, DT-06). */}
+            {/* How you progress + recognition-only note (verbatim — never affects pay, DT-06).
+                Info card → kind='neutral' (no liseré), flat. */}
             <Text style={st.howSecTitle}>{g.howTitle}</Text>
-            <View style={st.howCard}>
+            <StatusCard kind="neutral" elevated={false} padded={false} contentStyle={st.howCard}>
               <HowRow Icon={CalendarDays} title={g.how.sessions.title} desc={g.how.sessions.desc} first />
               <HowRow Icon={Trophy} title={g.how.climb.title} desc={g.how.climb.desc} />
-            </View>
+            </StatusCard>
 
             <Text style={st.note}>{g.note}</Text>
           </View>
@@ -414,11 +420,8 @@ const st = StyleSheet.create({
   idText: { flex: 1, minWidth: 0 },
   idName: { fontFamily: F.oswB, fontSize: 22, color: INK.textPrimary },
   idRole: { fontFamily: F.body, fontSize: 14, color: INK.textSecondary, marginTop: 1 },
-  idChip: {
-    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: OK_INK.bg, paddingVertical: 4, paddingHorizontal: 9, borderRadius: r.pill, marginTop: 6,
-  },
-  idChipTxt: { fontFamily: F.bodyS, fontSize: 12, color: OK_INK.fg },
+  // Just the spacing under the role line — the pill (fill/padding/radius/icon) is the shared StatusChip.
+  idChip: { marginTop: 6 },
   gearBtn: {
     alignSelf: 'flex-start',
     width: 40, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
@@ -438,8 +441,8 @@ const st = StyleSheet.create({
   streakTxt: { fontFamily: F.oswB, fontSize: 14, color: INK.textSecondary },
   heroCaption: { fontFamily: F.bodyS, fontSize: 13, color: INK.textSecondary, marginTop: sp.sm },
 
-  /* ----- next-tier spotlight ----- */
-  spotlight: { flexDirection: 'row', alignItems: 'center', gap: sp.md, borderRadius: r.xl, padding: sp.lg, backgroundColor: palette.neutral[0], borderWidth: 1, borderColor: HAIR, overflow: 'hidden' },
+  /* ----- next-tier spotlight (inner content of its StatusCard — surface/radius/shadow live there) ----- */
+  spotlight: { flexDirection: 'row', alignItems: 'center', gap: sp.md, padding: sp.lg },
   spotlightBody: { flex: 1 },
   spotlightEyebrow: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 1.2, color: GOLD_FG, textTransform: 'uppercase' },
   spotlightName: { fontFamily: F.oswB, fontSize: 18, color: ON_CARD, marginTop: 2 },
@@ -458,16 +461,18 @@ const st = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: sp.sm },
   slot: { width: '48%' },
 
-  /* ----- stat band ----- */
+  /* ----- stat band (each tile = a neutral StatusCard; surface/radius live there) ----- */
   statBand: { flexDirection: 'row', gap: sp.sm, marginTop: sp.xl },
-  statTile: { flex: 1, borderRadius: r.lg, padding: sp.md, backgroundColor: palette.neutral[0], borderWidth: 1, borderColor: HAIR },
+  statTile: { flex: 1 },
   statChip: { width: 32, height: 32, borderRadius: 999, alignItems: 'center', justifyContent: 'center', marginBottom: sp.sm },
   statNum: { fontFamily: F.oswB, fontSize: 22, color: ON_CARD },
-  statLabel: { fontFamily: F.body, fontSize: 12, lineHeight: 15, color: ON_CARD_2, marginTop: 2 },
+  // Reserve 2 lines (2 × lineHeight) so a label that wraps ("séances réalisées") doesn't make its
+  // tile taller than the 1-line tiles ("Série" / "Résidents") — all three stat tiles stay equal height.
+  statLabel: { fontFamily: F.body, fontSize: 12, lineHeight: 15, minHeight: 30, color: ON_CARD_2, marginTop: 2 },
 
   /* ----- how-you-progress ----- */
   howSecTitle: { fontFamily: F.oswS, fontSize: 18, letterSpacing: 0.3, color: ON_CANVAS, marginTop: sp.xl, marginBottom: sp.sm },
-  howCard: { borderRadius: r.xl, backgroundColor: palette.neutral[0], borderWidth: 1, borderColor: HAIR, paddingHorizontal: sp.md },
+  howCard: { paddingHorizontal: sp.md },
   howRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: sp.md },
   howDivider: { borderTopWidth: 1, borderTopColor: HAIR },
   howIcon: { width: 40, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.neutral[100] },

@@ -98,7 +98,7 @@ export function MedaillesScreen({ visible, onClose, earned, locked, sessions }: 
               <View style={st.grid}>
                 {earned.map((t) => (
                   <View key={t.key} style={st.slot}>
-                    <EarnedTile tier={t} name={c.tiers[t.key].name} desc={c.tiers[t.key].desc} reachedLabel={c.reachedLabel} />
+                    <EarnedTile tier={t} name={c.tiers[t.key].name} desc={c.tiers[t.key].desc} reachedLabel={c.reachedLabel} showRail={false} />
                   </View>
                 ))}
               </View>
@@ -111,7 +111,7 @@ export function MedaillesScreen({ visible, onClose, earned, locked, sessions }: 
               <View style={st.grid}>
                 {locked.map((t) => (
                   <View key={t.key} style={st.slot}>
-                    <LockedTile tier={t} name={c.tiers[t.key].name} desc={c.tiers[t.key].desc} sessions={sessions} anim={STATIC} ofTarget={c.ofTarget} lockedA11y={c.lockedA11y} />
+                    <LockedTile tier={t} name={c.tiers[t.key].name} desc={c.tiers[t.key].desc} sessions={sessions} anim={STATIC} ofTarget={c.ofTarget} lockedA11y={c.lockedA11y} showRail={false} />
                   </View>
                 ))}
               </View>

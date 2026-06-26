@@ -15,12 +15,13 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Skeleton, SkeletonCircle } from '../components/Skeleton';
-import { surfaces, spacing as sp, radius as r, palette } from '../theme/theme';
+import { surfaces, spacing as sp, radius as r, cardShape, palette, shadow } from '../theme/theme';
 
 const S = surfaces.coach;
 const BORDER_INK = palette.neutral[200];
 const CARD_BG = S.surface;                      // white raised card
-const CARD_BORDER = 'rgba(24,23,21,0.07)';         // hairline
+// Standardized to match the v2 <StatusCard> hairline (0.10) so the skeleton→content swap can't pop.
+const CARD_BORDER = 'rgba(24,23,21,0.10)';         // hairline
 
 /* ---------- shared building blocks ---------- */
 
@@ -442,13 +443,13 @@ const sk = StyleSheet.create({
   inkGhost: { backgroundColor: 'rgba(255,255,255,0.08)' },
 
   // Cream level-card placeholder (first scroll item under Home's fixed ink hero).
-  levelCardSk: { backgroundColor: palette.neutral[0], borderRadius: r.lg, borderWidth: 1, borderColor: palette.neutral[200], padding: sp.md }, // top spacing from the section wrapper
+  levelCardSk: { backgroundColor: palette.neutral[0], ...cardShape, borderWidth: 1, borderColor: palette.neutral[200], padding: sp.md }, // top spacing from the section wrapper
   section: { marginTop: sp['2xl'] },
   secHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: sp.sm },
   spread: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: sp.sm },
 
   card: {
-    backgroundColor: CARD_BG, borderRadius: r.xl, padding: sp.lg,
+    backgroundColor: CARD_BG, ...cardShape, padding: sp.lg,
     borderWidth: 1, borderColor: CARD_BORDER,
   },
   // Bare earnings value line (matches the real screen — figure + word · figure + word, no box).
@@ -462,7 +463,7 @@ const sk = StyleSheet.create({
   /* calendar */
   tileRow: { flexDirection: 'row', gap: sp.sm },
   tile: {
-    flex: 1, borderRadius: r.lg, padding: sp.md, minHeight: 104,
+    flex: 1, ...cardShape, padding: sp.md, minHeight: 104,
     backgroundColor: CARD_BG, borderWidth: 1, borderColor: CARD_BORDER,
   },
   calNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: sp.sm },
@@ -483,7 +484,7 @@ const sk = StyleSheet.create({
   /* badges & level */
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: sp.sm },
   badge: {
-    width: '48%', flexGrow: 1, borderRadius: r.lg, padding: sp.md,
+    width: '48%', flexGrow: 1, ...cardShape, padding: sp.md,
     backgroundColor: CARD_BG, borderWidth: 1, borderColor: CARD_BORDER,
   },
 
@@ -491,14 +492,14 @@ const sk = StyleSheet.create({
   chipsRow: { flexDirection: 'row', gap: sp.sm, paddingHorizontal: sp.lg, paddingBottom: sp.sm },
   listCard: {
     flexDirection: 'row', alignItems: 'center', gap: sp.md,
-    borderRadius: r.lg, padding: sp.md, marginBottom: sp.sm,
-    backgroundColor: CARD_BG, borderWidth: 1, borderColor: CARD_BORDER,
+    ...cardShape, padding: sp.md, marginBottom: sp.sm,
+    backgroundColor: CARD_BG, borderWidth: 1, borderColor: CARD_BORDER, ...shadow.card,
   },
 
   /* facility feedback */
   fbCard: {
-    borderRadius: r.lg, padding: sp.md, marginBottom: sp.sm,
-    backgroundColor: CARD_BG, borderWidth: 1, borderColor: CARD_BORDER,
+    ...cardShape, padding: sp.md, marginBottom: sp.sm,
+    backgroundColor: CARD_BG, borderWidth: 1, borderColor: CARD_BORDER, ...shadow.card,
   },
   fbHead: { flexDirection: 'row', alignItems: 'center', gap: sp.md },
 

@@ -73,7 +73,8 @@
 .drawer {
   width: min(320px, 86vw);
   height: 100%;
-  background: var(--color-surface);
+  /* Le tiroir est le rail mobile : même crème de marque que la barre latérale. */
+  background: var(--color-nav-surface);
   padding: var(--space-md);
   overflow-y: auto;
   box-shadow: var(--elevation-3);

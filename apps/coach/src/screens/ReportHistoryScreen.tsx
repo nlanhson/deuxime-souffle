@@ -16,7 +16,7 @@ import React from 'react';
 import { Modal, View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 
 import { X, FileText, Check, Hourglass, Edit3, Users, type LucideIcon } from '../icons';
-import { palette, spacing as sp, radius as r, surfaces } from '../theme/theme';
+import { palette, spacing as sp, radius as r, cardShape, surfaces } from '../theme/theme';
 import { copy } from '../copy';
 import { useFirstLoad } from '../lib/useFirstLoad';
 import { Reveal } from '../components/Reveal';
@@ -34,7 +34,7 @@ const SUBTLE = palette.neutral[100];
 const INK = {
   ok:      { fg: palette.vert[700], bg: 'rgba(47,158,107,0.16)' },
   pending: { fg: palette.or[800], bg: 'rgba(242,194,0,0.13)' },
-  changes: { fg: palette.rouge[600], bg: 'rgba(225,50,43,0.14)' },
+  changes: { fg: palette.rouge[600], bg: 'rgba(234,56,41,0.14)' },
 };
 
 const F = {
@@ -210,7 +210,7 @@ const st = StyleSheet.create({
 
   row: {
     flexDirection: 'row', alignItems: 'center', gap: sp.md,
-    borderRadius: r.lg, padding: sp.md, marginBottom: sp.sm,
+    ...cardShape, padding: sp.md, marginBottom: sp.sm,
     backgroundColor: palette.neutral[0], borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)',
   },
   rowIcon: {

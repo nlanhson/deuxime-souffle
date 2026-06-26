@@ -3,3 +3,11 @@
   flex-shrink: 0;
   /* Tuile carrée, sans arrondi — la marque garde ses angles vifs. */
 }
+
+/* Variante « tuile arrondie » du picto de marque (rail de navigation) : coins
+   adoucis ~22 % du côté, à l'image du picto coloré officiel. Le détour des lettres
+   laisse voir le fond crème du rail → tuile rouge, « 2ᵉᵐᵉ » en crème. */
+.rounded {
+  border-radius: 22%;
+  overflow: hidden;
+}

@@ -15,9 +15,10 @@ import { setStatusBarStyle } from 'expo-status-bar';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { ChevronLeft, ChevronRight, CaretDownSolid, Bell, MapPin, CalendarDays, Check, CheckCircle2, Clock, Hand, X, AlarmClock, Sparkles } from '../icons';
 
-import { palette, color, spacing as sp, radius as r, surfaces, motion, cardGradient as RAISED_GRAD } from '../theme/theme';
+import { palette, color, spacing as sp, radius as r, cardShape, surfaces, motion, cardGradient as RAISED_GRAD, type StatusTone } from '../theme/theme';
 import { useCopy } from '../i18n';
 import type { Copy } from '../copy';
+import { StatusCard, StatusChip } from '../components/StatusCard';
 import { NotificationCenter } from '../components/NotificationCenter';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { GradientFill } from '../components/GradientFill';
@@ -512,23 +513,23 @@ function DaySessions({ date, onPressSession }: { date: Date; onPressSession?: ()
   const sessions = sessionsOn(dateKey(date));
   const due = isDue(date);
   return (
-    // Lives INSIDE the calendar card, under a full-bleed hairline rule — the tapped day's sessions
-    // are part of the "Mon planning" card design (client: include the entry below, don't leave it
-    // bare beside the carded calendar). The rule sets the grid above off from the day's list below.
+    // The tapped day's session(s) live INSIDE the planning card, below the calendar grid and a
+    // full-bleed separator — as plain rows, NOT nested cards (client: one card, divided).
     <View style={st.daySess}>
-      {/* Date header + status tag removed per request — the day context comes from the calendar
-          grid above; here we just list the selected day's sessions. */}
       {sessions.length === 0 ? (
         <Text style={st.muted}>{copy.week.daySection.empty}</Text>
       ) : (
+        // Plain rows (no card frame / no liseré) — a grey "Passée" chip for already-happened sessions
+        // (colour-independence: status in words, not graying alone), a green "Confirmée" chip for
+        // upcoming ones. Multiple rows are split by a hairline.
         sessions.map((s, i) => (
           // Whole row taps through to the session detail (same modal the hero next-session opens).
           <Pressable
             key={i}
-            style={({ pressed }) => [st.availRow, i === 0 && st.daySessFirst, i > 0 && st.availDivider, pressed && { opacity: 0.7 }]}
             onPress={onPressSession}
+            style={({ pressed }) => [st.daySessRow, i > 0 && st.daySessRowGap, pressed && { opacity: 0.6 }]}
             accessibilityRole="button"
-            accessibilityLabel={`${s.place}, ${s.time} to ${s.end}, ${s.addr}`}
+            accessibilityLabel={`${s.place}, ${s.time} to ${s.end}, ${s.addr}, ${due ? copy.sessions.seg.past : copy.sessions.status.confirmed}`}
           >
             <View style={st.availWhen}>
               <Text style={[st.availHr, due && { color: S.textSecondary }]}>{s.time}</Text>
@@ -537,6 +538,13 @@ function DaySessions({ date, onPressSession }: { date: Date; onPressSession?: ()
             <View style={{ flex: 1 }}>
               <Text style={[st.availNm, due && { color: S.textSecondary }]}>{s.place}</Text>
               <Text style={st.availDs}>{s.addr}</Text>
+              <View style={st.dayChipRow}>
+                {due ? (
+                  <StatusChip tone="neutral" label={copy.sessions.seg.past} icon={Check} />
+                ) : (
+                  <StatusChip tone="ok" label={copy.sessions.status.confirmed} icon={CheckCircle2} />
+                )}
+              </View>
             </View>
           </Pressable>
         ))
@@ -745,13 +753,17 @@ export function AccueilScreen() {
   // the red check-in CTA. The status chip and countdown track the same source.
   const checkInPhase: CheckInPhase =
     nowMs < CHECKIN_OPENS ? 'tooEarly' : !ON_SITE ? 'away' : 'ready';
-  const statusChip = checkedIn
+  // Coach v2 status taxonomy for the next-session chip (sits on the cream section header, far right):
+  // "Confirmée" reads GREEN ('ok'), not blue — confirmé = confirmée per the PDF liseré legend. Amber
+  // for the running-late state; green for confirmed / check-in-ready / checked-in. Rendered via the
+  // shared <StatusChip> (paper surface, icon + word — never colour alone).
+  const statusChip: { tone: StatusTone; label: string; icon: typeof Check } = checkedIn
     ? (late
-        ? { label: copy.nextSession.statusLate, fg: INK.pending, bg: INK.pendingBg }
-        : { label: copy.sessions.status.checkedIn, fg: INK.ok, bg: INK.okBg })
+        ? { tone: 'pending', label: copy.nextSession.statusLate, icon: Clock }
+        : { tone: 'ok', label: copy.sessions.status.checkedIn, icon: CheckCircle2 })
     : checkInPhase === 'ready'
-      ? { label: copy.sessions.status.checkinOpen, fg: INK.ok, bg: INK.okBg }
-      : { label: copy.nextSession.status, fg: INK.info, bg: INK.infoBg };
+      ? { tone: 'ok', label: copy.sessions.status.checkinOpen, icon: MapPin }
+      : { tone: 'ok', label: copy.nextSession.status, icon: CheckCircle2 };
 
   // One open-session row for the "Séances ouvertes à venir" block (DT-13/14). The ⏰ urgency chip
   // shows ONLY when the session is genuinely urgent (starts within the window); the ✦ type chip and
@@ -761,8 +773,16 @@ export function AccueilScreen() {
     const isFirst = a.type === 'first';
     const urgent = a.days <= URGENT_WITHIN_DAYS;
     const showTags = urgent || isFirst || applied;
+    // Coach v2 liseré: urgent openings = 'danger' (action-required red); the rest = 'neutral'.
+    // "Première visite" stays a bespoke gold ATTRIBUTE tag (not a status), so it never drives the rail.
+    const tone: StatusTone = urgent ? 'danger' : 'neutral';
     return (
-      <View key={a.nm} style={[st.addlRow, i === 0 && { paddingTop: 0 }, i > 0 && st.availDivider]}>
+      // Each open-session row is its own elevated white StatusCard on the cream canvas (the old
+      // per-row divider is replaced by marginBottom). The card is NOT onPress: the body Pressable
+      // taps to detail and the apply/withdraw circle keeps its own tap target, so the row carries
+      // two distinct actions rather than one whole-card button.
+      <StatusCard key={a.nm} status={tone} style={st.openCardGap} contentStyle={st.openCardPad}>
+        <View style={st.openCardRow}>
         <Pressable
           style={({ pressed }) => [st.addlRowBody, pressed && { opacity: 0.7 }]}
           onPress={() => setAvailDetail(a)}
@@ -778,29 +798,6 @@ export function AccueilScreen() {
             <Text style={st.urgWhen}>{a.when}</Text>
             <Text style={st.availNm} numberOfLines={1}>{a.nm}</Text>
             <Text style={st.availDs} numberOfLines={1}>{a.ds}</Text>
-            {/* chip row — urgency (urgent only) · session type · applied (all carry an icon + word) */}
-            {showTags ? (
-              <View style={st.tagRow}>
-                {urgent ? (
-                  <View style={st.urgencyTag}>
-                    <AlarmClock size={12} color={palette.rouge[600]} strokeWidth={2.5} />
-                    <Text style={st.urgencyTxt}>{availUrgencyLabel(a.days, copy.availableScreen.list.urgency)}</Text>
-                  </View>
-                ) : null}
-                {isFirst ? (
-                  <View style={st.typeTag}>
-                    <Sparkles size={12} color={color.info} strokeWidth={2.5} />
-                    <Text style={st.typeTagTxt}>{copy.availableScreen.type.first}</Text>
-                  </View>
-                ) : null}
-                {applied ? (
-                  <View style={st.appliedTag}>
-                    <Check size={12} color={palette.vert[600]} strokeWidth={2.5} />
-                    <Text style={st.appliedTagTxt}>{copy.availableScreen.status.applied}</Text>
-                  </View>
-                ) : null}
-              </View>
-            ) : null}
           </View>
         </Pressable>
         {/* raise-hand (apply) ↔ withdraw — the Disponibles-tab action, now on Home (DT-13/14) */}
@@ -824,7 +821,29 @@ export function AccueilScreen() {
             <Hand size={20} color={color.onAction} />
           </Pressable>
         )}
-      </View>
+        </View>
+        {/* chip row — urgency · session type · applied. A FULL-WIDTH footer below the row so the tags
+            sit on ONE line instead of wrapping inside the narrow column between the time rail and the
+            apply circle. (Still wraps gracefully if all three ever show at once.) */}
+        {showTags ? (
+          <View style={st.tagRow}>
+            {urgent ? (
+              <StatusChip tone="danger" label={availUrgencyLabel(a.days, copy.availableScreen.list.urgency)} icon={AlarmClock} />
+            ) : null}
+            {/* "Première visite" — bespoke BLUE Sparkles attribute tag (blue = first visit, kept distinct
+                from gold = recommandé); an attribute, not a status, so it never drives the card liseré. */}
+            {isFirst ? (
+              <View style={st.typeTag}>
+                <Sparkles size={12} color={color.info} strokeWidth={2.5} />
+                <Text style={st.typeTagTxt}>{copy.availableScreen.type.first}</Text>
+              </View>
+            ) : null}
+            {applied ? (
+              <StatusChip tone="ok" label={copy.availableScreen.status.applied} icon={Check} />
+            ) : null}
+          </View>
+        ) : null}
+      </StatusCard>
     );
   };
 
@@ -899,10 +918,11 @@ export function AccueilScreen() {
               · on-bar endpoint labels (Monarch) — filled part = Gagné, full track = attendu
             Tappable → financial dashboard. ===== */}
         <View style={[st.section, { marginTop: sp.lg }]}>
-          <Pressable
-            style={({ pressed }) => [pressed && { opacity: 0.7 }]}
+          {/* Coach v2: the earnings preview is an INFO card — kind='neutral' (no status rail), a soft
+              white card on cream. Whole card taps through to the financial dashboard. */}
+          <StatusCard
+            kind="neutral"
             onPress={() => setRevenusOpen(true)}
-            accessibilityRole="button"
             accessibilityLabel={`${copy.earnings.eyebrow}. ${copy.earnings.earned}, ${eur(MONTH_EARNED)} €. ${eur(MONTH_PROJECTED)} € ${copy.earnings.projected.toLowerCase()}, ${eur(MONTH_EXPECTED)} € ${copy.earnings.expected}.`}
           >
             <View style={st.earnCardHead}>
@@ -928,19 +948,17 @@ export function AccueilScreen() {
               <Text style={st.earnLegendLight}>{copy.earnings.earned}</Text>
               <Text style={st.earnLegendStrong}>{`${eur(MONTH_EXPECTED)} € ${copy.earnings.expected}`}</Text>
             </View>
-          </Pressable>
+          </StatusCard>
         </View>
 
         {/* ===== Hero: next session (C16 / C21 / C22) — the screen's single focal point ===== */}
         <View style={st.section}>
           <View style={st.secHead}>
             <Text style={st.secTitle}>{copy.nextSession.eyebrow}</Text>
-            {/* Status chip lives on the section-title row (outside the card), far right. Tracks the
-                live phase: Confirmed → Check-in open → Checked in (or Running late). */}
-            <View style={[st.chip, { backgroundColor: statusChip.bg }]}>
-              <View style={[st.dot, { backgroundColor: statusChip.fg }]} />
-              <Text style={[st.chipTxt, { color: statusChip.fg }]}>{statusChip.label}</Text>
-            </View>
+            {/* Status chip lives on the section-title row (outside the card, on the cream canvas), far
+                right. Tracks the live phase: Confirmed → Check-in open → Checked in (or Running late).
+                Shared v2 <StatusChip> — icon + word, never colour alone. */}
+            <StatusChip tone={statusChip.tone} label={statusChip.label} icon={statusChip.icon} />
           </View>
 
           {/* The whole card is tappable → full session detail. The inner Directions / Check in
@@ -1024,11 +1042,10 @@ export function AccueilScreen() {
               valueOpacity={titleFade}
             />
           </View>
-          {/* The calendar itself (period nav + grid + legend) is boxed in a flat bordered card so it
-              reads as a distinct tile, set clearly apart from the bare selected-day session list
-              below (client: separate the two). House "flat bordered card" — white raised gradient +
-              hairline edge; no shadow (shadow is for overlays only). */}
-          <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={st.calCard}>
+          {/* ONE card holds the whole planning section: the calendar (period nav + grid + legend) on
+              top, a full-bleed separator, then the selected-day session(s) as plain rows below — NOT a
+              nested card (client: one card, divided by a separator, not a card-in-a-card). */}
+          <StatusCard kind="neutral" style={st.calBody}>
             {/* period nav — week-range / month label + a view-mode dropdown (Week/Month) beside it,
                 prev/next chevrons on the right. The Segmented toggle was folded into this dropdown to
                 simplify the section (one nav row instead of a separate toggle row). Crossfades on the
@@ -1073,9 +1090,9 @@ export function AccueilScreen() {
             {shownMode === 'month' ? (
               <CalendarLegend items={[{ color: color.action, label: copy.week.legend }]} />
             ) : null}
-            {/* Selected-date sessions — part of the SAME card, under a full-bleed divider (C09 / C10). */}
+            {/* Selected-date sessions — inside the SAME card, below a full-bleed separator (plain rows). */}
             <DaySessions date={selectedDate} onPressSession={() => setNextDetail(true)} />
-          </LinearGradient>
+          </StatusCard>
         </View>
 
         {/* ===== Séances supplémentaires (DT-13 / DT-14) — open sessions to apply for, set apart from
@@ -1192,7 +1209,12 @@ const st = StyleSheet.create({
   // Tighten the gap under the date title to the session info below (overrides secHead's margin
   // and the first row's top padding — this section only).
   dayHead: { marginBottom: sp.xs },
-  daySessFirst: { paddingTop: sp.xs },
+  // Day-session rows — plain content inside the planning card (no nested card frame). Time rail +
+  // body side by side, TOP-aligned (the time lines up with the title, like the other session cards).
+  daySessRow: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.md },
+  daySessRowGap: { marginTop: sp.md, paddingTop: sp.md, borderTopWidth: 1, borderTopColor: BORDER_INK },
+  // Spacing above the status chip under the place/address lines.
+  dayChipRow: { flexDirection: 'row', marginTop: 6 },
 
   /* The ink hero band itself is now the shared <InkHeader> (a fixed header outside the ScrollView);
      these styles are just its inner content. */
@@ -1238,11 +1260,15 @@ const st = StyleSheet.create({
   planningHead: { gap: sp.xs, marginBottom: sp.md },
   // The calendar (period nav + grid + legend) boxed as a flat bordered tile — sets it visually apart
   // from the bare selected-day session list below. White raised gradient fill + hairline edge.
-  calCard: { borderRadius: r.lg, borderWidth: 1, borderColor: RAISED_BORDER, padding: sp.md },
+  // Bare calendar body — no card chrome (the enclosing white card was removed). Just a top gap.
+  calBody: { marginTop: sp.sm },
   // Selected-day sessions block inside the calendar card — a full-bleed hairline rule sets it off
   // from the grid above; the negative margins bleed the rule to the card edges, the padding re-insets
   // the rows back to the grid's gutter.
-  daySess: { marginTop: sp.md, marginHorizontal: -sp.md, paddingTop: sp.md, paddingHorizontal: sp.md, borderTopWidth: 1, borderTopColor: BORDER_INK },
+  // Selected-day session block — sits below the calendar grid, set off by a separator that's INSET
+  // from the card edges (no negative margin, so the rule stays within the card's sp.md padding →
+  // a bit of breathing space on each side rather than a full-bleed line).
+  daySess: { marginTop: sp.md, paddingTop: sp.md, borderTopWidth: 1, borderTopColor: BORDER_INK },
   linkBtn: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingVertical: 6 },
   linkTxt: { fontFamily: F.bodyS, fontSize: 13, letterSpacing: 0.2, color: S.textSecondary },
   // Trailing label on a section header (e.g. the current month in the calendar Month view).
@@ -1263,9 +1289,9 @@ const st = StyleSheet.create({
   // Next-session card — ink surface (DT-02), map on top, ink info body below. Ink reads as a key
   // moment against the cream canvas (no border needed — the ink/cream contrast defines the edge).
   heroCard: {
-    backgroundColor: S.ink.bg, borderRadius: r.xl,
+    backgroundColor: S.ink.bg, ...cardShape,
   },
-  heroClip: { borderRadius: r.xl, overflow: 'hidden' },
+  heroClip: { ...cardShape, overflow: 'hidden' },
   heroMap: { height: 150 }, // square corners — heroClip rounds the top; the body covers the bottom
   heroBody: { padding: sp.lg, backgroundColor: S.ink.bg },
   heroTitle: { fontFamily: F.bodyB, fontSize: 20, color: S.ink.textPrimary },
@@ -1332,7 +1358,7 @@ const st = StyleSheet.create({
   // Week strip: per-day session count as a small red number circle (shared with the Available page).
   dayCountPill: {
     minWidth: 16, height: 16, borderRadius: 999, paddingHorizontal: 4,
-    backgroundColor: 'rgba(225,50,43,0.16)', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(234,56,41,0.16)', alignItems: 'center', justifyContent: 'center',
   },
   dayCountTxt: { fontFamily: F.bodyS, fontSize: 13, color: palette.rouge[700] }, // DT-20: AA on the red-tint pill
   // Month grid: a simple red dot marks days with sessions (count circle reserved for the week strip).
@@ -1342,7 +1368,7 @@ const st = StyleSheet.create({
   // calendar. Each is its own raised tile; the accent lives in a small icon chip (info-blue for
   // the plan, success-green for progress) so red stays the CTA/selected-day colour.
   tileRow: { flexDirection: 'row', gap: sp.sm },
-  tile: { flex: 1, borderRadius: r.lg, padding: sp.md, gap: 2, borderWidth: 1, borderColor: RAISED_BORDER },
+  tile: { flex: 1, ...cardShape, padding: sp.md, gap: 2, borderWidth: 1, borderColor: RAISED_BORDER },
   // tinted rounded square, pinned to the top-right corner — same 36×36 chip as the Earnings card
   tileChip: { position: 'absolute', top: sp.md, right: sp.md, width: 36, height: 36, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   tileLabel: { fontFamily: F.body, fontSize: 13, color: S.textSecondary },
@@ -1442,6 +1468,12 @@ const st = StyleSheet.create({
   // Rows are taller now (date line + chips), so the time rail + raise-hand top-align (DT-14).
   addlRow: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm, paddingVertical: sp.md },
   addlRowBody: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: sp.md },
+  // Coach v2 open-session cards — each row is its own elevated white StatusCard; marginBottom (not a
+  // divider) separates them. Card content is a column: a row (body Pressable + apply/withdraw circle)
+  // over a full-width chip footer, so the tags stay on one line.
+  openCardGap: { marginBottom: sp.sm },
+  openCardPad: { padding: sp.md },
+  openCardRow: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm },
   // raise-hand / withdraw circle — same language as the Disponibles tab (red apply, outline withdraw).
   actionCircle: { width: 44, height: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
   applyCircle: {
@@ -1453,16 +1485,19 @@ const st = StyleSheet.create({
   /* ⏰ Urgentes top section + Available-page chips (DT-14). Reds/blues are tuned for AA on the LIGHT
      canvas (a step darker than the Disponibles ink-card tints) so the small 12px chip text stays
      legible — same meaning (red = urgent, blue = session type, green = applied), just contrast-safe. */
-  urgHead: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
-  urgIcon: { width: 22, height: 22, borderRadius: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(225,50,43,0.10)' },
+  urgHead: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: sp.sm },
+  urgIcon: { width: 22, height: 22, borderRadius: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(234,56,41,0.10)' },
   urgTitle: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 1, color: palette.rouge[600] },
   urgCount: { fontFamily: F.bodyB, fontSize: 13, color: S.textSecondary },
   // Quiet sub-header for the non-urgent upcoming openings — muted, no red, clearly secondary to ⏰ Urgentes.
-  laterHead: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 1, color: S.textSecondary, marginTop: sp.lg, marginBottom: 2 },
+  laterHead: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 1, color: S.textSecondary, marginTop: sp.lg, marginBottom: sp.sm },
   // date line above the place name (Available-page card)
   urgWhen: { fontFamily: F.body, fontSize: 13, color: S.textSecondary, marginBottom: 2 },
-  tagRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: sp.sm, marginTop: 8 },
-  urgencyTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: r.pill, backgroundColor: 'rgba(225,50,43,0.10)' },
+  // Footer chip row indented to line up with the info stack (title/address) — i.e. past the time rail
+  // (availWhen width 52 + the addlRowBody gap sp.md), so the tags sit under the content like the
+  // day-session card's chip, not flush under the time rail.
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: sp.sm, marginTop: 8, marginLeft: 52 + sp.md },
+  urgencyTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: r.pill, backgroundColor: 'rgba(234,56,41,0.10)' },
   urgencyTxt: { fontFamily: F.bodyS, fontSize: 13, color: palette.rouge[600] },
   typeTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: r.pill, backgroundColor: palette.bleu[50] },
   typeTagTxt: { fontFamily: F.body, fontSize: 13, color: color.info },

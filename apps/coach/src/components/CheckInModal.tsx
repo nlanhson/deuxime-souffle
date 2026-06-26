@@ -39,7 +39,7 @@ const OUTCOME: Record<CheckInOutcome, { Icon: LucideIcon; fg: string; bg: string
   late:     { Icon: AlertTriangle, fg: palette.or[800],   bg: 'rgba(242,194,0,0.13)' },
   tooFar:   { Icon: MapPinOff,     fg: palette.bleu[700], bg: 'rgba(166,183,219,0.14)' },
   tooEarly: { Icon: Clock,         fg: palette.bleu[700], bg: 'rgba(166,183,219,0.14)' },
-  denied:   { Icon: MapPinOff,     fg: palette.rouge[600], bg: 'rgba(225,50,43,0.14)' },
+  denied:   { Icon: MapPinOff,     fg: palette.rouge[600], bg: 'rgba(234,56,41,0.14)' },
 };
 
 const DEMO_ORDER: CheckInOutcome[] = ['success', 'late', 'tooFar', 'tooEarly', 'denied'];

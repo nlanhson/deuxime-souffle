@@ -188,12 +188,12 @@ const st = StyleSheet.create({
   /* ⏰ Urgentes / Plus tard sections + Available-page chips (DT-14) — mirrors the Home block. Reds/
      blues are tuned for AA on the light canvas (a step darker than the Disponibles ink-card tints). */
   urgHead: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: sp.xs, marginBottom: 2 },
-  urgIcon: { width: 22, height: 22, borderRadius: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(225,50,43,0.10)' },
+  urgIcon: { width: 22, height: 22, borderRadius: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(234,56,41,0.10)' },
   urgTitle: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 1, color: palette.rouge[600] },
   urgCount: { fontFamily: F.bodyS, fontSize: 13, color: S.textSecondary },
   laterHead: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 1, color: S.textSecondary, marginTop: sp.lg, marginBottom: 2 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: sp.sm, marginTop: 8 },
-  urgencyTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: r.pill, backgroundColor: 'rgba(225,50,43,0.10)' },
+  urgencyTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: r.pill, backgroundColor: 'rgba(234,56,41,0.10)' },
   urgencyTxt: { fontFamily: F.bodyS, fontSize: 13, color: palette.rouge[600] },
   typeTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: r.pill, backgroundColor: palette.bleu[50] },
   typeTagTxt: { fontFamily: F.body, fontSize: 13, color: color.info },

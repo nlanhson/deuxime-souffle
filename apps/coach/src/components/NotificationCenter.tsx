@@ -12,7 +12,8 @@ import {
   X, MapPin, FileText, CalendarPlus, CheckCircle2, Wallet, CalendarClock, Check, type LucideIcon,
 } from '../icons';
 
-import { palette, color, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
+import { palette, color, spacing as sp, radius as r, surfaces, type StatusTone } from '../theme/theme';
+import { StatusCard, StatusChip } from './StatusCard';
 import { useCopy } from '../i18n';
 import { ReportScreen } from '../screens/ReportScreen';
 import { RevenusScreen } from '../screens/RevenusScreen';
@@ -27,7 +28,6 @@ const isDark = S.colorScheme === 'dark';
 const CANVAS = S.canvas;                                            // ink (dark) | cream (light)
 const CARD = S.surface;                                             // dark ink card in both schemes
 const SUBTLE = isDark ? palette.neutral[800] : palette.neutral[100]; // subtle container on the canvas
-const DIVIDER = palette.neutral[200];
 const ON_CANVAS = S.textPrimary;                                   // on-canvas text — adapts per scheme
 const ON_CANVAS_2 = S.textSecondary;
 const ON_CARD = palette.neutral[900];                            // dark text inside the white card
@@ -77,12 +77,28 @@ const TYPE_ACTION: Record<NotifType, {
 
 // Icon + on-ink colour per type (same tones the screens use for status).
 const TYPE_META: Record<NotifType, { Icon: LucideIcon; fg: string; bg: string }> = {
-  assigned:     { Icon: CalendarPlus, fg: color.action,      bg: 'rgba(225,50,43,0.16)' },
+  assigned:     { Icon: CalendarPlus, fg: color.action,      bg: 'rgba(234,56,41,0.16)' },
   checkin:      { Icon: MapPin,        fg: palette.bleu[200], bg: 'rgba(166,183,219,0.14)' },
   reportDue:    { Icon: FileText,      fg: palette.or[300],   bg: 'rgba(242,194,0,0.13)' },
   confirmed:    { Icon: CheckCircle2,  fg: palette.vert[300], bg: 'rgba(47,158,107,0.16)' },
   payment:      { Icon: Wallet,        fg: palette.vert[300], bg: 'rgba(47,158,107,0.16)' },
   availability: { Icon: CalendarClock, fg: palette.or[300],   bg: 'rgba(242,194,0,0.13)' },
+};
+
+// Notification type → v2 StatusTone — mirrors how each thing reads on ITS screen so the two surfaces
+// never disagree (restrained-red taxonomy, consistent with SeancesScreen STATUS_TONE):
+//   assigned (new session to apply for) = à venir / opportunity (amber, like the Applications tab)
+//   check-in open / session confirmed   = confirmée (green; the red lives on the check-in CTA, not here)
+//   report-due = action requise (RED — the only genuinely action-required notification)
+//   availability update = à venir (amber) · payment effected = passé / clôturé (grey).
+// Drives the StatusCard's 3px left liseré per (unread) row.
+const TYPE_TONE: Record<NotifType, StatusTone> = {
+  assigned:     'pending',
+  checkin:      'ok',
+  reportDue:    'danger',
+  confirmed:    'ok',
+  availability: 'pending',
+  payment:      'neutral',
 };
 
 // Mock notifications — placeholders (real code pulls from the notifications service / push).
@@ -121,36 +137,38 @@ const SEED: Notif[] = [
 
 /* ---------- pieces ---------- */
 
-function Row({ n, first, onPress }: { n: Notif; first: boolean; onPress: () => void }) {
+function Row({ n, onPress }: { n: Notif; onPress: () => void }) {
   const m = TYPE_META[n.type];
   const Icon = m.Icon;
-  // Read-state drives the icon tone now (not the per-type accent): unread = ink, read = grey.
+  // Read-state drives the icon tone (not the per-type accent): unread = ink, read = grey.
   const iconColor = n.unread ? palette.neutral[900] : palette.neutral[500];
+  // The v2 left liseré routes the read/unread distinction through the tone system: unread keeps the
+  // notification's status tone (red/green/amber/grey); read de-emphasizes to a neutral grey rail.
+  const tone: StatusTone = n.unread ? TYPE_TONE[n.type] : 'neutral';
   return (
-    <Pressable
-      style={({ pressed }) => [st.row, !first && st.rowDivider, pressed && { opacity: 0.9 }]}
+    <StatusCard
+      status={tone}
       onPress={onPress}
-      accessibilityRole="button"
+      style={st.cardGap}
       accessibilityLabel={`${n.title}. ${n.body}. ${n.time}${n.result ? `, ${n.result}` : n.unread ? ', unread' : ''}`}
     >
-      <View style={st.iconWrap}>
-        <Icon size={20} color={iconColor} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <View style={st.rowHead}>
-          <Text style={st.title} numberOfLines={1}>{n.title}</Text>
-          <Text style={st.time}>{n.time}</Text>
+      <View style={st.row}>
+        <View style={st.iconWrap}>
+          <Icon size={20} color={iconColor} />
         </View>
-        <Text style={st.body}>{n.body}</Text>
-        {n.result ? (
-          <View style={st.doneChip}>
-            <Check size={12} color={palette.vert[700]} />
-            <Text style={st.doneChipTxt}>{n.result}</Text>
+        <View style={{ flex: 1 }}>
+          <View style={st.rowHead}>
+            <Text style={st.title} numberOfLines={1}>{n.title}</Text>
+            <Text style={st.time}>{n.time}</Text>
           </View>
-        ) : null}
+          <Text style={st.body}>{n.body}</Text>
+          {n.result ? (
+            <StatusChip tone="ok" label={n.result} icon={Check} style={{ marginTop: 6 }} />
+          ) : null}
+        </View>
+        {n.unread && !n.result ? <View style={st.unreadDot} /> : null}
       </View>
-      {n.unread && !n.result ? <View style={st.unreadDot} /> : null}
-    </Pressable>
+    </StatusCard>
   );
 }
 
@@ -159,7 +177,7 @@ function Section({ label, items, onOpen }: { label: string; items: Notif[]; onOp
   return (
     <View style={st.section}>
       <Text style={st.eyebrow}>{label}</Text>
-      {items.map((n, i) => <Row key={n.id} n={n} first={i === 0} onPress={() => onOpen(n)} />)}
+      {items.map((n) => <Row key={n.id} n={n} onPress={() => onOpen(n)} />)}
     </View>
   );
 }
@@ -343,8 +361,10 @@ const st = StyleSheet.create({
     fontFamily: F.oswS, fontSize: 13, letterSpacing: 1,
     color: ON_CANVAS_2, marginBottom: sp.sm,
   },
-  row: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: sp.md },
-  rowDivider: { borderTopWidth: 1, borderTopColor: DIVIDER },
+  // v2 card: each notification is its own white StatusCard. The card provides the sp.md padding +
+  // soft shadow + 3px status liseré; the row just lays out the icon disc · text column · trailing dot.
+  cardGap: { marginBottom: sp.sm },
+  row: { flexDirection: 'row', alignItems: 'center', gap: sp.md },
   iconWrap: {
     width: 40, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(24,23,21,0.04)',   // very dim, just enough to seat the icon
@@ -354,13 +374,6 @@ const st = StyleSheet.create({
   time: { fontFamily: F.body, fontSize: 13, color: ON_CARD_3 },
   body: { fontFamily: F.body, fontSize: 16, color: ON_CARD_2, marginTop: 2 },
   unreadDot: { width: 9, height: 9, borderRadius: 999, backgroundColor: color.action },
-  // "task done" chip — green, on the row, replaces the unread dot once the CTA has run.
-  doneChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start',
-    marginTop: 6, paddingVertical: 3, paddingHorizontal: 8, borderRadius: r.pill,
-    backgroundColor: 'rgba(47,158,107,0.16)',
-  },
-  doneChipTxt: { fontFamily: F.oswM, fontSize: 13, letterSpacing: 0.6, color: palette.vert[700] }, // DT-20: AA on green-tint chip
 
   empty: { fontFamily: F.body, fontSize: 16, color: ON_CANVAS_2, textAlign: 'center', marginTop: sp['2xl'] },
 

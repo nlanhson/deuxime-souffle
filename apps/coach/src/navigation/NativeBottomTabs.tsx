@@ -38,7 +38,7 @@ const NATIVE_TABS = TABS.map((t) => ({ ...t, component: withTabBarInset(t.compon
 
 // iOS 26's Liquid Glass tab bar renders the selected item's tint desaturated (washed-out light
 // red). The library exposes no per-state icon colour, so we compensate at the app level: feed the
-// native bar a DEEPER red (rouge[600]) that lands closer to the brand #E1322B after the wash, and
+// native bar a DEEPER red (rouge[600]) that lands closer to the brand #EA3829 after the wash, and
 // mute the inactive tint one step for extra contrast. The JS bar (no glass) keeps the exact brand
 // red — see JsBottomTabs.
 const NATIVE_ACTIVE_TINT = palette.rouge[600]; // #C32721 — pre-compensated for the iOS 26 glass wash

@@ -18,7 +18,7 @@ import { AccessibilityInfo, ActivityIndicator, Modal, Pressable, ScrollView, Sty
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { X, Check, Plus, Camera, FileText, ScrollText, ShieldCheck, GraduationCap, type LucideIcon } from '../icons';
-import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
+import { palette, color, spacing as sp, radius as r, cardShape, surfaces } from '../theme/theme';
 import { useCopy } from '../i18n';
 import type { Copy } from '../copy';
 import { OptionSheet } from '../components/OptionSheet';
@@ -235,7 +235,7 @@ const st = StyleSheet.create({
   formats: { fontFamily: F.body, fontSize: 13, lineHeight: 18, color: palette.neutral[600], marginTop: sp.xs, marginBottom: sp.lg },
 
   docCard: {
-    backgroundColor: palette.neutral[0], borderRadius: r.xl, padding: sp.lg, marginBottom: sp.md,
+    backgroundColor: palette.neutral[0], ...cardShape, padding: sp.lg, marginBottom: sp.md,
     borderWidth: 1, borderColor: DIVIDER,
   },
   docTop: { flexDirection: 'row', alignItems: 'center', gap: sp.md },

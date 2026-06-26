@@ -12,9 +12,11 @@
  * The payment HISTORY remains an ACTIVITY REPORT (not an invoice); the submit-invoice card is the
  * separate channel for the coach to send DS their actual invoice.
  *
- * Surface = coach (locked DARK): ink canvas, dark cards, light in-card text — same vocabulary
- * as Accueil/Séances. The signature rouge→or gradient is reserved here for the earned/expected
- * progress meter (theme: gradient = "hero CTAs / medals / progress"). UI text comes from ../copy.
+ * Surface = coach: LIGHT app (cream canvas, S.canvas) with the Coach v2 "système de carte type" —
+ * white StatusCards raised on the cream, each with a soft shadow + a 3px left status liseré. The
+ * earnings hero is the single dark/strong focal block (its own rouge→or treatment + shadow). The
+ * signature rouge→or gradient is reserved for the earned/expected progress meter (theme: gradient =
+ * "hero CTAs / medals / progress"). UI text comes from ../copy.
  */
 import React from 'react';
 import { Modal, View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
@@ -25,15 +27,16 @@ import {
   FileText, Camera, CheckCircle2, Receipt, type LucideIcon,
 } from '../icons';
 
-import { palette, color, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
+import { palette, color, spacing as sp, radius as r, cardShape, surfaces, cardGradient as RAISED_GRAD, type StatusTone } from '../theme/theme';
+import { StatusCard, StatusChip as ToneChip } from '../components/StatusCard';
 import { copy } from '../copy';
 import { useFirstLoad } from '../lib/useFirstLoad';
 import { Reveal } from '../components/Reveal';
 import { OptionSheet, type SheetOption } from '../components/OptionSheet';
 import { RevenusSkeleton } from './skeletons';
 
-const S = surfaces.coach;                     // ink canvas / dark cards / light card text
-const BORDER_INK = palette.neutral[200];      // dividers / hairlines on ink
+const S = surfaces.coach;                     // cream (light) canvas / dark-on-cream text
+const BORDER_INK = palette.neutral[200];      // dividers / hairlines on the cream canvas
 const TRACK = palette.neutral[200];           // progress meter track
 const MOVEMENT = [palette.rouge[500], palette.or[500]] as const; // signature gradient, 135°
 
@@ -41,14 +44,15 @@ const MOVEMENT = [palette.rouge[500], palette.or[500]] as const; // signature gr
    so cards read as raised glass. Copied from Accueil so the two screens feel like one family. */
 const RAISED_BORDER = 'rgba(24,23,21,0.07)';
 
-/* On-ink status colours — the semantic status tokens are tuned for light surfaces, so (as in
-   Accueil/Séances) we reach into the global ramp for the ink variants. SPEC §4 proposes
-   promoting these to coach-theme tokens. Used for both the trend chip and payment status. */
+/* Status tint pairs on the cream canvas — these match the shared `statusTones.paper` tokens and
+   are kept here for the bits that aren't a StatusChip/StatusCard: the hero trend chip (ok/down) and
+   the submit-invoice confirmation disc (ok). Payment-history + session rows now use the shared
+   <StatusChip>/<StatusCard> instead. The `down` trend tint has no shared tone, so it stays raw. */
 const INK = {
   ok:      { fg: palette.vert[700], bg: 'rgba(47,158,107,0.16)' },   // paid / trend up
   pending: { fg: palette.or[800], bg: 'rgba(242,194,0,0.13)' },      // awaiting payment
   info:    { fg: palette.bleu[700], bg: 'rgba(166,183,219,0.14)' },  // in progress (current month)
-  down:    { fg: palette.rouge[600], bg: 'rgba(225,50,43,0.14)' },   // trend down
+  down:    { fg: palette.rouge[600], bg: 'rgba(234,56,41,0.14)' },   // trend down
 };
 
 const F = {
@@ -166,23 +170,18 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   return <Text style={st.secTitle}>{children}</Text>;
 }
 
-const PAY_META: Record<PaymentStatus, { tone: keyof typeof INK; icon: LucideIcon; label: string }> = {
+// Payment status → v2 StatusTone (PDF liseré legend): paid = Confirmée (green), awaiting = en
+// attente (amber), inProgress = in-process (blue). Drives BOTH the row's left liseré and its chip.
+const PAY_META: Record<PaymentStatus, { tone: StatusTone; icon: LucideIcon; label: string }> = {
   paid:       { tone: 'ok', icon: Check, label: copy.earnings.screen.status.paid },
   awaiting:   { tone: 'pending', icon: Hourglass, label: copy.earnings.screen.status.awaiting },
   inProgress: { tone: 'info', icon: Clock, label: copy.earnings.screen.status.inProgress },
 };
 
-// Status chip — never colour alone: every tone carries an icon AND a word.
+// Status chip — the shared filled-tint pill; never colour alone (icon + word).
 function StatusChip({ status }: { status: PaymentStatus }) {
   const m = PAY_META[status];
-  const c = INK[m.tone];
-  const Icon = m.icon;
-  return (
-    <View style={[st.chip, { backgroundColor: c.bg }]}>
-      <Icon size={13} color={c.fg} />
-      <Text style={[st.chipTxt, { color: c.fg }]} numberOfLines={1}>{m.label}</Text>
-    </View>
-  );
+  return <ToneChip tone={m.tone} label={m.label} icon={m.icon} />;
 }
 
 // Star rating — gold star + value, or a muted "Not rated" (icon present in both, never colour-only).
@@ -508,19 +507,25 @@ export function RevenusScreen({ visible, onClose }: { visible: boolean; onClose:
           </View>
           <Text style={st.sectionNote}>{c.sessionsNote}</Text>
           <View style={st.list}>
-            {m.sessions.map((s, i) => (
-              <View key={`${s.place}-${s.date}`} style={[st.sessionRow, i > 0 && st.rowDivider]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={st.sessionPlace} numberOfLines={1}>{s.place}</Text>
-                  <View style={st.sessionMeta}>
-                    <MapPin size={13} color={palette.neutral[500]} />
-                    <Text style={st.sessionDate}>{s.date}</Text>
-                    <View style={st.metaSep} />
-                    <Rating value={s.rating} />
+            {m.sessions.map((s) => (
+              // Each contributing session = its own white v2 StatusCard. These are PAST, realised /
+              // banked sessions → 'neutral' (passé / clôturé, grey liseré) — matching the PDF legend
+              // and SeancesScreen's closed-session (reportSent) mapping; green=ok stays reserved for
+              // confirmed/upcoming. The old per-row divider is gone; st.cardGap spaces the cards.
+              <StatusCard key={`${s.place}-${s.date}`} status="neutral" style={st.cardGap}>
+                <View style={st.sessionRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={st.sessionPlace} numberOfLines={1}>{s.place}</Text>
+                    <View style={st.sessionMeta}>
+                      <MapPin size={13} color={palette.neutral[500]} />
+                      <Text style={st.sessionDate}>{s.date}</Text>
+                      <View style={st.metaSep} />
+                      <Rating value={s.rating} />
+                    </View>
                   </View>
+                  <Text style={st.sessionAmount}>{s.amount} €</Text>
                 </View>
-                <Text style={st.sessionAmount}>{s.amount} €</Text>
-              </View>
+              </StatusCard>
             ))}
           </View>
         </View>
@@ -532,24 +537,29 @@ export function RevenusScreen({ visible, onClose }: { visible: boolean; onClose:
           </View>
           <Text style={st.sectionNote}>{c.historyNote}</Text>
           <View style={st.list}>
-            {HISTORY.map((p, i) => (
-              <View key={p.label} style={[st.histRow, i > 0 && st.rowDivider]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={st.histLabel} numberOfLines={1}>{p.label}</Text>
-                  <Text style={st.histSub}>{p.sessions} {c.sessionsCountUnit} · {eur(p.amount)} €</Text>
-                  <View style={{ marginTop: 8, alignSelf: 'flex-start' }}>
-                    <StatusChip status={p.status} />
+            {HISTORY.map((p) => (
+              // Each statement = its own white v2 StatusCard, the left liseré mirroring the chip's
+              // tone (paid=ok/green, awaiting=pending/amber, inProgress=info/blue). Divider replaced
+              // by marginBottom (st.cardGap). The Download button / ghost spacer are preserved.
+              <StatusCard key={p.label} status={PAY_META[p.status].tone} style={st.cardGap}>
+                <View style={st.histRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={st.histLabel} numberOfLines={1}>{p.label}</Text>
+                    <Text style={st.histSub}>{p.sessions} {c.sessionsCountUnit} · {eur(p.amount)} €</Text>
+                    <View style={{ marginTop: 8, alignSelf: 'flex-start' }}>
+                      <StatusChip status={p.status} />
+                    </View>
                   </View>
+                  {/* Download only when a statement exists (not for the in-progress month). */}
+                  {p.status !== 'inProgress' ? (
+                    <Pressable style={st.dlBtn} hitSlop={6} accessibilityRole="button" accessibilityLabel={`${c.downloadA11y}, ${p.label}`}>
+                      <Download size={18} color={S.textPrimary} />
+                    </Pressable>
+                  ) : (
+                    <View style={st.dlBtnGhost} />
+                  )}
                 </View>
-                {/* Download only when a statement exists (not for the in-progress month). */}
-                {p.status !== 'inProgress' ? (
-                  <Pressable style={st.dlBtn} hitSlop={6} accessibilityRole="button" accessibilityLabel={`${c.downloadA11y}, ${p.label}`}>
-                    <Download size={18} color={S.textPrimary} />
-                  </Pressable>
-                ) : (
-                  <View style={st.dlBtnGhost} />
-                )}
-              </View>
+              </StatusCard>
             ))}
           </View>
         </View>
@@ -572,8 +582,8 @@ export function RevenusScreen({ visible, onClose }: { visible: boolean; onClose:
 }
 
 /* ---------- styles ----------
-   Polarity: on the ink CANVAS -> S.textPrimary / S.textSecondary (light);
-   inside the dark CARDS the text is the same light ramp (the cards are ink too). */
+   Polarity: on the cream CANVAS -> S.textPrimary / S.textSecondary (dark-on-light). The list rows
+   now live inside white v2 StatusCards, where the same dark-on-light ramp reads against the card. */
 const st = StyleSheet.create({
   eyebrow: {
     fontFamily: F.oswS, fontSize: 13, // Oswald — matches the header eyebrow on every other screen
@@ -617,7 +627,7 @@ const st = StyleSheet.create({
 
   /* hero card */
   heroCard: {
-    marginTop: sp.lg, borderRadius: r.xl, padding: sp.lg,
+    marginTop: sp.lg, ...cardShape, padding: sp.lg,
     borderWidth: 1, borderColor: RAISED_BORDER,
     shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.35, shadowRadius: 20,
   },
@@ -659,7 +669,7 @@ const st = StyleSheet.create({
   /* submit-invoice card — flat bordered card (house style: shadow reserved for overlays). The
      outline CTA matches the hero's export button; the gradient stays reserved for the meter. */
   invoiceCard: {
-    marginTop: sp.xl, borderRadius: r.xl, padding: sp.lg,
+    marginTop: sp.xl, ...cardShape, padding: sp.lg,
     backgroundColor: S.surface, borderWidth: 1, borderColor: BORDER_INK,
   },
   invoiceHead: { flexDirection: 'row', alignItems: 'center', gap: sp.md },
@@ -715,8 +725,10 @@ const st = StyleSheet.create({
   section: { marginTop: sp.xl },
   secHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sectionNote: { fontFamily: F.body, fontSize: 13, color: S.textSecondary, marginTop: 4, marginBottom: sp.sm },
-  /* sessions / payment history — flat entry stacks on the canvas (no box), rows split by hairlines */
+  /* sessions / payment history — each row is now its own white v2 StatusCard (système de carte
+     type); the cards are spaced by st.cardGap (no more hairline dividers). */
   list: { marginTop: 2 },
+  cardGap: { marginBottom: sp.sm }, // spacing between stacked v2 cards (replaces the old divider)
 
   /* chips */
   chip: {
@@ -725,9 +737,8 @@ const st = StyleSheet.create({
   },
   chipTxt: { fontFamily: F.body, fontSize: 13 },
 
-  /* session rows */
-  sessionRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: sp.md },
-  rowDivider: { borderTopWidth: 1, borderTopColor: BORDER_INK },
+  /* session rows — the v2 StatusCard supplies the card padding, so the row is just the flex layout */
+  sessionRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md },
   sessionPlace: { fontFamily: F.bodyS, fontSize: 17, color: S.textPrimary },
   sessionMeta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   sessionDate: { fontFamily: F.body, fontSize: 13, color: palette.neutral[600] },
@@ -737,8 +748,8 @@ const st = StyleSheet.create({
   ratingNone: { fontFamily: F.body, fontSize: 13, color: palette.neutral[600] },
   sessionAmount: { fontFamily: F.oswB, fontSize: 18, color: S.textPrimary },
 
-  /* payment-history rows */
-  histRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: sp.md },
+  /* payment-history rows — like sessionRow, the v2 StatusCard supplies padding; this is the flex layout */
+  histRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md },
   histLabel: { fontFamily: F.bodyS, fontSize: 17, color: S.textPrimary },
   histSub: { fontFamily: F.body, fontSize: 14, color: S.textSecondary, marginTop: 2 },
   dlBtn: {

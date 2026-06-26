@@ -42,7 +42,7 @@ import {
   Trash2, Languages, type LucideIcon,
 } from '../icons';
 
-import { palette, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
+import { palette, spacing as sp, radius as r, cardShape, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
 import { useCopy, useLocale, type Locale } from '../i18n';
 import { ActionModal } from '../components/ActionModal';
 import { OptionSheet } from '../components/OptionSheet';
@@ -200,7 +200,7 @@ function StatusChip({ tone, icon: Icon, label }: { tone: keyof typeof INK; icon:
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <View style={st.card}>
-      <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
+      <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, cardShape]} pointerEvents="none" />
       {children}
     </View>
   );
@@ -487,7 +487,7 @@ export function SettingsScreen({ visible, onClose }: { visible: boolean; onClose
           onClose={close}
           Icon={LogOut}
           accentFg={palette.rouge[600]}
-          accentBg="rgba(225,50,43,0.16)"
+          accentBg="rgba(234,56,41,0.16)"
           title={c.logoutConfirm.title}
           body={c.logoutConfirm.body}
           primaryLabel={c.logout}
@@ -517,7 +517,7 @@ export function SettingsScreen({ visible, onClose }: { visible: boolean; onClose
           onClose={close}
           Icon={Trash2}
           accentFg={palette.rouge[600]}
-          accentBg="rgba(225,50,43,0.16)"
+          accentBg="rgba(234,56,41,0.16)"
           title={c.deleteConfirm.title}
           body={c.deleteConfirm.body}
           primaryLabel={c.deleteConfirm.confirm}
@@ -581,12 +581,12 @@ const st = StyleSheet.create({
   nudge: {
     flexDirection: 'row', alignItems: 'center', gap: sp.sm,
     backgroundColor: INK.pending.bg, borderColor: 'rgba(242,194,0,0.35)', borderWidth: 1,
-    borderRadius: r.lg, padding: sp.md, marginBottom: sp.sm,
+    ...cardShape, padding: sp.md, marginBottom: sp.sm,
   },
   nudgeTxt: { flex: 1, fontFamily: F.body, fontSize: 16, color: INK.pending.fg },
 
   card: {
-    borderRadius: r.xl, paddingHorizontal: sp.md, // tighter L/R inset than the sp.lg gutter
+    ...cardShape, paddingHorizontal: sp.md, // tighter L/R inset than the sp.lg gutter
     backgroundColor: palette.neutral[0],
     borderWidth: 1, borderColor: 'rgba(24,23,21,0.10)',
     // Flat settings cards — no drop shadow; a crisp 10% hairline carries the edge now the shadow's
@@ -614,7 +614,7 @@ const st = StyleSheet.create({
   logout: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     minHeight: 48, borderRadius: r.button, marginTop: sp.xl,
-    borderWidth: 1.5, borderColor: 'rgba(225,50,43,0.5)',
+    borderWidth: 1.5, borderColor: 'rgba(234,56,41,0.5)',
   },
   logoutTxt: { fontFamily: F.bodyS, fontSize: 16, letterSpacing: 0.2, color: palette.rouge[700] }, // DT-20: AA on light
 });

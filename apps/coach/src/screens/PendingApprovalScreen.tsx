@@ -14,7 +14,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { palette, color, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
+import { palette, color, spacing as sp, radius as r, cardShape, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
 import { useCopy } from '../i18n';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { useAuth } from '../auth/AuthContext';
@@ -88,7 +88,7 @@ export function PendingApprovalScreen() {
             colors={RAISED_GRAD}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
-            style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]}
+            style={[StyleSheet.absoluteFill, cardShape]}
             pointerEvents="none"
           />
           {DOC_META.map((d, i) => (
@@ -172,7 +172,7 @@ const st = StyleSheet.create({
   docsEyebrow: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 1, color: palette.neutral[600], marginBottom: 4 },
   docsNote: { fontFamily: F.body, fontSize: 13, color: palette.neutral[600], marginBottom: sp.sm },
   card: {
-    backgroundColor: palette.neutral[0], borderRadius: r.xl, paddingHorizontal: sp.lg,
+    backgroundColor: palette.neutral[0], ...cardShape, paddingHorizontal: sp.lg,
     borderWidth: 1, borderColor: palette.neutral[200],
   },
   docRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, minHeight: 60, paddingVertical: sp.sm },

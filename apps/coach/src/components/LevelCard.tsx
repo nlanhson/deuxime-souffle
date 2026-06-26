@@ -15,7 +15,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { palette, spacing as sp, radius as r } from '../theme/theme';
+import { palette, spacing as sp, radius as r, cardShape } from '../theme/theme';
 import { useCopy } from '../i18n';
 import { ChevronRight } from '../icons';
 import { currentTier, nextTier, sessionsToNext, tierProgress, TIERS, TIER_COUNT } from '../lib/gamification';
@@ -70,9 +70,9 @@ export function LevelCard({ onPress, style }: { onPress: () => void; style?: Sty
 }
 
 const st = StyleSheet.create({
-  // Flat bordered card matching the Profile settings cards: r.xl corners + a 10% translucent
-  // hairline (no shadow).
-  card: { backgroundColor: palette.neutral[0], borderRadius: r.xl, padding: sp.md, borderWidth: 1, borderColor: 'rgba(24,23,21,0.10)' },
+  // Flat bordered card matching the Profile settings cards: Apple continuous corners (cardShape) + a
+  // 10% translucent hairline (no shadow).
+  card: { backgroundColor: palette.neutral[0], ...cardShape, padding: sp.md, borderWidth: 1, borderColor: 'rgba(24,23,21,0.10)' },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: palette.or[300], paddingVertical: 5, paddingHorizontal: 10, borderRadius: r.pill },
   pillTxt: { fontFamily: F.oswB, fontSize: 13, letterSpacing: 0.4, color: palette.neutral[900], textTransform: 'uppercase' },

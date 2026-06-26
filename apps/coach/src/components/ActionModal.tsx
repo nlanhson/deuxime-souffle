@@ -13,7 +13,7 @@ import React from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
 import { X, Phone, StickyNote, type LucideIcon } from '../icons';
 
-import { palette, color, spacing as sp, radius as r } from '../theme/theme';
+import { palette, color, spacing as sp, radius as r, cardShape } from '../theme/theme';
 import { BottomSheet } from './BottomSheet';
 import { GradientFill } from './GradientFill';
 import { callNumber } from '../lib/callNumber';
@@ -313,7 +313,7 @@ const st = StyleSheet.create({
 
   // Previous coach's handover note (DT-09) — a soft callout block so the continuity note reads as
   // distinct from the contact line, shown directly (not behind a menu).
-  handover: { marginTop: sp.md, padding: sp.md, borderRadius: r.md, backgroundColor: palette.neutral[100] },
+  handover: { marginTop: sp.md, padding: sp.md, ...cardShape, backgroundColor: palette.neutral[100] },
   handoverHead: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
   handoverLabel: { fontFamily: F.oswS, fontSize: 13, letterSpacing: 0.6, color: ON_CARD_2 },
   handoverText: { fontFamily: F.body, fontSize: 16, lineHeight: 20, color: ON_CARD },

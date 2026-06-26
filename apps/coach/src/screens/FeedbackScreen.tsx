@@ -14,7 +14,7 @@ import React from 'react';
 import { Modal, View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 
 import { X, Star, Building2 } from '../icons';
-import { palette, spacing as sp, radius as r, surfaces } from '../theme/theme';
+import { palette, spacing as sp, radius as r, cardShape, surfaces } from '../theme/theme';
 import { copy } from '../copy';
 import { useFirstLoad } from '../lib/useFirstLoad';
 import { Reveal } from '../components/Reveal';
@@ -162,7 +162,7 @@ const st = StyleSheet.create({
   empty: { fontFamily: F.body, fontSize: 16, lineHeight: 22, color: ON_CANVAS_2, marginTop: sp.md },
 
   card: {
-    borderRadius: r.lg, padding: sp.md, marginBottom: sp.sm,
+    ...cardShape, padding: sp.md, marginBottom: sp.sm,
     backgroundColor: palette.neutral[0], borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)',
   },
   cardHead: { flexDirection: 'row', alignItems: 'center', gap: sp.md },

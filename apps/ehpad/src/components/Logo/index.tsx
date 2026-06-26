@@ -13,21 +13,25 @@ interface LogoProps {
   size?: number;
   /** Couleur de la tuile. Noir d'encre du picto officiel sur fond clair (défaut), blanc sur fond sombre. */
   color?: string;
+  /** Coins arrondis (tuile de marque). Par défaut la tuile garde ses angles vifs. */
+  rounded?: boolean;
   /** Nom accessible quand le logo est SEUL. Omis → décoratif (le mot-symbole porte le nom). */
   label?: string;
 }
 
 /** Marque Deuxième Souffle — tuile « 2ᵉᵐᵉ » détourée, en badge arrondi.
  *  Décoratif par défaut : il accompagne le mot-symbole « Deuxième Souffle »
- *  qui porte déjà le nom pour les lecteurs d'écran. Voir public/brand/logo.svg. */
-export function Logo({ size = 40, color = 'var(--color-text-primary)', label = '' }: LogoProps) {
+ *  qui porte déjà le nom pour les lecteurs d'écran. Voir public/brand/logo.svg.
+ *  `color` est posé en style en ligne (et non en attribut `fill`) pour que les
+ *  variables CSS — ex. le rouge de marque du rail — soient bien résolues. */
+export function Logo({ size = 40, color = 'var(--color-text-primary)', rounded = false, label = '' }: LogoProps) {
   return (
     <svg
-      className={styles.logo}
+      className={`${styles.logo}${rounded ? ` ${styles.rounded}` : ''}`}
       width={size}
       height={size}
       viewBox="0 0 188.99 188.99"
-      fill={color}
+      style={{ fill: color }}
       {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true })}
     >
       <path d={LOGO_PATH} />

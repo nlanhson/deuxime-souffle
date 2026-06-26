@@ -169,7 +169,7 @@ const st = StyleSheet.create({
 
   icon: {
     width: 52, height: 52, borderRadius: r.pill, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(225,50,43,0.10)', marginBottom: sp.sm,
+    backgroundColor: 'rgba(234,56,41,0.10)', marginBottom: sp.sm,
   },
 
   // "Last step" groups with the icon (tight gap above) and separates from the title (larger gap below).

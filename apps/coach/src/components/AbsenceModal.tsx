@@ -19,7 +19,7 @@ import {
 
 import { CalendarX, X } from '../icons';
 import { useKeyboardInset } from '../lib/useKeyboardInset';
-import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
+import { palette, color, spacing as sp, radius as r, cardShape, surfaces } from '../theme/theme';
 import { useCopy } from '../i18n';
 import { GradientFill } from './GradientFill';
 import type { Copy } from '../copy';
@@ -218,7 +218,7 @@ const st = StyleSheet.create({
   stepTxt: { fontFamily: F.oswS, fontSize: 14, letterSpacing: 0.3, color: ON_CANVAS, marginTop: sp.sm },
 
   card: {
-    backgroundColor: CARD, borderRadius: r.xl, padding: sp.lg,
+    backgroundColor: CARD, ...cardShape, padding: sp.lg,
     borderWidth: 1, borderColor: DIVIDER,
   },
   labelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -231,7 +231,7 @@ const st = StyleSheet.create({
     backgroundColor: palette.neutral[100], borderWidth: 1, borderColor: 'rgba(24,23,21,0.10)',
     alignItems: 'center', justifyContent: 'center',
   },
-  chipOn: { borderColor: DANGER, backgroundColor: 'rgba(225,50,43,0.14)' },
+  chipOn: { borderColor: DANGER, backgroundColor: 'rgba(234,56,41,0.14)' },
   chipTxt: { fontFamily: F.bodyS, fontSize: 14, color: ON_CARD_2 },
   chipTxtOn: { color: DANGER },
 

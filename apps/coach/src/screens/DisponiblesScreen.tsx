@@ -31,7 +31,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
 import { MapPin, Clock, Hand, Check, X, Bell, CalendarX, CalendarDays, Sparkles, Star, AlarmClock, LayoutList, SlidersHorizontal, Copy, Building2, DoorOpen, UserRound, ChevronLeft, ChevronRight, CaretDownSolid, Car, Footprints, TriangleAlert, type LucideIcon } from '../icons';
 
-import { palette, color, spacing as sp, radius as r, surfaces, motion, cardGradient as RAISED_GRAD } from '../theme/theme';
+import { palette, color, spacing as sp, radius as r, cardShape, surfaces, motion, cardGradient as RAISED_GRAD, type StatusTone } from '../theme/theme';
+import { StatusCard, StatusChip as ToneChip } from '../components/StatusCard';
 import { useCopy } from '../i18n';
 import type { Copy as AppCopy } from '../copy';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -248,7 +249,7 @@ function AvailCard({ a, applied, first, onToggle, onOpen, category }: {
   // Recommended (gold); 'available' shows none. The List view passes this; the day-view leaves it off.
   const catTag = category === 'urgent' ? L.tag.urgent : category === 'recommended' ? L.tag.recommended : undefined;
   return (
-    <View style={[st.card, first ? st.cardFirst : st.cardDivider]}>
+    <StatusCard status={railTone(category, applied)} style={st.cardGap}>
       <View style={st.cardTop}>
         {/* tappable row → session detail */}
         <Pressable
@@ -276,30 +277,25 @@ function AvailCard({ a, applied, first, onToggle, onOpen, category }: {
                 more than one is present. */}
             {(catTag || isFirstVisit || applied) ? (
               <View style={st.tagRow}>
+                {/* triage category as a shared filled-tint StatusChip (icon + word — never colour
+                    alone): urgent → danger (red), recommended → pending (amber). */}
                 {category === 'urgent' ? (
-                  <View style={st.urgencyTag}>
-                    <AlarmClock size={12} color={CAT_META.urgent.fg} strokeWidth={2.5} />
-                    <Text style={st.urgencyTxt} numberOfLines={1}>{L.tag.urgent}</Text>
-                  </View>
+                  <ToneChip tone="danger" label={L.tag.urgent} icon={AlarmClock} />
                 ) : category === 'recommended' ? (
-                  <View style={st.recoTag}>
-                    <Star size={12} color={CAT_META.recommended.fg} strokeWidth={2.5} />
-                    <Text style={st.recoTxt} numberOfLines={1}>{L.tag.recommended}</Text>
-                  </View>
+                  <ToneChip tone="pending" label={L.tag.recommended} icon={Star} />
                 ) : null}
+                {/* "Première séance" = an ATTRIBUTE, not a status — kept as its own bespoke tag
+                    (blue Sparkles, mirroring the detail-sheet context chip), never folded into the rail. */}
                 {isFirstVisit ? (
                   <View style={st.typeTag}>
                     <Sparkles size={12} color={INK.info.fg} strokeWidth={2.5} />
                     <Text style={st.typeTagTxt} numberOfLines={1}>{copy.availableScreen.type.first}</Text>
                   </View>
                 ) : null}
-                {/* applied = compact pill matching the other tags. AppliedChip's fuller form is kept
-                    for the detail sheet, where it sits beside the equally-sized context chip. */}
+                {/* applied = the coach is on the shortlist → shared green StatusChip (ok). AppliedChip's
+                    fuller form is kept for the detail sheet, where it sits beside the context chip. */}
                 {applied ? (
-                  <View style={st.appliedTag}>
-                    <Check size={12} color={INK.applied.fg} strokeWidth={2.5} />
-                    <Text style={st.appliedTagTxt} numberOfLines={1}>{copy.availableScreen.status.applied}</Text>
-                  </View>
+                  <ToneChip tone="ok" label={copy.availableScreen.status.applied} icon={Check} />
                 ) : null}
               </View>
             ) : null}
@@ -329,7 +325,7 @@ function AvailCard({ a, applied, first, onToggle, onOpen, category }: {
           </Pressable>
         )}
       </View>
-    </View>
+    </StatusCard>
   );
 }
 
@@ -419,6 +415,17 @@ function categoryOf(a: Avail): Category {
   if (d >= 0 && d <= URGENT_WITHIN_DAYS) return 'urgent';
   if (a.km <= NEAR_KM) return 'recommended';
   return 'available';
+}
+
+// Card-rail tone (Coach v2 "système de carte type" liseré legend). If the coach has APPLIED the rail
+// reads as confirmed/on-the-shortlist (green = ok) — the application is the dominant state. Otherwise
+// the triage category drives it: urgent = action-requise (red/danger), recommended = à-venir (amber/
+// pending), plain available (or the Week/Month day-view, which passes no category) = neutral grey.
+function railTone(category: Category | undefined, applied: boolean): StatusTone {
+  if (applied) return 'ok';
+  if (category === 'urgent') return 'danger';
+  if (category === 'recommended') return 'pending';
+  return 'neutral';
 }
 
 // Partition OPEN into the three buckets. OPEN is already date+time ascending (the BY_DAY keys
@@ -766,7 +773,7 @@ function AvailDetail({ a, applied, onToggle, onClose }: { a: Avail | null; appli
 
             {/* facts (deliberately no resident/candidate count — pre-assignment) */}
             <View style={st.dCard}>
-              <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
+              <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, cardShape]} pointerEvents="none" />
               <DetailRow Icon={Clock} label={c.detail.when} value={`${dayLabel(a.date)} · ${a.time} → ${a.end} · ${a.dur}`} first />
               <DetailRow Icon={MapPin} label={c.detail.where} value={a.address} onCopy={copyAddress} copyA11y={c.detail.copyA11y} />
               <DetailRow Icon={TRAVEL_ICON[TRAVEL_PREF.mode]} label={c.travel.detailLabel} value={`${travelLabel(a.km, c.travel)} · ${a.km} km`} />
@@ -1443,7 +1450,7 @@ const st = StyleSheet.create({
 
   /* metric tiles (Open / Applied) — raised ink surface, accent only in the icon chip + figure */
   tileRow: { flexDirection: 'row', gap: sp.sm },
-  tile: { flex: 1, borderRadius: r.lg, padding: sp.md, gap: 2, borderWidth: 1, borderColor: RAISED_BORDER },
+  tile: { flex: 1, ...cardShape, padding: sp.md, gap: 2, borderWidth: 1, borderColor: RAISED_BORDER },
   tileLabel: { fontFamily: F.body, fontSize: 13, color: ON_CANVAS_2 },
   // tinted icon chip pinned to the top-right corner (matches the Home calendar tiles)
   tileChip: { position: 'absolute', top: sp.md, right: sp.md, width: 36, height: 36, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
@@ -1466,7 +1473,7 @@ const st = StyleSheet.create({
   // Explicit per-day count pill (PLA-04) — red, compact, reads as a session tally.
   countPill: {
     minWidth: 16, height: 16, borderRadius: 999, paddingHorizontal: 4,
-    backgroundColor: 'rgba(225,50,43,0.16)', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(234,56,41,0.16)', alignItems: 'center', justifyContent: 'center',
   },
   countTxt: { fontFamily: F.bodyS, fontSize: 13, color: palette.rouge[700] }, // DT-20: AA on the red-tint pill
 
@@ -1523,22 +1530,10 @@ const st = StyleSheet.create({
   chipFCountTxt: { fontFamily: F.bodyB, fontSize: 13, color: ON_CANVAS_2 },
   chipFCountTxtOn: { color: color.onAction },
 
-  urgencyTag: {
-    flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8,
-    borderRadius: r.pill, backgroundColor: CAT_META.urgent.bg,
-  },
-  urgencyTxt: { fontFamily: F.bodyS, fontSize: 13, color: CAT_META.urgent.fg },
-  // "Recommended" triage tag — gold, mirrors the urgency tag's shape (Star + label on a gold tint).
-  recoTag: {
-    flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8,
-    borderRadius: r.pill, backgroundColor: CAT_META.recommended.bg,
-  },
-  recoTxt: { fontFamily: F.bodyS, fontSize: 13, color: CAT_META.recommended.fg },
-
-  /* open-session row — flat, matching the Séances list (hairline divider between rows) */
-  card: { paddingVertical: sp.md },
-  cardFirst: { paddingTop: sp.xs },   // first card hugs its day/category label (tighter red gap)
-  cardDivider: { borderTopWidth: 1, borderTopColor: 'rgba(24,23,21,0.07)' },
+  /* open-session card — each row is now its own elevated white <StatusCard> (Coach v2 "système de
+     carte type"): StatusCard owns the surface + soft shadow + 3px status liseré. cardGap spaces
+     consecutive cards within a day/category group (the old hairline divider is retired). */
+  cardGap: { marginBottom: sp.sm },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm },
   headerTap: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: sp.md },
   timeRail: { width: 52, alignItems: 'flex-start' },
@@ -1553,10 +1548,6 @@ const st = StyleSheet.create({
   // session-type tag (first visit) — blue, matches the detail context chip; sits in the tag row.
   typeTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: r.pill, backgroundColor: INK.info.bg },
   typeTagTxt: { fontFamily: F.body, fontSize: 13, color: INK.info.fg },
-  // applied status as a compact pill (card tag row) — same shape as the type / urgency tags so the
-  // row reads as one set; green, matching AppliedChip's fuller detail-sheet form.
-  appliedTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: r.pill, backgroundColor: INK.applied.bg },
-  appliedTagTxt: { fontFamily: F.bodyS, fontSize: 13, color: INK.applied.fg },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 5 },
   meta: { fontFamily: F.body, fontSize: 14, color: ON_CARD_2 },
   appliedNote: { fontFamily: F.body, fontSize: 13, color: INK.applied.fg, marginTop: sp.sm },
@@ -1594,7 +1585,7 @@ const st = StyleSheet.create({
   dHeaderTitle: { fontFamily: F.oswS, fontSize: 22, color: ON_CANVAS },
   dClose: { width: 40, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: SUBTLE },
   dPlace: { fontFamily: F.bodyB, fontSize: 26, color: ON_CANVAS },
-  dCard: { backgroundColor: CARD, borderRadius: r.xl, paddingHorizontal: sp.lg, marginTop: sp.lg, borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)' },
+  dCard: { backgroundColor: CARD, ...cardShape, paddingHorizontal: sp.lg, marginTop: sp.lg, borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)' },
   dRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: sp.md },
   dRowDivider: { borderTopWidth: 1, borderTopColor: DIVIDER },
   dRowIcon: { width: 24, alignItems: 'center' },
@@ -1603,7 +1594,7 @@ const st = StyleSheet.create({
   dCopyBtn: { width: 36, height: 36, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(24,23,21,0.04)' },
 
   /* over-limit travel warning banner (detail page) — amber, non-blocking, text-backed (not colour-alone) */
-  warnBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm, marginTop: sp.lg, padding: sp.md, borderRadius: r.lg, backgroundColor: WARN.bg, borderWidth: 1, borderColor: WARN.border },
+  warnBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm, marginTop: sp.lg, padding: sp.md, ...cardShape, backgroundColor: WARN.bg, borderWidth: 1, borderColor: WARN.border },
   warnTitle: { fontFamily: F.bodyS, fontSize: 14, color: WARN.fg },
   warnBody: { fontFamily: F.body, fontSize: 13, color: ON_CANVAS_2, marginTop: 2, lineHeight: 18 },
 

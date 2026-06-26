@@ -24,7 +24,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { palette, spacing as sp, radius as r, cardGradient as RAISED_GRAD } from '../theme/theme';
+import { palette, spacing as sp, radius as r, cardShape, cardGradient as RAISED_GRAD } from '../theme/theme';
 import { useCopy } from '../i18n';
 
 const ON_CARD = palette.neutral[900];
@@ -83,7 +83,7 @@ export function ScoreCard({ scores = COACH_SCORES, compact = false }: { scores?:
 
   return (
     <View style={st.card}>
-      <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
+      <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, cardShape]} pointerEvents="none" />
       <View style={st.head}>
         <Text style={st.title}>{c.title}</Text>
         <Text>
@@ -106,7 +106,7 @@ export function ScoreCard({ scores = COACH_SCORES, compact = false }: { scores?:
 
 const st = StyleSheet.create({
   card: {
-    borderRadius: r.xl, padding: sp.lg, backgroundColor: palette.neutral[0],
+    ...cardShape, padding: sp.lg, backgroundColor: palette.neutral[0],
     borderWidth: 1, borderColor: HAIR, overflow: 'hidden',
   },
   head: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },

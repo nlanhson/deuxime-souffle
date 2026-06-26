@@ -9,7 +9,55 @@ Maintained as we go — every meaningful change and every decision lands here.
 
 ---
 
-## 2026-06-23 — Contract wizard rebuilt to Loïc's mockups (5 steps) + "Need help?" on every step
+## 2026-06-26 — Warmer navigation: "Crème" rail + red active item + red DS picto
+
+Acted on partner-space feedback ("the navigation feels a bit cold — white & blue; make it warmer,
+more anchored to the brand, without losing the calm feel"). The nav rail (desktop
+[Sidebar](src/layout/Sidebar.tsx) + mobile drawer in [AppShell](src/layout/AppShell.tsx)) moves from a
+white surface + blue active state to the brand **Crème** with a **red** active item and a **red brand
+picto**. Content/canvas stays white — the "blanc *et* crème" principle.
+
+### Changes
+- **New nav tokens** ([tokens.css](src/theme/tokens.css)): global `--lc-creme:#F7F4EF` (charter
+  "Respiration"); and inside `[data-surface="ehpad"]` — `--color-nav-surface` (crème rail),
+  `--color-nav-border`/`--color-nav-hover` (warm ink-wash hairline & hover, replacing the cool
+  neutral-200/-100), `--color-nav-active-soft` (rouge-50 `#FDECEA` veil), `--color-nav-active-ink`
+  (rouge-600 `#C32721`), `--color-nav-red` (`#EA3829`).
+- **Rail = crème** ([Sidebar.module.css](src/layout/Sidebar.module.css), drawer in
+  [AppShell.module.css](src/layout/AppShell.module.css)): `.sidebar`/`.drawer` background + warm
+  hairlines; hover is now a warm wash.
+- **Active item = white raised pill, on three cues** (not colour alone): white fill (`--color-nav-active-bg`)
+  + a soft lift (`elevation-1`) + rouge-600 ink (text **and** icon) + a `#EA3829` left bar; font-weight 600
+  is the third cue. *(Refined from the first cut's rose veil — see Decisions.)*
+- **DS picto = brand-red rounded tile** ([Logo](src/components/Logo/index.tsx)): new `rounded` prop
+  (`border-radius:22%`), and `color` now applied via inline `style={{fill}}` so the rail's CSS var
+  resolves. Sidebar + drawer pass `color="var(--color-nav-red)" rounded`; the cut-out "2ᵉᵐᵉ" shows
+  the crème rail through. Default `<Logo>` (auth screens) is unchanged — still the black square.
+- **Page background warmed** ([tokens.css](src/theme/tokens.css)): new global `--lc-creme-25:#FBFAF7`
+  (a lighter crème — the warm pendant of the dormant `--lc-bleu-25` "papier"); EHPAD `--color-canvas`
+  now points at it instead of pure white. **Cards stay white** (`--color-surface` unchanged) so they
+  lift off the page; the topbar (white) blends in — no header/page seam.
+
+### Decisions
+- **Beige = Crème `#F7F4EF`**, the charter's "Respiration" colour (moodboard p.2), not an invented
+  tan. It's a hair off white on purpose: warmth without leaving "calme".
+- **Active text/icon use rouge-600 `#C32721`, not the literal `#EA3829`** — `#EA3829` as 16px/600 text
+  is only ~3.6:1 (fails AA); rouge-600 is ~5.1–5.3:1 on both the crème and the rose veil. The exact
+  `#EA3829` the client specified is carried by the **left bar** (a graphical element, 3:1 suffices) and
+  the **brand picto**. Visually one red; AA holds where it's read.
+- **Red stays scoped to the nav active item + picto** — the charter's "le rouge se fait rare, réservé
+  à l'item actif". Content-level selection (tabs, rows) keeps its blue `--color-selected-*`; those
+  tokens were left untouched.
+- **Three warm tiers, cards stay white** — rail (crème `#F7F4EF`) › page (crème-25 `#FBFAF7`) › cards
+  (white). This revisits the warm-paper canvas that was tried+reverted on 2026-06-13 — but that revert
+  was bundled with a serif-font experiment; here it's just a whisper of warmth (no font change),
+  honouring "beaucoup de blanc *et* de crème". Kept deliberately faint per "just not pure white".
+- **Active fill = white pill, not a rose veil** — the first cut used `--lc-rouge-50` (pale pink) on the
+  crème rail; two low-contrast *warm* tones read as muddy ("fighting"), so the fill barely separated
+  from the rail. A **white** pill is a neutral pop that lifts off the crème *and* lets the red stay
+  vivid (rouge-600 on white = 5.3:1, vs ~4:1 muddied on pink). Systemically it matches "white cards on
+  the warm page" — the active item is just a little white card. Carries a soft `elevation-1` lift; a
+  deliberate, minimal exception to the flat-card rule, scoped to the active nav item only.
 
 Reworked **"Request a new contract"** ([ContractWizard.tsx](src/screens/contracts/ContractWizard.tsx)) to match
 the 5-screen mockup lot: the old single "Besoins" step is split into three, each step is

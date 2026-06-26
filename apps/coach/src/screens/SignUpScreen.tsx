@@ -25,7 +25,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
+import { palette, color, spacing as sp, radius as r, cardShape, surfaces } from '../theme/theme';
 import { useCopy } from '../i18n';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SecondaryButton } from '../components/SecondaryButton';
@@ -794,7 +794,7 @@ const st = StyleSheet.create({
   // Info-blue tip card (paper-tuned).
   tipCard: {
     flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm, marginTop: sp.md,
-    padding: sp.md, borderRadius: r.lg, backgroundColor: palette.bleu[50],
+    padding: sp.md, ...cardShape, backgroundColor: palette.bleu[50],
     borderWidth: 1, borderColor: palette.bleu[200],
   },
   tipTitle: { fontFamily: F.bodyS, fontSize: 14, lineHeight: 20, color: palette.bleu[700] },
@@ -807,7 +807,7 @@ const st = StyleSheet.create({
 
   // ── KYC document rows ──
   docItem: {
-    padding: sp.md, borderRadius: r.lg, borderWidth: 1, borderColor: palette.neutral[200],
+    padding: sp.md, ...cardShape, borderWidth: 1, borderColor: palette.neutral[200],
     backgroundColor: palette.neutral[0], marginTop: sp.sm,
   },
   docReceived: { backgroundColor: RECEIVED.bg, borderColor: palette.vert[200] },
@@ -845,7 +845,7 @@ const st = StyleSheet.create({
 
   renewNote: {
     flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm, marginTop: sp.md,
-    padding: sp.md, borderRadius: r.lg, backgroundColor: 'rgba(242,194,0,0.10)',
+    padding: sp.md, ...cardShape, backgroundColor: 'rgba(242,194,0,0.10)',
     borderWidth: 1, borderColor: palette.or[200],
   },
   renewTitle: { fontFamily: F.bodyS, fontSize: 14, lineHeight: 20, color: palette.or[800] },
@@ -863,7 +863,7 @@ const st = StyleSheet.create({
 
   // ── Weekly availability grid ──
   availCard: {
-    borderWidth: 1, borderColor: palette.neutral[200], borderRadius: r.lg, padding: sp.md,
+    borderWidth: 1, borderColor: palette.neutral[200], ...cardShape, padding: sp.md,
     backgroundColor: palette.neutral[0],
   },
   availHeadRow: { flexDirection: 'row', alignItems: 'center', marginBottom: sp.xs },

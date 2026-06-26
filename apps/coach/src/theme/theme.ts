@@ -20,7 +20,12 @@
  */
 
 export const palette = {
-  rouge: { 50:'#FDECEA',100:'#FACFCB',200:'#F4A8A1',300:'#EE7B72',400:'#E85248',500:'#E1322B',600:'#C32721',700:'#9E1E19',800:'#771613',900:'#4F0E0C' },
+  // 500 re-anchored to the BRAND CHART RED #EA3829 (Coach v2 — 2026-06-26). The ramp stays
+  // monotonic (400 lighter, 600+ darker) so the action/hover/active chain and the on-paper danger
+  // step (rouge[600]) remain AA. ⚠️ COACH-ONLY divergence: admin / ehpad / project/design-system
+  // theme.ts still hold #E1322B — do NOT "re-sync" this back; brand-wide adoption is a separate,
+  // QA'd pass (EHPAD today-circle gradient + admin destructive reds need their own review).
+  rouge: { 50:'#FDECEA',100:'#FACFCB',200:'#F4A8A1',300:'#EE7B72',400:'#E85248',500:'#EA3829',600:'#C32721',700:'#9E1E19',800:'#771613',900:'#4F0E0C' },
   or:    { 50:'#FEF9E0',100:'#FDEFB0',200:'#FBE27A',300:'#F8D544',400:'#F5CB1F',500:'#F2C200',600:'#CCA300',700:'#9E7E00',800:'#6E5800',900:'#463800' },
   bleu:  { 50:'#ECF0F8',100:'#CDD8EC',200:'#A6B7DB',300:'#7B93C7',400:'#4F6DAE',500:'#2F4F92',600:'#1F3B73',700:'#182E5A',800:'#122242',900:'#0B152A' },
   vert:  { 50:'#E8F7EF',100:'#C2EAD4',200:'#93D9B5',300:'#62C795',400:'#41B47E',500:'#2F9E6B',600:'#268158',700:'#1D6444',800:'#154A32',900:'#0D2F20' },
@@ -32,7 +37,10 @@ export const palette = {
 } as const;
 
 export const gradient = {
-  movement: ['#E1322B', '#F2C200'] as const, // 135deg rouge -> or; signature, used on hero CTAs / medals / progress
+  // 135deg rouge -> or; signature, used on hero CTAs / medals / progress. Wired to palette refs
+  // (was a hard-coded ['#E1322B','#F2C200']) so it follows the brand-red anchor and never drifts
+  // from the ~8 local MOVEMENT=[rouge[500],or[500]] re-declarations across the app.
+  movement: [palette.rouge[500], palette.or[500]] as const,
   // Primary-CTA fill (DT-02): rouge holds 0→70% of the diagonal, then a soft ramp into the brand
   // gold in the bottom-right corner. A centred white label sits over the rouge field, so contrast
   // holds. SINGLE SOURCE for every primary action button — consumed by <PrimaryButton/> and
@@ -47,6 +55,12 @@ export const color = {
   actionActive:  palette.rouge[700],
   actionDisabled:palette.neutral[300],
   onAction:      palette.neutral[0],
+  // Brand-red (#EA3829 = rgb 234,56,41) wash tints — single source for the red chip / tag / banner
+  // fills that used to be hard-coded rgba(225,50,43,…) (the old #E1322B in decimal, which would
+  // have drifted cool against the new anchor). Use these instead of raw rgba going forward.
+  actionWashWeak:   'rgba(234,56,41,0.08)',
+  actionWashMed:    'rgba(234,56,41,0.14)',
+  actionWashStrong: 'rgba(234,56,41,0.22)',
 
   reward:        palette.or[500],
   rewardStrong:  palette.or[600],
@@ -72,6 +86,37 @@ export const color = {
   borderStrong:  palette.neutral[300],
 } as const;
 
+/**
+ * Coach v2 status-card tones — the "liseré de statut" system. ONE source for the 3px left rail +
+ * filled-tint chip across every list card (Séances, Notifications, Disponibles, Revenus, Accueil,
+ * Profil). Promotes the per-screen INK maps (SeancesScreen / SettingsScreen / NotificationCenter)
+ * into a single token. Two variants: `paper` (cards on cream) and `ink` (cards on the dark band).
+ * Contract: colour is NEVER the only signal — every chip pairs the tone with an icon + a word, and
+ * the rail is additive on top of that. Foregrounds are AA on their surface.
+ *   ok = confirmée (green) · danger = action requise (red) · pending = à venir (amber)
+ *   info = check-in / in-process (blue) · neutral = passé / clôturé (grey)
+ * `rail` = left-border colour · `fg` = chip text/icon · `bg` = chip fill.
+ */
+export const statusTones = {
+  paper: {
+    ok:      { rail: palette.vert[700],    fg: palette.vert[700],    bg: 'rgba(47,158,107,0.16)' },
+    danger:  { rail: palette.rouge[600],   fg: palette.rouge[600],   bg: color.actionWashMed },
+    pending: { rail: palette.or[800],      fg: palette.or[800],      bg: 'rgba(242,194,0,0.13)' },
+    info:    { rail: palette.bleu[700],    fg: palette.bleu[700],    bg: 'rgba(166,183,219,0.14)' },
+    neutral: { rail: palette.neutral[400], fg: palette.neutral[600], bg: 'rgba(156,156,156,0.16)' },
+  },
+  ink: {
+    ok:      { rail: palette.vert[300],    fg: palette.vert[300],    bg: 'rgba(47,158,107,0.22)' },
+    danger:  { rail: palette.rouge[400],   fg: palette.rouge[300],   bg: 'rgba(234,56,41,0.26)' },
+    pending: { rail: palette.or[300],      fg: palette.or[300],      bg: 'rgba(242,194,0,0.20)' },
+    info:    { rail: palette.bleu[200],    fg: palette.bleu[200],    bg: 'rgba(166,183,219,0.22)' },
+    neutral: { rail: palette.neutral[300], fg: palette.neutral[300], bg: 'rgba(255,255,255,0.10)' },
+  },
+} as const;
+
+export type StatusTone = keyof (typeof statusTones)['paper'];
+export type CardSurface = keyof typeof statusTones;
+
 export const typography = {
   family: { display: 'Anton', heading: 'Oswald', body: 'Inter' },
   weight: { display: 400, regular: 400, medium: 500, semibold: 600, bold: 700 },
@@ -82,13 +127,38 @@ export const typography = {
 
 export const spacing = { xs:4, sm:8, md:16, lg:24, xl:32, '2xl':48, '3xl':64 } as const;
 export const radius  = { sm:8, md:12, lg:16, xl:24, '2xl':32, pill:999, button:14 } as const;
+
+/** Apple-style card corner — ONE radius + value for every content card across the app.
+ *  `radius.lg` (16) is the modern Apple card value (SwiftUI `RoundedRectangle(cornerRadius: 16,
+ *  style: .continuous)`); `borderCurve: 'continuous'` is iOS's superellipse/squircle smoothing
+ *  (no-op on Android). Every card surface — StatusCard, stat tiles, hero/premium panels, modal +
+ *  onboarding cards — spreads this so corners stay uniform and can never drift. Non-cards (pills,
+ *  buttons, avatars, progress bars, inputs) keep their own radii and do NOT use this. */
+export const CARD_RADIUS = radius.lg;
+export const cardShape = { borderRadius: CARD_RADIUS, borderCurve: 'continuous' } as const;
 export const size    = { touchTargetMin:44, iconSm:16, iconMd:20, iconLg:24, avatarSm:32, avatarMd:48 } as const;
 
 export const elevation = {
   level1: '0 1px 2px rgba(24,23,21,.06), 0 1px 3px rgba(24,23,21,.10)',
   level2: '0 4px 12px rgba(24,23,21,.08)',
   level3: '0 12px 32px rgba(24,23,21,.12)',
-  glowAction: '0 8px 24px rgba(225,50,43,.35)',
+  // Coach v2 list-card "ombre douce" (web-string parity with shadow.card below).
+  card: '0 1px 2px rgba(24,23,21,.05), 0 6px 16px rgba(24,23,21,.07)',
+  glowAction: '0 8px 24px rgba(234,56,41,.35)', // brand red #EA3829 in decimal
+} as const;
+
+/** Coach v2 RN soft card shadow ("ombre douce"). RN-shaped (shadow* for iOS, elevation for Android).
+ *  SINGLE SOURCE — the list <StatusCard> and its skeleton both import this so the skeleton→content
+ *  swap can't pop (flat ghost → shadowed card). Deliberate scoped reversal of the old "shadow only
+ *  on overlays" house rule, for Coach v2 list cards only; heroes/sheets/stat tiles stay flat. */
+export const shadow = {
+  card: {
+    shadowColor: palette.neutral[900],
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 3,
+  },
 } as const;
 
 export const motion = {
@@ -151,5 +221,5 @@ export type SurfaceName = keyof typeof surfaces;
  *  Single source of truth — every card (Home, Séances, Disponibles, Revenus, modals) imports this. */
 export const cardGradient = ['#FFFFFF', '#FBFAF7'] as const;
 
-export const theme = { palette, gradient, color, typography, spacing, radius, size, elevation, motion, surfaces, cardGradient };
+export const theme = { palette, gradient, color, typography, spacing, radius, CARD_RADIUS, cardShape, size, elevation, shadow, motion, surfaces, cardGradient, statusTones };
 export default theme;

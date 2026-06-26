@@ -34,7 +34,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   X, ChevronLeft, TriangleAlert, Heart, Euro, CalendarDays, Check, ShieldCheck, type LucideIcon,
 } from '../icons';
-import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
+import { palette, color, spacing as sp, radius as r, cardShape, surfaces } from '../theme/theme';
 import { useCopy } from '../i18n';
 import { PrimaryButton } from './PrimaryButton';
 
@@ -53,7 +53,7 @@ const ON_INK = palette.neutral[50];
 const ON_INK_2 = palette.neutral[300];
 
 // Tints reused across the impact rows / boxes.
-const RED = { fg: palette.rouge[700], bg: 'rgba(225,50,43,0.12)' };
+const RED = { fg: palette.rouge[700], bg: 'rgba(234,56,41,0.12)' };
 const GOLD = { fg: palette.or[800], bg: 'rgba(242,194,0,0.16)', border: 'rgba(242,194,0,0.45)' };
 const GREEN = { fg: palette.vert[700], bg: 'rgba(47,158,107,0.14)', border: 'rgba(47,158,107,0.40)' };
 const DANGER = { fg: palette.rouge[700], bg: 'rgba(232,82,72,0.10)', border: 'rgba(232,82,72,0.40)' };
@@ -412,9 +412,9 @@ const st = StyleSheet.create({
   sectionLabel: { fontFamily: F.osw, fontSize: 13, letterSpacing: 1, color: ON_CANVAS_2, textTransform: 'uppercase', marginBottom: sp.sm },
 
   /* step 1 — warning + impact rows */
-  warnBox: { flexDirection: 'row', gap: sp.sm, borderRadius: r.lg, borderWidth: 1, padding: sp.md, marginBottom: sp.lg },
+  warnBox: { flexDirection: 'row', gap: sp.sm, ...cardShape, borderWidth: 1, padding: sp.md, marginBottom: sp.lg },
   warnTxt: { flex: 1, fontFamily: F.bodyS, fontSize: 14, lineHeight: 20 },
-  impactRow: { backgroundColor: CARD, borderRadius: r.lg, borderWidth: 1, borderColor: DIVIDER, padding: sp.md, marginBottom: sp.sm },
+  impactRow: { backgroundColor: CARD, ...cardShape, borderWidth: 1, borderColor: DIVIDER, padding: sp.md, marginBottom: sp.sm },
   impactTop: { flexDirection: 'row', alignItems: 'center', gap: sp.md },
   impactChip: { width: 40, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
   impactLabel: { fontFamily: F.body, fontSize: 13, color: ON_CANVAS_2 },
@@ -424,24 +424,24 @@ const st = StyleSheet.create({
   barFill: { height: 6, borderRadius: r.pill, backgroundColor: palette.rouge[500] },
 
   /* step 2 — reasons + proof */
-  reasonRow: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.md, borderWidth: 1, borderColor: BORDER, borderRadius: r.lg, padding: sp.md, marginBottom: sp.sm, backgroundColor: CARD },
-  reasonRowOn: { borderColor: palette.rouge[400], backgroundColor: 'rgba(225,50,43,0.05)' },
+  reasonRow: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.md, borderWidth: 1, borderColor: BORDER, ...cardShape, padding: sp.md, marginBottom: sp.sm, backgroundColor: CARD },
+  reasonRowOn: { borderColor: palette.rouge[400], backgroundColor: 'rgba(234,56,41,0.05)' },
   radio: { width: 22, height: 22, borderRadius: 999, borderWidth: 2, borderColor: palette.neutral[400], alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   radioOn: { borderColor: color.action },
   radioDot: { width: 10, height: 10, borderRadius: 999, backgroundColor: color.action },
   reasonLabel: { fontFamily: F.bodyS, fontSize: 16, color: ON_CANVAS },
   reasonHint: { fontFamily: F.body, fontSize: 13, lineHeight: 19, color: ON_CANVAS_2, marginTop: 3 },
-  proofBox: { backgroundColor: palette.bleu[50], borderRadius: r.lg, padding: sp.md, marginTop: sp.sm },
+  proofBox: { backgroundColor: palette.bleu[50], ...cardShape, padding: sp.md, marginTop: sp.sm },
   proofTitle: { fontFamily: F.bodyS, fontSize: 14, color: palette.bleu[700], marginBottom: 4 },
   proofBody: { fontFamily: F.body, fontSize: 13, lineHeight: 19, color: palette.bleu[700] },
 
   /* step 3 — what happens + checkbox */
-  willBox: { borderRadius: r.lg, borderWidth: 1, padding: sp.md, marginBottom: sp.md },
+  willBox: { ...cardShape, borderWidth: 1, padding: sp.md, marginBottom: sp.md },
   willTitle: { fontFamily: F.bodyS, fontSize: 15, lineHeight: 21, marginBottom: sp.sm },
   bulletRow: { flexDirection: 'row', gap: sp.sm, marginTop: 4 },
   bulletDot: { fontFamily: F.bodyS, fontSize: 14, lineHeight: 20 },
   bulletTxt: { flex: 1, fontFamily: F.body, fontSize: 14, lineHeight: 20 },
-  checkRow: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm, borderRadius: r.lg, borderWidth: 1, padding: sp.md },
+  checkRow: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.sm, ...cardShape, borderWidth: 1, padding: sp.md },
   checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: palette.neutral[400], alignItems: 'center', justifyContent: 'center', backgroundColor: CARD },
   checkboxOn: { backgroundColor: color.action, borderColor: color.action },
   checkTxt: { flex: 1, fontFamily: F.body, fontSize: 14, lineHeight: 20, color: ON_CANVAS },
@@ -467,7 +467,7 @@ const st = StyleSheet.create({
   sheetTitle: { fontFamily: F.oswB, fontSize: 22, color: ON_CANVAS, textAlign: 'center', marginTop: sp.md },
   sheetSession: { fontFamily: F.bodyS, fontSize: 13, color: ON_CANVAS_2, textAlign: 'center', marginTop: 4 },
   sheetBody: { fontFamily: F.body, fontSize: 15, lineHeight: 22, color: ON_CANVAS_2, textAlign: 'center', marginTop: sp.sm },
-  preservedBox: { alignSelf: 'stretch', borderRadius: r.lg, borderWidth: 1, padding: sp.md, marginTop: sp.lg, marginBottom: sp.md },
+  preservedBox: { alignSelf: 'stretch', ...cardShape, borderWidth: 1, padding: sp.md, marginTop: sp.lg, marginBottom: sp.md },
   preservedHead: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
   preservedTitle: { fontFamily: F.bodyS, fontSize: 14 },
   preservedTxt: { fontFamily: F.body, fontSize: 13, lineHeight: 19, color: palette.or[900] },
@@ -477,6 +477,6 @@ const st = StyleSheet.create({
   resultIcon: { width: 80, height: 80, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
   resultTitle: { fontFamily: F.oswB, fontSize: 24, color: ON_CANVAS, marginTop: sp.lg, textAlign: 'center' },
   resultBody: { fontFamily: F.body, fontSize: 15, lineHeight: 22, color: ON_CANVAS_2, textAlign: 'center', marginTop: sp.sm },
-  penaltyPill: { borderRadius: r.lg, paddingHorizontal: sp.md, paddingVertical: sp.sm, marginTop: sp.lg },
+  penaltyPill: { ...cardShape, paddingHorizontal: sp.md, paddingVertical: sp.sm, marginTop: sp.lg },
   penaltyTxt: { fontFamily: F.bodyS, fontSize: 14, textAlign: 'center' },
 });

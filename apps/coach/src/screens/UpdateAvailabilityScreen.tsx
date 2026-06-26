@@ -21,7 +21,7 @@ import {
   Clock, Plus, Minus, Trash2, Check, Info, Activity, type LucideIcon,
 } from '../icons';
 
-import { palette, color, spacing as sp, radius as r, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
+import { palette, color, spacing as sp, radius as r, cardShape, surfaces, cardGradient as RAISED_GRAD } from '../theme/theme';
 import { useCopy } from '../i18n';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { useKeyboardInset } from '../lib/useKeyboardInset';
@@ -88,7 +88,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 function Card({ children, style }: { children: React.ReactNode; style?: object }) {
   return (
     <View style={[st.card, style]}>
-      <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r.xl }]} pointerEvents="none" />
+      <LinearGradient colors={RAISED_GRAD} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, cardShape]} pointerEvents="none" />
       {children}
     </View>
   );
@@ -783,10 +783,10 @@ const st = StyleSheet.create({
 
   freshRow: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: sp.sm },
   updated: { fontFamily: F.body, fontSize: 13, color: ON_CANVAS_2 },
-  nudge: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, backgroundColor: 'rgba(242,194,0,0.13)', borderColor: 'rgba(242,194,0,0.35)', borderWidth: 1, borderRadius: r.lg, padding: sp.md, marginBottom: sp.sm },
+  nudge: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, backgroundColor: 'rgba(242,194,0,0.13)', borderColor: 'rgba(242,194,0,0.35)', borderWidth: 1, ...cardShape, padding: sp.md, marginBottom: sp.sm },
   nudgeTxt: { flex: 1, fontFamily: F.body, fontSize: 15, color: palette.or[800] },
 
-  card: { borderRadius: r.xl, paddingHorizontal: sp.md, backgroundColor: palette.neutral[0], borderWidth: 1, borderColor: HAIRLINE, overflow: 'hidden' },
+  card: { ...cardShape, paddingHorizontal: sp.md, backgroundColor: palette.neutral[0], borderWidth: 1, borderColor: HAIRLINE, overflow: 'hidden' },
   cardPad: { paddingVertical: sp.md },
   divider: { borderTopWidth: 1, borderTopColor: DIVIDER },
 
@@ -802,7 +802,7 @@ const st = StyleSheet.create({
   cta: { marginTop: sp.lg },
 
   // Notes
-  note: { flexDirection: 'row', gap: sp.sm, backgroundColor: color.infoSoft, borderRadius: r.lg, padding: sp.md, marginTop: sp.md },
+  note: { flexDirection: 'row', gap: sp.sm, backgroundColor: color.infoSoft, ...cardShape, padding: sp.md, marginTop: sp.md },
   noteTitle: { fontFamily: F.bodyS, fontSize: 13, color: palette.bleu[700], marginBottom: 2 },
   noteBody: { fontFamily: F.body, fontSize: 13, lineHeight: 18, color: palette.bleu[700] },
 
@@ -814,7 +814,7 @@ const st = StyleSheet.create({
 
   // Transport tiles
   tileGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: sp.sm },
-  tile: { width: '47.8%', flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: sp.lg, borderRadius: r.xl, borderWidth: 1, borderColor: HAIRLINE, backgroundColor: palette.neutral[0] },
+  tile: { width: '47.8%', flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: sp.lg, ...cardShape, borderWidth: 1, borderColor: HAIRLINE, backgroundColor: palette.neutral[0] },
   tileSel: { borderColor: SELECTED, borderWidth: 2, backgroundColor: SELECTED_BG },
   tileTxt: { fontFamily: F.bodyS, fontSize: 14, color: ON_CARD },
 
@@ -886,13 +886,13 @@ const st = StyleSheet.create({
   chip: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: r.lg, borderWidth: 1, borderColor: HAIRLINE, backgroundColor: palette.neutral[0], minWidth: 56, alignItems: 'center' },
   chipSel: { backgroundColor: SELECTED, borderColor: SELECTED },
   chipTxt: { fontFamily: F.body, fontSize: 14, color: ON_CARD },
-  selected: { backgroundColor: color.progressSoft, borderWidth: 1, borderColor: palette.vert[300], borderRadius: r.lg, padding: sp.md, alignItems: 'center', marginTop: sp.md },
+  selected: { backgroundColor: color.progressSoft, borderWidth: 1, borderColor: palette.vert[300], ...cardShape, padding: sp.md, alignItems: 'center', marginTop: sp.md },
   selectedLabel: { fontFamily: F.body, fontSize: 12, color: palette.vert[700] },
   selectedVal: { fontFamily: F.oswB, fontSize: 22, color: palette.vert[700], marginTop: 2 },
   selectedErr: { fontFamily: F.body, fontSize: 12, color: color.danger, marginTop: 4 },
 
   // Slot zones radios
-  radio: { flexDirection: 'row', alignItems: 'center', gap: sp.md, padding: sp.md, borderRadius: r.lg, borderWidth: 1, borderColor: HAIRLINE, backgroundColor: palette.neutral[0], marginBottom: sp.sm },
+  radio: { flexDirection: 'row', alignItems: 'center', gap: sp.md, padding: sp.md, ...cardShape, borderWidth: 1, borderColor: HAIRLINE, backgroundColor: palette.neutral[0], marginBottom: sp.sm },
   radioOn: { borderColor: SELECTED, borderWidth: 2, backgroundColor: SELECTED_BG },
   radioDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: palette.neutral[300], alignItems: 'center', justifyContent: 'center' },
   radioDotOn: { borderColor: SELECTED },
@@ -902,7 +902,7 @@ const st = StyleSheet.create({
   travelHint: { fontFamily: F.body, fontSize: 12, color: ON_CARD_2, textAlign: 'center', marginTop: sp.sm },
 
   // Recap
-  recapCard: { backgroundColor: palette.neutral[0], borderWidth: 1, borderColor: HAIRLINE, borderRadius: r.lg, padding: sp.md, marginBottom: sp.sm },
+  recapCard: { backgroundColor: palette.neutral[0], borderWidth: 1, borderColor: HAIRLINE, ...cardShape, padding: sp.md, marginBottom: sp.sm },
   recapOff: { backgroundColor: 'transparent', borderStyle: 'dashed' },
   recapDay: { fontFamily: F.oswS, fontSize: 14, color: ON_CARD, marginBottom: 4 },
   recapLine: { flexDirection: 'row', alignItems: 'center', gap: sp.sm, marginTop: 2 },
@@ -911,10 +911,10 @@ const st = StyleSheet.create({
   recapClosed: { fontFamily: F.body, fontSize: 13, color: ON_CANVAS_2, fontStyle: 'italic' },
 
   // Validation
-  periodRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, backgroundColor: 'rgba(242,194,0,0.10)', borderWidth: 1, borderColor: 'rgba(242,194,0,0.30)', borderRadius: r.lg, padding: sp.md, marginBottom: sp.sm },
+  periodRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, backgroundColor: 'rgba(242,194,0,0.10)', borderWidth: 1, borderColor: 'rgba(242,194,0,0.30)', ...cardShape, padding: sp.md, marginBottom: sp.sm },
   periodLabel: { fontFamily: F.bodyS, fontSize: 15, color: ON_CARD },
   periodDates: { fontFamily: F.body, fontSize: 13, color: palette.or[800], marginTop: 1 },
-  finalCard: { backgroundColor: color.progressSoft, borderWidth: 1, borderColor: palette.vert[300], borderRadius: r.xl, padding: sp.lg, marginTop: sp.md },
+  finalCard: { backgroundColor: color.progressSoft, borderWidth: 1, borderColor: palette.vert[300], ...cardShape, padding: sp.lg, marginTop: sp.md },
   finalHead: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: sp.sm },
   finalTitle: { fontFamily: F.bodyB, fontSize: 14, color: palette.vert[700] },
   finalLine: { fontFamily: F.body, fontSize: 14, lineHeight: 21, color: palette.vert[700] },

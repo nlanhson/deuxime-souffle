@@ -41,6 +41,15 @@
   --lc-neutral-550:#6A6A6A; --lc-neutral-600:#646464;
   --lc-neutral-700:#484848; --lc-neutral-800:#2B2B2B; --lc-neutral-900:#171717;
 
+  /* Crème — couleur « Respiration » de la charte (moodboard p.2, #F7F4EF) : le beige
+     chaud de marque sur lequel la palette se pose. Sert de fond au rail de navigation
+     EHPAD — une chaleur de marque, sans jamais quitter le calme.
+     -25 : voile crème le plus clair (pendant chaud du --lc-bleu-25 « papier »), un cran
+     tonal sous les cartes BLANCHES — fond de page chaud, jamais blanc pur. Trois paliers :
+     rail (crème) › page (crème-25) › cartes (blanc), façon Doctolib. */
+  --lc-creme:#F7F4EF;
+  --lc-creme-25:#FBFAF7;
+
   --lc-gradient-movement: linear-gradient(135deg, #E1322B 0%, #F2C200 100%);
 
   /* Dégradé d'action signature (identique à l'app coach › PrimaryButton) :
@@ -166,14 +175,30 @@
 /* EHPAD: tout blanc (canvas, chrome et cartes) — la structure tient aux liserés
    fins. Rouge quasi absent ; bleu + vert mènent (info / santé). */
 [data-surface="ehpad"] {
-  --color-canvas:           var(--lc-neutral-0);
+  /* Fond de page : voile crème le plus clair (chaud, pas blanc pur) ; les CARTES
+     restent blanches (--color-surface) et ressortent dessus. Le rail (crème) est un
+     cran plus chaud encore — trois paliers tonals, calme préservé. */
+  --color-canvas:           var(--lc-creme-25);
   --color-surface:          var(--lc-neutral-0);
   --color-text-primary:     var(--lc-neutral-900);
   --color-accent:           var(--color-info);
   --color-accent-secondary: var(--color-progress);
-  /* Sélection courante (nav, segment actif) — voile bleu très doux + encre bleue. */
+  /* Sélection courante (segment actif, ligne sélectionnée) — voile bleu très doux
+     + encre bleue. Réservé au CONTENU ; la navigation a son propre rouge ci-dessous. */
   --color-selected-soft:    var(--lc-bleu-50);
   --color-selected-ink:     var(--lc-bleu-800);
+
+  /* Navigation — rail « Crème » (couleur Respiration de la charte) : un beige chaud,
+     plus accueillant que le blanc, toujours calme. L'item actif passe au ROUGE
+     (charte EHPAD : « le rouge rare, réservé à l'item actif et aux alertes »),
+     signalé par TROIS indices — voile rosé, encre rouge AA, barre rouge vif —
+     jamais la couleur seule. Le picto DS reprend ce même rouge (lien de marque). */
+  --color-nav-surface:      var(--lc-creme);
+  --color-nav-border:       rgba(24, 23, 21, 0.08);  /* hairline chaud (pas le gris froid du neutral-200) */
+  --color-nav-hover:        rgba(24, 23, 21, 0.05);  /* survol : voile d'encre chaud sur la crème */
+  --color-nav-active-bg:    var(--lc-neutral-0);       /* pastille BLANCHE : se détache franchement de la crème (fini le rosé qui se battait avec le rail) — le rouge reste à l'encre + la barre */
+  --color-nav-active-ink:   var(--lc-rouge-600);      /* #C32721 — texte + icône : 5,3:1 sur blanc, rouge vif */
+  --color-nav-red:          #EA3829;                  /* rouge exact de la charte client — barre « vous êtes ici » + picto DS */
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -18,7 +18,8 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Clipboard from 'expo-clipboard';
 import { MapPin, AlertTriangle, Check, CheckCircle2, Navigation, Edit3, Users, Bell, Clock, User, X, ChevronDown, ChevronRight, Ban, CalendarClock, StickyNote, Send, Activity, Smile, Copy, Phone, Building2, ShieldCheck, Sparkles, DoorOpen, type LucideIcon } from '../icons';
 
-import { palette, color, spacing as sp, radius as r, surfaces } from '../theme/theme';
+import { palette, color, spacing as sp, radius as r, cardShape, surfaces, type StatusTone } from '../theme/theme';
+import { StatusCard, StatusChip as ToneChip } from '../components/StatusCard';
 import { useCopy, useLocale } from '../i18n';
 import { dayFromOffset, dayLabel } from '../lib/dateLabels';
 import { useNow } from '../lib/useNow';
@@ -158,26 +159,32 @@ const PAST: Group[] = [
 
 /* ---------- small building blocks ---------- */
 
-const statusMeta = (copy: AppCopy): Record<Status, { tone: keyof typeof INK; label: string; icon?: LucideIcon }> => ({
-  checkin:    { tone: 'info', label: copy.sessions.status.checkinOpen, icon: MapPin },
-  confirmed:  { tone: 'ok', label: copy.sessions.status.confirmed },
-  checkedIn:  { tone: 'ok', label: copy.sessions.status.checkedIn, icon: CheckCircle2 },
-  reportDue:  { tone: 'pending', label: copy.sessions.status.reportDue, icon: AlertTriangle },
-  reportSent: { tone: 'neutral', label: copy.sessions.status.reportSent, icon: Check },
+// Session workflow status → v2 StatusTone (PDF "système de carte type" liseré legend:
+// action-requise=red, confirmée=green, passé/clôturé=grey). Drives BOTH the status chip and the
+// card's 3px left liseré. Restrained red per the PDF screens: green = confirmed / check-in-ready /
+// on-site; RED is reserved for action-required (report due) and the live "En cours" state; grey =
+// a closed/past session. Amber stays for à-venir (applications / recommandé).
+const STATUS_TONE: Record<Status, StatusTone> = {
+  checkin:    'ok',       // check-in window open = confirmed & ready (the red lives on the CTA button)
+  confirmed:  'ok',
+  checkedIn:  'ok',
+  reportDue:  'danger',   // report owed — action required (was gold)
+  reportSent: 'neutral',  // closed / passé
+};
+
+const statusMeta = (copy: AppCopy): Record<Status, { tone: StatusTone; label: string; icon: LucideIcon }> => ({
+  checkin:    { tone: STATUS_TONE.checkin,    label: copy.sessions.status.checkinOpen, icon: MapPin },
+  confirmed:  { tone: STATUS_TONE.confirmed,  label: copy.sessions.status.confirmed,   icon: CheckCircle2 },
+  checkedIn:  { tone: STATUS_TONE.checkedIn,  label: copy.sessions.status.checkedIn,   icon: CheckCircle2 },
+  reportDue:  { tone: STATUS_TONE.reportDue,  label: copy.sessions.status.reportDue,   icon: AlertTriangle },
+  reportSent: { tone: STATUS_TONE.reportSent, label: copy.sessions.status.reportSent,  icon: Check },
 });
 
-// Status chip — never colour alone: every tone carries an icon (or a dot) AND a word.
+// Status chip — the shared filled-tint pill; never colour alone (icon + word).
 function StatusChip({ status }: { status: Status }) {
   const copy = useCopy();
   const m = statusMeta(copy)[status];
-  const c = INK[m.tone];
-  const Icon = m.icon;
-  return (
-    <View style={[st.chip, { backgroundColor: c.bg }]}>
-      {Icon ? <Icon size={13} color={c.fg} /> : <View style={[st.dot, { backgroundColor: c.fg }]} />}
-      <Text style={[st.chipTxt, { color: c.fg }]} numberOfLines={1}>{m.label}</Text>
-    </View>
-  );
+  return <ToneChip tone={m.tone} label={m.label} icon={m.icon} />;
 }
 
 /* Time-derived "in progress" chip (WBS PLA-14 §7/§8) — shown while a session is currently running,
@@ -188,13 +195,8 @@ function StatusChip({ status }: { status: Status }) {
    action-required banner and check-in CTA. */
 function LifecycleChip() {
   const copy = useCopy();
-  const c = INK.info;
-  return (
-    <View style={[st.chip, { backgroundColor: c.bg }]}>
-      <View style={[st.dot, { backgroundColor: c.fg }]} />
-      <Text style={[st.chipTxt, { color: c.fg }]} numberOfLines={1}>{copy.sessions.status.inProgress}</Text>
-    </View>
-  );
+  // Live now → red attention dot ("En cours" reads red in the PDF), never colour alone (dot + word).
+  return <ToneChip tone="danger" label={copy.sessions.status.inProgress} dot />;
 }
 
 // Is the session currently running (clock within [start, end])? Past workflow states (report
@@ -208,6 +210,12 @@ function isInProgress(s: Session, dayOffset: number, today: Date, now: Date): bo
 // The chip shown on a session — the live "in progress" override when running, else the workflow status.
 function SessionStatusChip({ s, dayOffset, today, now }: { s: Session; dayOffset: number; today: Date; now: Date }) {
   return isInProgress(s, dayOffset, today, now) ? <LifecycleChip /> : <StatusChip status={s.status} />;
+}
+
+// The card's left-liseré tone — mirrors SessionStatusChip: live "En cours" override (red) when
+// running, else the workflow-status tone.
+function sessionTone(s: Session, dayOffset: number, today: Date, now: Date): StatusTone {
+  return isInProgress(s, dayOffset, today, now) ? 'danger' : STATUS_TONE[s.status];
 }
 
 // The visible status label (for a11y) — mirrors SessionStatusChip so screen readers match the chip.
@@ -287,11 +295,12 @@ function SessionCta({ status, compact, onCheckIn, onWriteReport, onDirections, o
 
 type OpenSession = Session & { day: string; dayOffset: number };
 
-function SessionCard({ s, day, dayOffset, today, now, first, onOpen, onCheckIn, onWriteReport }: { s: Session; day: string; dayOffset: number; today: Date; now: Date; first: boolean; onOpen: (d: OpenSession) => void; onCheckIn: (d: OpenSession) => void; onWriteReport: (d: OpenSession) => void }) {
+function SessionCard({ s, day, dayOffset, today, now, onOpen, onCheckIn, onWriteReport }: { s: Session; day: string; dayOffset: number; today: Date; now: Date; onOpen: (d: OpenSession) => void; onCheckIn: (d: OpenSession) => void; onWriteReport: (d: OpenSession) => void }) {
   const copy = useCopy();
   const reduced = useReducedMotion();
   const [expanded, setExpanded] = React.useState(false);
   const open: OpenSession = { ...s, day, dayOffset };
+  const tone = sessionTone(s, dayOffset, today, now); // drives the v2 card left liseré
 
   // Chevron rotates 0°→180° with the reveal (GPU transform). Reduced motion snaps instantly.
   const chevron = React.useRef(new Animated.Value(0)).current;
@@ -322,7 +331,7 @@ function SessionCard({ s, day, dayOffset, today, now, first, onOpen, onCheckIn, 
     setExpanded((v) => !v);
   };
   return (
-    <View style={[st.card, !first && st.cardDivider]}>
+    <StatusCard status={tone} style={st.cardGap}>
       <View style={st.cardTop}>
         {/* collapsed header — tap opens the full detail page */}
         <Pressable
@@ -340,7 +349,7 @@ function SessionCard({ s, day, dayOffset, today, now, first, onOpen, onCheckIn, 
 
           {/* title (hero) · tag(s) · address */}
           <View style={st.cardBody}>
-            <Text style={st.place} numberOfLines={1}>{s.place}</Text>
+            <Text style={st.place} numberOfLines={2}>{s.place}</Text>
             <View style={st.tagRow}>
               <SessionStatusChip s={s} dayOffset={dayOffset} today={today} now={now} />
               {s.firstVisit ? <FirstVisitTag /> : null}
@@ -404,7 +413,7 @@ function SessionCard({ s, day, dayOffset, today, now, first, onOpen, onCheckIn, 
           />
         </View>
       ) : null}
-    </View>
+    </StatusCard>
   );
 }
 
@@ -436,27 +445,20 @@ const appMeta = (copy: AppCopy): Record<AppStatus, { tone: keyof typeof INK; lab
 function ApplicationChip({ status }: { status: AppStatus }) {
   const copy = useCopy();
   const m = appMeta(copy)[status];
-  const c = INK[m.tone];
-  const Icon = m.icon;
-  return (
-    <View style={[st.chip, { backgroundColor: c.bg }]}>
-      <Icon size={13} color={c.fg} />
-      <Text style={[st.chipTxt, { color: c.fg }]} numberOfLines={1}>{m.label}</Text>
-    </View>
-  );
+  return <ToneChip tone={m.tone} label={m.label} icon={m.icon} />;
 }
 
-function ApplicationCard({ a, first, onOpen }: { a: Application; first: boolean; onOpen: (a: Application) => void }) {
+function ApplicationCard({ a, onOpen }: { a: Application; onOpen: (a: Application) => void }) {
   const copy = useCopy();
   return (
-    <Pressable
-      style={({ pressed }) => [st.card, !first && st.cardDivider, pressed && { opacity: 0.9 }]}
+    <StatusCard
+      status="pending"
       onPress={() => onOpen(a)}
-      accessibilityRole="button"
+      style={st.cardGap}
       accessibilityLabel={`${a.place}, ${a.when}, ${appMeta(copy)[a.status].label}. View application.`}
     >
       <View style={st.appHead}>
-        <Text style={st.place} numberOfLines={1}>{a.place}</Text>
+        <Text style={[st.place, { flex: 1 }]} numberOfLines={2}>{a.place}</Text>
         <ApplicationChip status={a.status} />
       </View>
       <View style={[st.metaRow, { marginTop: 6 }]}>
@@ -467,7 +469,7 @@ function ApplicationCard({ a, first, onOpen }: { a: Application; first: boolean;
         <MapPin size={14} color={ON_CARD_2} />
         <Text style={st.meta} numberOfLines={1}>{a.addr}</Text>
       </View>
-    </Pressable>
+    </StatusCard>
   );
 }
 
@@ -788,7 +790,7 @@ function DetailRow({ Icon, label, value, first, valueIsPhone, onCopy, copyA11y, 
    it always carries an icon and a word). */
 function IconAction({ Icon, label, a11yLabel, danger, onPress }: { Icon: LucideIcon; label: string; a11yLabel?: string; danger?: boolean; onPress?: () => void }) {
   const fg = danger ? palette.rouge[700] : ON_CARD;   // DT-20: AA destructive red on light
-  const bg = danger ? 'rgba(225,50,43,0.10)' : SUBTLE;
+  const bg = danger ? 'rgba(234,56,41,0.10)' : SUBTLE;
   return (
     <Pressable
       style={({ pressed }) => [st.iconAction, pressed && { opacity: 0.6 }]}
@@ -832,7 +834,7 @@ function SheetFooter({ s, onCheckIn, onWriteReport }: { s: OpenSession; onCheckI
   // A sent report is shown read-only inline in the sheet — no footer action is needed.
   if (s.status === 'reportSent') return null;
   return (
-    <View style={[st.footerBar, { paddingBottom: sp.md + insets.bottom }]}>
+    <View style={[st.footerBar, { paddingBottom: insets.bottom }]}>
       <SessionCta
         status={s.status}
         onCheckIn={onCheckIn}
@@ -876,7 +878,7 @@ function SessionDetail({ detail, notes, today, now, onClose, onCheckIn, onWriteR
 
         {s ? (
         <>
-          <ScrollView contentContainerStyle={{ padding: sp.lg, paddingBottom: sp.xl }} showsVerticalScrollIndicator={false}>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: sp.lg, paddingBottom: sp.xl }} showsVerticalScrollIndicator={false}>
             {/* media hero (Lugg idiom) — a map preview leads the sheet and taps through to
                 directions, so the "where" is glanceable before any reading. */}
             <SessionMap
@@ -1106,7 +1108,7 @@ export function SeancesScreen() {
           /* ===== Applications list (C13) — your applied-for sessions + their status ===== */
           <View style={st.group}>
             {applications.length ? (
-              applications.map((a, i) => <ApplicationCard key={`${a.place}-${a.when}`} a={a} first={i === 0} onOpen={setSelectedApp} />)
+              applications.map((a) => <ApplicationCard key={`${a.place}-${a.when}`} a={a} onOpen={setSelectedApp} />)
             ) : (
               <Text style={st.empty}>{copy.sessions.emptyApplications}</Text>
             )}
@@ -1144,7 +1146,7 @@ export function SeancesScreen() {
                 <Text style={st.dayHeadLabel}>{label}</Text>
                 <Text style={st.dayHeadCount}>{g.items.length}</Text>
               </View>
-              {g.items.map((s, i) => (
+              {g.items.map((s) => (
                 <SessionCard
                   key={`${g.offset}-${s.time}-${s.place}`}
                   s={s}
@@ -1152,7 +1154,6 @@ export function SeancesScreen() {
                   dayOffset={g.offset}
                   today={today}
                   now={now}
-                  first={i === 0}
                   onOpen={setSelected}
                   onCheckIn={handleCheckIn}
                   onWriteReport={handleWriteReport}
@@ -1231,7 +1232,7 @@ export function SeancesScreen() {
         onClose={() => setWithdrawFor(null)}
         Icon={Ban}
         accentFg={palette.rouge[700]}
-        accentBg="rgba(225,50,43,0.14)"
+        accentBg="rgba(234,56,41,0.14)"
         eyebrow={withdrawFor ? `${withdrawFor.place} · ${withdrawFor.when}` : undefined}
         title={copy.sessions.appDetail.withdrawConfirm.title}
         body={copy.sessions.appDetail.withdrawConfirm.body}
@@ -1299,21 +1300,19 @@ const st = StyleSheet.create({
 
   /* groups */
   group: { marginTop: sp.lg },
-  // Day section header (Craft / ClassPass idiom) — a plain typographic heading with a hairline
-  // rule beneath. Reads as a calm agenda divider, not a filter tag. The count is demoted to a
-  // quiet muted number on the right rather than a badge.
+  // Day section header (Craft / ClassPass idiom) — a plain typographic heading. The count is demoted
+  // to a quiet muted number on the right rather than a badge. No hairline rule beneath: the v2
+  // elevated cards carry their own separation, so the divider would be redundant clutter.
   dayHead: {
     flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between',
-    paddingBottom: sp.sm, marginBottom: sp.xs,
-    borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.08)',
+    paddingBottom: sp.sm,
   },
   dayHeadLabel: { fontFamily: F.oswS, fontSize: 18, letterSpacing: 0.3, color: ON_CANVAS },
   dayHeadCount: { fontFamily: F.body, fontSize: 14, color: palette.neutral[500] },
 
-  /* session card — dark "component" on the cream canvas */
-  // Flat session rows on the canvas — a light hairline divider separates consecutive entries.
-  card: { paddingVertical: sp.md },
-  cardDivider: { borderTopWidth: 1, borderTopColor: 'rgba(24,23,21,0.07)' },
+  /* session card — each session is now its own elevated white <StatusCard> (Coach v2). cardGap
+     spaces consecutive cards within a day group; StatusCard owns the surface + soft shadow + liseré. */
+  cardGap: { marginBottom: sp.sm },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: sp.sm },
   // tappable collapsed header: time rail · connector rule · (title / tag / address)
   headerTap: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: sp.md },
@@ -1328,8 +1327,9 @@ const st = StyleSheet.create({
   place: { fontFamily: F.bodyB, fontSize: 19, color: ON_CARD, letterSpacing: 0.2 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 6, marginBottom: 6 },
   addr: { fontFamily: F.body, fontSize: 14, color: ON_CARD_2 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 5 },
-  meta: { fontFamily: F.body, fontSize: 14, color: ON_CARD_2 },
+  metaRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 5 },
+  // flex:1 so long contact / access strings wrap within the card instead of overflowing its right edge.
+  meta: { flex: 1, fontFamily: F.body, fontSize: 14, color: ON_CARD_2 },
   // Tap-to-call link (DT-12) — phone number rendered as an interactive blue link (colour = clickable),
   // distinct from the red action CTA. Left-aligned, ≥44 tap target via minHeight + hitSlop.
   callLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, minHeight: 32, alignSelf: 'flex-start' },
@@ -1339,12 +1339,13 @@ const st = StyleSheet.create({
   chevBtn: { width: 36, height: 44, alignItems: 'center', justifyContent: 'center' },
   expandWrap: { marginTop: sp.md },
 
-  /* chips */
+  /* chips — local fallback for FirstVisitTag (gold reward attribute) + ReviewChip; metrics aligned
+     to the shared <StatusChip> pill so they sit consistently next to it in a tag row. */
   chip: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingVertical: 5, paddingHorizontal: 10, borderRadius: r.pill,
+    flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start',
+    paddingVertical: 4, paddingHorizontal: 9, borderRadius: r.pill,
   },
-  chipTxt: { fontFamily: F.body, fontSize: 13 },
+  chipTxt: { fontFamily: F.bodyS, fontSize: 13, letterSpacing: 0.1 },
   dot: { width: 8, height: 8, borderRadius: 999 },
 
   /* CTAs — shared vocabulary with Accueil: the gradient primary comes from the reusable
@@ -1394,7 +1395,7 @@ const st = StyleSheet.create({
   dCard: { marginTop: sp.lg },
   // Grouped fact card (Lugg) — facts collected into one bordered white card.
   dFactCard: {
-    marginTop: sp.lg, backgroundColor: CARD, borderRadius: r.lg,
+    marginTop: sp.lg, backgroundColor: CARD, ...cardShape,
     borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)', paddingHorizontal: sp.md,
   },
   dRow: { flexDirection: 'row', alignItems: 'center', gap: sp.md, paddingVertical: 10 },
@@ -1417,7 +1418,7 @@ const st = StyleSheet.create({
   /* action-required banner (Fresha idiom) */
   banner: {
     flexDirection: 'row', alignItems: 'center', gap: sp.sm,
-    marginTop: sp.md, paddingVertical: sp.md, paddingHorizontal: sp.md, borderRadius: r.lg,
+    marginTop: sp.md, paddingVertical: sp.md, paddingHorizontal: sp.md, ...cardShape,
   },
   bannerTxt: { flex: 1, fontFamily: F.bodyS, fontSize: 16, lineHeight: 19 },
 
@@ -1445,7 +1446,7 @@ const st = StyleSheet.create({
   iconActionLabel: { fontFamily: F.bodyS, fontSize: 13, lineHeight: 16, textAlign: 'center' },
 
   /* ----- applications list + detail (C13) ----- */
-  appHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: sp.sm },
+  appHead: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: sp.sm },
   empty: { fontFamily: F.body, fontSize: 14, color: ON_CANVAS_2, marginTop: sp.sm },
   // Empty-state hint + "see availability" link (WBS S14) — colour=clickable on the blue link.
   emptyHint: { fontFamily: F.body, fontSize: 14, lineHeight: 19, color: ON_CANVAS_2, marginTop: sp.xs },
@@ -1457,7 +1458,7 @@ const st = StyleSheet.create({
   notesPlace: { fontFamily: F.bodyB, fontSize: 22, color: ON_CANVAS },
   notesIntro: { fontFamily: F.body, fontSize: 16, lineHeight: 20, color: ON_CANVAS_2, marginTop: 4, marginBottom: sp.md },
   noteCard: {
-    backgroundColor: CARD, borderRadius: r.xl, padding: sp.md, marginTop: sp.sm,
+    backgroundColor: CARD, ...cardShape, padding: sp.md, marginTop: sp.sm,
     borderWidth: 1, borderColor: 'rgba(24,23,21,0.07)',
   },
   noteHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
